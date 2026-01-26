@@ -6,8 +6,8 @@
     tableRowData: @js($incomes),
     itemsPerPage: 10,
     currentPage: 1,
-    editUrl: '{{ route('bendahara.periode.edit', ':id') }}',
-    destroyUrl: '{{ route('bendahara.periode.destroy', ':id') }}',
+    showUrl: '{{ route('user.incomes.show', ':id') }}',
+    {{-- destroyUrl: '{{ route('user.incomes.destroy', ':id') }}', --}}
 
     get totalPages() {
         return Math.ceil(this.tableRowData.length / this.itemsPerPage);

@@ -43,4 +43,9 @@ class Transaction extends Model
     {
         return $this->hasMany(TransactionLine::class, 'transaction_id');
     }
+
+    public function journal()
+    {
+        return $this->hasOne(Journal::class, 'transaction_id');
+    }
 }

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Period;
 use Illuminate\Support\Facades\Auth;
+use Pest\Support\Str;
 
 class IncomeController extends Controller
 {
@@ -156,9 +157,19 @@ class IncomeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Transaction $transaction)
+    public function show(String $id)
     {
-        //
+        $transaction = Transaction::where('transaction_type', TransactionType::INCOME->value)
+            ->findOrFail($id);
+            
+        $transaction->load([
+            'creator:id,name',
+            'period:id,name,start_date,end_date',
+            'transactionLines.chartOfAccount:id,code,name,normal_balance',
+            'journal.details.coa',
+        ]);
+
+        return view('pages.menus.user.incomes.show', compact('transaction'));
     }
 
     /**

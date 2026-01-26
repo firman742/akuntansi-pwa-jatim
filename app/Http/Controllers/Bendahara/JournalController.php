@@ -21,9 +21,7 @@ class JournalController extends Controller
 
         $periods = Period::orderBy('start_date', 'desc')->get();
 
-        $period = $periodId
-            ? Period::findOrFail($periodId)
-            : Period::active()->firstOrFail();
+        $period = $periodId ? Period::findOrFail($periodId) : Period::active()->firstOrFail();
 
         $journals = Journal::with('transaction')
             ->where('period_id', $period->id)
@@ -40,14 +38,11 @@ class JournalController extends Controller
             ]);
 
 
-        return view('pages.menus.bendahara.journals.index', compact(
-            [
+        return view('pages.menus.bendahara.journals.index', compact([
                 'journals',
                 'periods',
-                'period',
                 'periodId'
-            ]
-        ));
+            ]));
     }
 
     /**

@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             PeriodSeeder::class,
             AccountTypeSeeder::class,
             ChartOfAccountSeeder::class,
-            // TransactionSeeder::class,
+            TransactionSeeder::class,
         ]);
     }
 }

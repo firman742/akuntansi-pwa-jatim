@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 
-class RoleController extends Controller
+class PermissionController extends Controller
 {
     public function create()
     {
