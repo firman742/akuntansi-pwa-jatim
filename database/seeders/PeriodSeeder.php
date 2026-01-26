@@ -14,7 +14,7 @@ class PeriodSeeder extends Seeder
     public function run(): void
     {
         Period::factory()
-            ->count(10)
+            ->count(1)
             ->create();
     }
 }

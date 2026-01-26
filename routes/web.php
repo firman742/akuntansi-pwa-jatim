@@ -114,6 +114,11 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
     Route::put('/saldo-awal/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'update'])->name('bendahara.opening-balances.update');
     Route::delete('/saldo-awal/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'destroy'])->name('bendahara.opening-balances.destroy');
 
+
+    // journal routes
+    Route::get('/jurnal-umum', [App\Http\Controllers\Bendahara\JournalController::class, 'index'])->name('bendahara.journals.index');
+    Route::get('/jurnal-umum/{id}', [App\Http\Controllers\Bendahara\JournalController::class, 'show'])->name('bendahara.journals.show');
+
 });
 
 /*
@@ -124,4 +129,20 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
 Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->group(function () {
 
     Route::get('/dashboard', [App\Http\Controllers\Accountingusers\DashboardController::class, 'index'])->name('user.dashboard');
+
+    // Income Routes
+    Route::get('/transaksi/penerimaan', [App\Http\Controllers\Accountingusers\IncomeController::class, 'index'])->name('user.incomes.index');
+    Route::get('transaksi/penerimaan/create', [App\Http\Controllers\Accountingusers\IncomeController::class, 'create'])->name('user.incomes.create');
+    Route::post('transaksi/penerimaan', [App\Http\Controllers\Accountingusers\IncomeController::class, 'store'])->name('user.incomes.store');
+    Route::get('transaksi/penerimaan/{id}', [App\Http\Controllers\Accountingusers\IncomeController::class, 'show'])->name('user.incomes.show');
+    
+
+    // Expense Routes
+    Route::get('/transaksi/pengeluaran', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'index'])->name('user.expenses.index');
+    Route::get('transaksi/pengeluaran/create', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'create'])->name('user.expenses.create');
+    Route::post('transaksi/pengeluaran', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'store'])->name('user.expenses.store');
+    Route::get('transaksi/pengeluaran/{id}', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'show'])->name('user.expenses.show');
+
+    // History Routes
+    Route::get('/transaksi/history', [App\Http\Controllers\Accountingusers\HistoryController::class, 'index'])->name('user.histories.index');
 });

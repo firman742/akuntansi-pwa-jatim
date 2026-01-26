@@ -19,6 +19,15 @@ return new class extends Migration
             $table->decimal('credit_amount', 15, 2)->default(0)->nullable();
             $table->enum('line_type', ['debit', 'credit']);
             $table->text('description')->nullable();
+
+            $table->foreign('transaction_id')
+                ->references('id')
+                ->on('transactions')
+                ->onDelete('cascade');
+            $table->foreign('chart_of_account_id')
+                ->references('id')
+                ->on('chart_of_accounts')
+                ->onDelete('restrict');
             $table->timestamps();
         });
     }

@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Transaction extends Model
 {
-    use HasUuids;
+    use HasUuids, HasFactory;
 
     protected $table = 'transactions';
     protected $fillable = [
@@ -24,6 +26,7 @@ class Transaction extends Model
     protected $casts = [
         'transaction_date' => 'date',
         'total_amount' => 'decimal:2',
+        'transaction_type' => TransactionType::class, // ⬅️ KUNCI
     ];
 
     public function period()
@@ -34,5 +37,10 @@ class Transaction extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function transactionLines()
+    {
+        return $this->hasMany(TransactionLine::class, 'transaction_id');
     }
 }

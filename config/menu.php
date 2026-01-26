@@ -122,20 +122,20 @@ class Menu
                 'name' => 'Laporan',
                 'icon' => 'report',
                 'active_on' => [
-                    'bendahara/jurnal*'
+                    'bendahara/report*'
                 ],
                 'subItems' => [
                     self::item(
                         'Buku Besar',
                         null,
-                        '/bendahara/jurnal/buku-besar',
-                        ['bendahara/jurnal/buku-besar*']
+                        '/bendahara/report/buku-besar',
+                        ['bendahara/report/buku-besar*']
                     ),
                     self::item(
                         'Neraca Saldo',
                         null,
-                        '/bendahara/jurnal/neraca-saldo',
-                        ['bendahara/jurnal/neraca-saldo*']
+                        '/bendahara/report/neraca-saldo',
+                        ['bendahara/report/neraca-saldo*']
                     ),
                 ],
             ],
@@ -153,29 +153,25 @@ class Menu
                 '/user/dashboard',
                 ['user/dashboard*']
             ),
+            self::item(
+                'Penerimaan',
+                'income',
+                '/user/transaksi/penerimaan',
+                ['user/transaksi/penerimaan*']
+            ),
+            self::item(
+                'Pengeluaran',
+                'expense',
+                '/user/transaksi/pengeluaran',
+                ['user/transaksi/pengeluaran*']
+            ),
+            self::item(
+                'Riwayat Transaksi',
+                'cash',
+                '/user/transaksi/history',
+                ['user/transaksi/history*']
+            ),
 
-            [
-                'name' => 'Transaksi',
-                'icon' => 'cash',
-                'active_on' => ['user/transaksi*'],
-                'subItems' => [
-                    self::item(
-                        'Penerimaan',
-                        null,
-                        '/user/transaksi/penerimaan'
-                    ),
-                    self::item(
-                        'Pengeluaran',
-                        null,
-                        '/user/transaksi/pengeluaran'
-                    ),
-                    self::item(
-                        'Pindah Kas',
-                        null,
-                        '/user/transaksi/pindah-kas'
-                    ),
-                ],
-            ],
         ];
     }
 

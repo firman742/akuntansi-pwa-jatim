@@ -64,6 +64,11 @@ class ChartOfAccount extends Model
         return $this->belongsTo(ChartOfAccount::class, 'parent_id');
     }
 
+    public function children(): HasMany
+    {
+        return $this->hasMany(ChartOfAccount::class, 'parent_id');
+    }
+
     public function opening_balances(): HasMany
     {
         return $this->hasMany(OpeningBalance::class, 'chart_of_account_id');

@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Period extends Model
 {
@@ -45,5 +46,23 @@ class Period extends Model
     public function opening_balances(): HasMany
     {
         return $this->hasMany(OpeningBalance::class, 'period_id');
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'period_id');
+    }
+
+    public function journals(): HasMany
+    {
+        return $this->hasMany(Journal::class, 'period_id');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query
+            ->where('is_closed', false)
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now());
     }
 }
