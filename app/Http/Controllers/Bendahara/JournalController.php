@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Bendahara;
 
+use Carbon\Carbon;
 use App\Models\Period;
 use App\Models\Journal;
 use Illuminate\Http\Request;
@@ -12,37 +13,35 @@ use Illuminate\Support\Facades\Auth;
 
 class JournalController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $periodId = $request->get('period_id');
+        $month    = $request->get('month'); // YYYY-MM
 
         $periods = Period::orderBy('start_date', 'desc')->get();
 
-        $period = $periodId ? Period::findOrFail($periodId) : Period::active()->firstOrFail();
+        $period = $periodId
+            ? Period::findOrFail($periodId)
+            : Period::active()->firstOrFail();
 
-        $journals = Journal::with('transaction')
+        $journals = Journal::with(['details.coa.accountType', 'postedBy'])
             ->where('period_id', $period->id)
+            ->when($month, function ($q) use ($month) {
+                $startDate = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+                $endDate   = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+                $q->whereBetween('journal_date', [$startDate, $endDate]);
+            })
             ->orderBy('journal_date')
-            ->get()
-            ->map(fn($j) => [
-                'id'            => $j->id,
-                'journal_date'  => $j->journal_date->toDateString(),
-                'journal_number' => $j->journal_number,
-                'description'   => $j->description,
-                'total_debit'   => $j->total_debit,
-                'total_credit'  => $j->total_credit,
-                'detail_url'    => route('bendahara.journals.show', $j),
-            ]);
+            ->orderBy('id')
+            ->get();
 
-
-        return view('pages.menus.bendahara.journals.index', compact([
-                'journals',
-                'periods',
-                'periodId'
-            ]));
+        return view('pages.menus.bendahara.journals.index', compact(
+            'journals',
+            'periods',
+            'periodId',
+            'month'
+        ));
     }
 
     /**
@@ -56,27 +55,25 @@ class JournalController extends Controller
         return view('pages.menus.bendahara.journals.show', compact('journal'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(OpeningBalance $openingBalance)
+    public function export(Request $request, string $type)
     {
-        //
-    }
+        $periodId = $request->period_id;
+        $month    = $request->month;
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, OpeningBalance $openingBalance)
-    {
-        //
-    }
+        $journals = Journal::with(['details.coa.accountType'])
+            ->where('period_id', $periodId)
+            ->when($month, function ($q) use ($month) {
+                [$year, $m] = explode('-', $month);
+                $q->whereYear('journal_date', $year)
+                  ->whereMonth('journal_date', $m);
+            })
+            ->orderBy('journal_date')
+            ->get();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(OpeningBalance $openingBalance)
-    {
-        //
+        return match ($type) {
+            'excel' => app(JournalExcelExport::class)->download($journals),
+            'pdf'   => app(JournalPdfExport::class)->download($journals),
+            default => abort(404),
+        };
     }
 }

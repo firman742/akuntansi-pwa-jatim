@@ -23,7 +23,10 @@ class IncomeController extends Controller
      */
     public function index()
     {
-        $incomes = Transaction::with('transactionLines', 'creator')->where('transaction_type', TransactionType::INCOME->value)->get();
+        $incomes = Transaction::with('transactionLines', 'creator')
+            ->where('transaction_type', TransactionType::INCOME->value)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('pages.menus.user.incomes.index', compact('incomes'));
     }
@@ -33,29 +36,50 @@ class IncomeController extends Controller
      */
     public function create()
     {
+        $userId = Auth::id();
         // Ambil ID Account Type
         $assetTypeId = AccountType::where('name', 'ASET')->value('id');
         $incomeTypeId = AccountType::where('name', 'PENDAPATAN')->value('id');
 
-        // ==============================
-        // AKUN KAS / BANK (ASET - DEBIT)
-        // ==============================
+        /*
+        |--------------------------------------------------------------------------
+        | AKUN KAS / BANK (ASET - DEBIT)
+        |--------------------------------------------------------------------------
+        | - ASET
+        | - Normal balance DEBIT
+        | - Leaf account
+        | - Aktif
+        | - TERDAFTAR di user_accounts
+        */
         $cashCoas = ChartOfAccount::query()
             ->where('account_type_id', $assetTypeId)
-            ->where('normal_balance', 'debit')
+            ->where('normal_balance', 'DEBIT')
             ->where('is_active', true)
-            ->whereDoesntHave('children') // hanya leaf
+            ->whereDoesntHave('children')
+            ->whereHas('userAccounts', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
             ->orderBy('code')
             ->get();
 
-        // ==============================
-        // AKUN PENDAPATAN (CREDIT)
-        // ==============================
+        /*
+        |--------------------------------------------------------------------------
+        | AKUN PENDAPATAN (CREDIT)
+        |--------------------------------------------------------------------------
+        | - PENDAPATAN
+        | - Normal balance CREDIT
+        | - Leaf account
+        | - Aktif
+        | - TERDAFTAR di user_accounts
+        */
         $incomeCoas = ChartOfAccount::query()
             ->where('account_type_id', $incomeTypeId)
-            ->where('normal_balance', 'credit')
+            ->where('normal_balance', 'CREDIT')
             ->where('is_active', true)
             ->whereDoesntHave('children')
+            ->whereHas('userAccounts', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
             ->orderBy('code')
             ->get();
 
@@ -161,7 +185,7 @@ class IncomeController extends Controller
     {
         $transaction = Transaction::where('transaction_type', TransactionType::INCOME->value)
             ->findOrFail($id);
-            
+
         $transaction->load([
             'creator:id,name',
             'period:id,name,start_date,end_date',

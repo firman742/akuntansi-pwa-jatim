@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\AccountingUsers;
 
+use App\Models\Period;
 use App\Models\Journal;
 use App\Models\AccountType;
 use App\Models\Transaction;
@@ -9,10 +10,11 @@ use Illuminate\Http\Request;
 use App\Models\JournalDetail;
 use App\Enums\TransactionType;
 use App\Models\ChartOfAccount;
+use App\Models\OpeningBalance;
 use App\Models\TransactionLine;
+use App\Helpers\CashBalanceHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Period;
 use Illuminate\Support\Facades\Auth;
 
 class ExpenseController extends Controller
@@ -22,7 +24,10 @@ class ExpenseController extends Controller
      */
     public function index()
     {
-        $expenses = Transaction::with('transactionLines', 'creator')->where('transaction_type', TransactionType::EXPENSE->value)->get();
+        $expenses = Transaction::with(['transactionLines', 'creator'])
+            ->where('transaction_type', TransactionType::EXPENSE->value)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('pages.menus.user.expenses.index', compact('expenses'));
     }
@@ -32,35 +37,53 @@ class ExpenseController extends Controller
      */
     public function create()
     {
+        $userId = Auth::id();
         // Ambil ID Account Type
         $assetTypeId = AccountType::where('name', 'ASET')->value('id');
-        $incomeTypeId = AccountType::where('name', 'PENDAPATAN')->value('id');
+        $expenseTypeId = AccountType::where('name', 'BEBAN')->value('id');
 
         // ==============================
-        // AKUN KAS / BANK (ASET - DEBIT)
+        // KAS / BANK (ASET - CREDIT)
         // ==============================
         $cashCoas = ChartOfAccount::query()
             ->where('account_type_id', $assetTypeId)
             ->where('normal_balance', 'debit')
             ->where('is_active', true)
-            ->whereDoesntHave('children') // hanya leaf
+            ->whereDoesntHave('children')
+            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
             ->orderBy('code')
             ->get();
 
         // ==============================
-        // AKUN PENDAPATAN (CREDIT)
+        // BEBAN (DEBIT)
         // ==============================
-        $incomeCoas = ChartOfAccount::query()
-            ->where('account_type_id', $incomeTypeId)
-            ->where('normal_balance', 'credit')
+        $expenseCoas = ChartOfAccount::query()
+            ->where('account_type_id', $expenseTypeId)
+            ->where('normal_balance', 'debit')
             ->where('is_active', true)
             ->whereDoesntHave('children')
+            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
             ->orderBy('code')
             ->get();
+
+
+            $period = Period::active()->first();
+
+            $cashBalances = collect();
+            
+            if ($period) {
+                foreach ($cashCoas as $coa) {
+                    $cashBalances[$coa->id] = CashBalanceHelper::getBalance(
+                        $coa->id,
+                        $period->id
+                    );
+                }
+            }
 
         return view('pages.menus.user.incomes.create', compact(
             'cashCoas',
-            'incomeCoas'
+            'expenseCoas',
+            'cashBalances'
         ));
     }
 
@@ -77,66 +100,83 @@ class ExpenseController extends Controller
             ]);
         }
 
-
         $request->validate([
             'transaction_date' => 'required|date',
             'cash_coa_id' => 'required|exists:chart_of_accounts,id',
-            'income_lines.*.coa_id' => 'required|exists:chart_of_accounts,id',
-            'income_lines.*.amount' => 'required|numeric|min:1',
+            'expense_lines.*.coa_id' => 'required|exists:chart_of_accounts,id',
+            'expense_lines.*.amount' => 'required|numeric|min:1',
         ]);
 
-        DB::transaction(function () use ($request, $period) {
 
-            // 1️⃣ Hitung total
-            $total = collect($request->income_lines)->sum('amount');
+        $totalExpense = collect($request->expense_lines)->sum('amount');
 
-            // 2️⃣ TRANSACTION HEADER
+
+        $currentBalance = CashBalanceHelper::getBalance(
+            $request->cash_coa_id,
+            $period->id
+        );
+
+        if ($currentBalance <= 0) {
+            return back()->withErrors([
+                'cash_coa_id' => 'Saldo kas saat ini sudah habis.',
+            ])->withInput();
+        }
+
+        if ($totalExpense > $currentBalance) {
+            return back()->withErrors([
+                'cash_coa_id' => 'Saldo kas tidak mencukupi. Sisa saldo: Rp ' .
+                    number_format($currentBalance, 0, ',', '.'),
+            ])->withInput();
+        }
+
+        DB::transaction(function () use ($request, $period, $totalExpense) {
+
+            // ================= TRANSACTION HEADER =================
             $transaction = Transaction::create([
-                'transaction_number' => 'TRX-IN-' . now()->format('YmdHis'),
+                'transaction_number' => 'TRX-OUT-' . now()->format('YmdHis'),
                 'transaction_date' => $request->transaction_date,
-                'transaction_type' => TransactionType::INCOME,
+                'transaction_type' => TransactionType::EXPENSE,
                 'description' => $request->description,
-                'total_amount' => $total,
+                'total_amount' => $totalExpense,
                 'status' => 'POSTED',
-                'period_id' => $period->id, // asumsi helper activePeriod()->id
+                'period_id' => $period->id,
                 'created_by' => Auth::id(),
             ]);
 
-            // 3️⃣ LINE KAS (DEBIT)
-            TransactionLine::create([
-                'transaction_id' => $transaction->id,
-                'chart_of_account_id' => $request->cash_coa_id,
-                'debit_amount' => $total,
-                'credit_amount' => 0,
-                'line_type' => 'DEBIT',
-            ]);
-
-            // 4️⃣ LINE PENDAPATAN (CREDIT)
-            foreach ($request->income_lines as $line) {
+            // ================= BEBAN (DEBIT) =================
+            foreach ($request->expense_lines as $line) {
                 TransactionLine::create([
                     'transaction_id' => $transaction->id,
                     'chart_of_account_id' => $line['coa_id'],
-                    'debit_amount' => 0,
-                    'credit_amount' => $line['amount'],
+                    'debit_amount' => $line['amount'],
+                    'credit_amount' => 0,
                     'description' => $line['description'] ?? null,
-                    'line_type' => 'CREDIT',
+                    'line_type' => 'DEBIT',
                 ]);
             }
 
-            // 5️⃣ JOURNAL HEADER
+            // ================= KAS / BANK (CREDIT) =================
+            TransactionLine::create([
+                'transaction_id' => $transaction->id,
+                'chart_of_account_id' => $request->cash_coa_id,
+                'debit_amount' => 0,
+                'credit_amount' => $totalExpense,
+                'line_type' => 'CREDIT',
+            ]);
+
+            // ================= JOURNAL =================
             $journal = Journal::create([
                 'journal_number' => 'JR-' . now()->format('YmdHis'),
                 'journal_date' => $transaction->transaction_date,
                 'description' => $transaction->description,
-                'total_debit' => $total,
-                'total_credit' => $total,
+                'total_debit' => $totalExpense,
+                'total_credit' => $totalExpense,
                 'period_id' => $transaction->period_id,
                 'transaction_id' => $transaction->id,
                 'posted_by' => Auth::id(),
                 'posted_at' => now(),
             ]);
 
-            // 6️⃣ JOURNAL DETAIL (mirror lines)
             foreach ($transaction->transactionLines as $line) {
                 JournalDetail::create([
                     'journal_id' => $journal->id,
@@ -149,8 +189,8 @@ class ExpenseController extends Controller
         });
 
         return redirect()
-            ->route('user.incomes.index')
-            ->with('success', 'Transaksi penerimaan berhasil disimpan');
+            ->route('user.expenses.index')
+            ->with('success', 'Transaksi pengeluaran berhasil disimpan');
     }
 
     /**

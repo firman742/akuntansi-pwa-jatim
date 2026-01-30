@@ -1,94 +1,86 @@
-{{-- @extends('layouts.app')
-
-@section('content')
-    <x-common.page-breadcrumb pageTitle="Jurnal Umum" />
-
-    <div class="space-y-6">
-        <x-core.basic-tables.bendahara.opening-balance-table :openingBalances="$openingBalances" :periods="$periods" :periodId="$periodId" />
-    </div>
-@endsection --}}
-
-
 @extends('layouts.app')
 
 @section('content')
     <x-common.page-breadcrumb pageTitle="Jurnal Umum" />
 
-    <x-core.basic-tables.bendahara.journal-table :journals="$journals" :periods="$periods" :periodId="$periodId" />
+    <form method="GET"
+        class="flex flex-wrap items-end justify-between gap-4 mb-6
+           rounded-xl border border-gray-200 bg-white p-4">
 
-    {{-- <div x-data="journalTable()" class="space-y-6">
-        <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-500">
-                Periode: {{ $period->name }}
-            </span>
-        </div>
-
-        <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-                <thead class="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium">No Jurnal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium">Deskripsi</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium">Debit</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium">Kredit</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-                    @foreach ($journals as $journal)
-                        <tr>
-                            <td class="px-6 py-3" x-text="formatDate('{{ $journal->journal_date }}')">
-                            </td>
-
-                            <td class="px-6 py-3 font-medium">
-                                {{ $journal->journal_number }}
-                            </td>
-
-                            <td class="px-6 py-3">
-                                {{ $journal->description ?? '-' }}
-                            </td>
-
-                            <td class="px-6 py-3 text-right">
-                                <span class="font-medium">
-                                    Rp {{ number_format($journal->total_debit, 0, ',', '.') }}
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-3 text-right">
-                                <span class="font-medium">
-                                    Rp {{ number_format($journal->total_credit, 0, ',', '.') }}
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-3">
-                                <a href="{{ route('bendahara.journals.show', $journal) }}"
-                                    class="text-primary-600 hover:underline text-sm">
-                                    Detail
-                                </a>
-                            </td>
-                        </tr>
+        {{-- FILTER --}}
+        <div class="flex flex-wrap items-end gap-4">
+            {{-- Period --}}
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                    Periode
+                </label>
+                <select name="period_id"
+                    class="rounded-lg border border-gray-200
+                       px-3 py-2 text-sm
+                       focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    @foreach ($periods as $p)
+                        <option value="{{ $p->id }}" @selected($periodId == $p->id)>
+                            {{ $p->name }}
+                        </option>
                     @endforeach
-                </tbody>
-            </table>
+                </select>
+            </div>
+
+            {{-- Month --}}
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                    Bulan
+                </label>
+                <input type="month" name="month" value="{{ $month }}"
+                    class="rounded-lg border border-gray-200
+                       px-3 py-2 text-sm
+                       focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+            </div>
+
+            {{-- Submit --}}
+            <div class="flex gap-2">
+                <x-ui.button type="submit" variant="primary" size="sm">
+                    Tampilkan
+                </x-ui.button>
+
+                @if ($month)
+                    <a href="{{ route('bendahara.journals.index', ['period_id' => $periodId]) }}">
+                        <x-ui.button variant="outline" size="sm">
+                            Reset
+                        </x-ui.button>
+                    </a>
+                @endif
+            </div>
         </div>
 
-        {{ $journals->links() }}
-    </div>
+        {{-- EXPORT --}}
+        <div class="flex gap-2">
+            {{-- Excel --}}
+            <a
+                href="{{ route('bendahara.journals.export', [
+                    'type' => 'excel',
+                    'period_id' => $periodId,
+                    'month' => $month,
+                ]) }}">
+                <x-ui.button variant="success" size="sm">
+                    Export Excel
+                </x-ui.button>
+            </a>
 
-    <script>
-        function journalTable() {
-            return {
-                formatDate(date) {
-                    if (!date) return '-';
-                    return new Date(date).toLocaleDateString('id-ID', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric'
-                    });
-                }
-            }
-        }
-    </script> --}}
+            {{-- PDF --}}
+            <a
+                href="{{ route('bendahara.journals.export', [
+                    'type' => 'pdf',
+                    'period_id' => $periodId,
+                    'month' => $month,
+                ]) }}">
+                <x-ui.button variant="danger" size="sm">
+                    Export PDF
+                </x-ui.button>
+            </a>
+        </div>
+    </form>
+
+
+    <x-core.basic-tables.bendahara.journal-table :journals="$journals" :periods="$periods" :periodId="$periodId" :month="$month" />
 @endsection

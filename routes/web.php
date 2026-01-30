@@ -118,7 +118,14 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
     // journal routes
     Route::get('/jurnal-umum', [App\Http\Controllers\Bendahara\JournalController::class, 'index'])->name('bendahara.journals.index');
     Route::get('/jurnal-umum/{id}', [App\Http\Controllers\Bendahara\JournalController::class, 'show'])->name('bendahara.journals.show');
+    Route::get('/jurnal-umum/export/{type}', [App\Http\Controllers\Bendahara\JournalController::class, 'export'])->name('bendahara.journals.export');
 
+    // ledger routes
+    Route::get('/buku-besar', [App\Http\Controllers\Bendahara\LedgerController::class, 'index'])->name('bendahara.ledgers.index');
+    Route::get('/buku-besar/export', [App\Http\Controllers\Bendahara\LedgerController::class, 'export'])->name('bendahara.ledgers.export');
+
+    // trial balance routes
+    Route::get('/neraca-saldo', [App\Http\Controllers\Bendahara\TrialBalanceController::class, 'index'])->name('bendahara.trial-balance.index');
 });
 
 /*

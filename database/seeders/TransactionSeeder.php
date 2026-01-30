@@ -3,61 +3,82 @@
 namespace Database\Seeders;
 
 use App\Models\Journal;
+use App\Models\Period;
 use App\Models\Transaction;
-use App\Enums\TransactionType;
+use App\Models\OpeningBalance;
 use App\Models\ChartOfAccount;
-use App\Models\TransactionLine;
+use App\Enums\TransactionType;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Helpers\TransactionNumberHelper;
 
 class TransactionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         DB::transaction(function () {
 
-            // ===== Ambil COA Penting =====
-            $cash    = ChartOfAccount::where('code', 'like', '111%')->first(); // Kas
-            $income  = ChartOfAccount::where('code', 'like', '41%')->first();  // Pendapatan
-            $expense = ChartOfAccount::where('code', 'like', '51%')->first();  // Beban
+            $period = Period::active()->firstOrFail();
+            $periodCode = $period->start_date->format('Ym');
 
-            if (!$cash || !$income || !$expense) {
-                throw new \Exception('COA Kas / Pendapatan / Beban tidak ditemukan');
+            /*
+            |--------------------------------------------------------------------------
+            | Ambil COA utama
+            |--------------------------------------------------------------------------
+            */
+            $cashAccounts = ChartOfAccount::where('code', 'like', '111%')->get();
+            $income       = ChartOfAccount::where('code', 'like', '41%')->firstOrFail();
+            $expense      = ChartOfAccount::where('code', 'like', '51%')->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Pastikan Opening Balance ada
+            |--------------------------------------------------------------------------
+            */
+            foreach ($cashAccounts as $cash) {
+                OpeningBalance::firstOrCreate([
+                    'chart_of_account_id' => $cash->id,
+                    'period_id'           => $period->id,
+                ], [
+                    'balance_type' => 'DEBIT',
+                    'amount'       => fake()->numberBetween(5_000_000, 20_000_000),
+                    'created_by'   => 1,
+                ]);
             }
 
             /*
             |--------------------------------------------------------------------------
-            | INCOME
+            | TRANSAKSI PER AKUN KAS (≥10 INCOME & EXPENSE)
             |--------------------------------------------------------------------------
             */
-            Transaction::factory()
-                ->count(5)
-                ->state([
-                    'transaction_type' => TransactionType::INCOME,
-                    'description'      => 'Penerimaan kas',
-                    'status'           => 'POSTED',
-                ])
-                ->create()
-                ->each(function (Transaction $trx) use ($cash, $income) {
+            foreach ($cashAccounts as $cash) {
+
+                // =====================
+                // INCOME
+                // =====================
+                for ($i = 1; $i <= 10; $i++) {
 
                     $amount = fake()->numberBetween(500_000, 5_000_000);
 
-                    // === Transaction Lines ===
+                    $trx = Transaction::factory()->create([
+                        'transaction_type'   => TransactionType::INCOME,
+                        'description'        => 'Penerimaan kas',
+                        'transaction_number' => TransactionNumberHelper::generate(
+                            $cash->code,
+                            $periodCode
+                        ),
+                        'period_id'          => $period->id,
+                    ]);
+
                     $trx->transactionLines()->createMany([
                         [
                             'chart_of_account_id' => $cash->id,
-                            'description'         => 'Kas masuk',
                             'debit_amount'        => $amount,
                             'credit_amount'       => 0,
                             'line_type'           => 'DEBIT',
                         ],
                         [
                             'chart_of_account_id' => $income->id,
-                            'description'         => 'Pendapatan',
                             'debit_amount'        => 0,
                             'credit_amount'       => $amount,
                             'line_type'           => 'CREDIT',
@@ -66,65 +87,58 @@ class TransactionSeeder extends Seeder
 
                     $trx->update(['total_amount' => $amount]);
 
-                    // === Journal ===
                     $journal = Journal::create([
-                        'journal_number' => 'JR-' . now()->format('Ymd') . '-' . strtoupper(fake()->bothify('###')),
+                        'journal_number' => 'JR-' . $trx->transaction_number,
                         'journal_date'   => $trx->transaction_date,
                         'description'    => $trx->description,
                         'total_debit'    => $amount,
                         'total_credit'   => $amount,
                         'posted_by'      => $trx->created_by,
                         'posted_at'      => now(),
-                        'period_id'      => $trx->period_id,
+                        'period_id'      => $period->id,
                         'transaction_id'=> $trx->id,
                     ]);
 
-                    // === Journal Details ===
                     $journal->details()->createMany([
                         [
-                            'coa_id'      => $cash->id,
-                            'debit'       => $amount,
-                            'credit'      => 0,
-                            'description' => 'Kas masuk',
+                            'coa_id' => $cash->id,
+                            'debit'  => $amount,
+                            'credit' => 0,
                         ],
                         [
-                            'coa_id'      => $income->id,
-                            'debit'       => 0,
-                            'credit'      => $amount,
-                            'description' => 'Pendapatan',
+                            'coa_id' => $income->id,
+                            'debit'  => 0,
+                            'credit' => $amount,
                         ],
                     ]);
-                });
+                }
 
-            /*
-            |--------------------------------------------------------------------------
-            | EXPENSE
-            |--------------------------------------------------------------------------
-            */
-            Transaction::factory()
-                ->count(5)
-                ->state([
-                    'transaction_type' => TransactionType::EXPENSE,
-                    'description'      => 'Pengeluaran kas',
-                    'status'           => 'POSTED',
-                ])
-                ->create()
-                ->each(function (Transaction $trx) use ($cash, $expense) {
+                // =====================
+                // EXPENSE
+                // =====================
+                for ($i = 1; $i <= 10; $i++) {
 
                     $amount = fake()->numberBetween(200_000, 3_000_000);
 
-                    // === Transaction Lines ===
+                    $trx = Transaction::factory()->create([
+                        'transaction_type'   => TransactionType::EXPENSE,
+                        'description'        => 'Pengeluaran kas',
+                        'transaction_number' => TransactionNumberHelper::generate(
+                            $cash->code,
+                            $periodCode
+                        ),
+                        'period_id'          => $period->id,
+                    ]);
+
                     $trx->transactionLines()->createMany([
                         [
                             'chart_of_account_id' => $expense->id,
-                            'description'         => 'Beban operasional',
                             'debit_amount'        => $amount,
                             'credit_amount'       => 0,
                             'line_type'           => 'DEBIT',
                         ],
                         [
                             'chart_of_account_id' => $cash->id,
-                            'description'         => 'Kas keluar',
                             'debit_amount'        => 0,
                             'credit_amount'       => $amount,
                             'line_type'           => 'CREDIT',
@@ -133,35 +147,32 @@ class TransactionSeeder extends Seeder
 
                     $trx->update(['total_amount' => $amount]);
 
-                    // === Journal ===
                     $journal = Journal::create([
-                        'journal_number' => 'JR-' . now()->format('Ymd') . '-' . strtoupper(fake()->bothify('###')),
+                        'journal_number' => 'JR-' . $trx->transaction_number,
                         'journal_date'   => $trx->transaction_date,
                         'description'    => $trx->description,
                         'total_debit'    => $amount,
                         'total_credit'   => $amount,
                         'posted_by'      => $trx->created_by,
                         'posted_at'      => now(),
-                        'period_id'      => $trx->period_id,
+                        'period_id'      => $period->id,
                         'transaction_id'=> $trx->id,
                     ]);
 
-                    // === Journal Details ===
                     $journal->details()->createMany([
                         [
-                            'coa_id'      => $expense->id,
-                            'debit'       => $amount,
-                            'credit'      => 0,
-                            'description' => 'Beban operasional',
+                            'coa_id' => $expense->id,
+                            'debit'  => $amount,
+                            'credit' => 0,
                         ],
                         [
-                            'coa_id'      => $cash->id,
-                            'debit'       => 0,
-                            'credit'      => $amount,
-                            'description' => 'Kas keluar',
+                            'coa_id' => $cash->id,
+                            'debit'  => 0,
+                            'credit' => $amount,
                         ],
                     ]);
-                });
+                }
+            }
         });
     }
 }
