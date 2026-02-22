@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\AccountingUsers;
 
+use App\Enums\OpeningBalanceTypeEnum;
 use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
@@ -161,7 +162,7 @@ class IncomeController extends Controller
             'chart_of_account_id'  => $request->cash_coa_id,
             'debit_amount'         => $totalIncome,
             'credit_amount'        => 0,
-            'line_type'            => 'DEBIT',
+            'line_type'            => OpeningBalanceTypeEnum::DEBIT->value,
         ]);
 
         // ================= PENDAPATAN (CREDIT) =================
@@ -172,7 +173,7 @@ class IncomeController extends Controller
                 'debit_amount'        => 0,
                 'credit_amount'       => $line['amount'],
                 'description'         => $line['description'] ?? null,
-                'line_type'           => 'CREDIT',
+                'line_type'           => OpeningBalanceTypeEnum::CREDIT->value,
             ]);
         }
 

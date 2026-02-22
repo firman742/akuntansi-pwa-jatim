@@ -2,15 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Enums\OpeningBalanceTypeEnum;
+use App\Enums\TransactionType;
+use App\Helpers\TransactionNumberHelper;
+use App\Models\ChartOfAccount;
 use App\Models\Journal;
+use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\Transaction;
-use App\Models\OpeningBalance;
-use App\Models\ChartOfAccount;
-use App\Enums\TransactionType;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Helpers\TransactionNumberHelper;
 
 class TransactionSeeder extends Seeder
 {
@@ -75,13 +76,13 @@ class TransactionSeeder extends Seeder
                             'chart_of_account_id' => $cash->id,
                             'debit_amount'        => $amount,
                             'credit_amount'       => 0,
-                            'line_type'           => 'DEBIT',
+                            'line_type'           => OpeningBalanceTypeEnum::DEBIT->value,
                         ],
                         [
                             'chart_of_account_id' => $income->id,
                             'debit_amount'        => 0,
                             'credit_amount'       => $amount,
-                            'line_type'           => 'CREDIT',
+                            'line_type'           => OpeningBalanceTypeEnum::CREDIT->value,
                         ],
                     ]);
 
@@ -135,13 +136,13 @@ class TransactionSeeder extends Seeder
                             'chart_of_account_id' => $expense->id,
                             'debit_amount'        => $amount,
                             'credit_amount'       => 0,
-                            'line_type'           => 'DEBIT',
+                            'line_type'           => OpeningBalanceTypeEnum::DEBIT->value,
                         ],
                         [
                             'chart_of_account_id' => $cash->id,
                             'debit_amount'        => 0,
                             'credit_amount'       => $amount,
-                            'line_type'           => 'CREDIT',
+                            'line_type'           => OpeningBalanceTypeEnum::CREDIT->value,
                         ],
                     ]);
 

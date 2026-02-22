@@ -20,7 +20,7 @@ class TransactionLineFactory extends Factory
             'description'         => $this->faker->sentence(3),
             'debit_amount'        => 0,
             'credit_amount'       => 0,
-            'line_type'           => 'NORMAL',
+            'line_type'           => $this->faker->randomElement(['DEBIT', 'CREDIT']),
         ];
     }
 }

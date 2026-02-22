@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Bendahara;
 
+use App\Enums\OpeningBalanceTypeEnum;
 use Carbon\Carbon;
 use App\Models\Period;
 use App\Models\Journal;
@@ -60,8 +61,9 @@ class LedgerController extends Controller
                 ->where('period_id', $period->id)
                 ->first();
 
+
             if ($opening) {
-                $openingBalance = $opening->balance_type === 'DEBIT'
+                $openingBalance = $opening->balance_type === OpeningBalanceTypeEnum::DEBIT->value
                     ? $opening->amount
                     : -1 * $opening->amount;
             }
@@ -118,24 +120,35 @@ class LedgerController extends Controller
             | 4️⃣ RUNNING BALANCE
             |--------------------------------------------------------------------------
             */
+            $ledger = [];
             $runningBalance = $openingBalance;
 
             foreach ($transactions as $trx) {
-
-                if ($coa->normal_balance === 'DEBIT') {
-                    $runningBalance += $trx->debit - $trx->credit;
+                // 1. Hitung Saldo Berjalan
+                // Jika akun DEBIT (Kas): Saldo + Debit - Kredit
+                // Jika akun KREDIT (Hutang): Saldo + Kredit - Debit
+                if ($coa->normal_balance === OpeningBalanceTypeEnum::DEBIT->value) {
+                    $runningBalance += ($trx->debit - $trx->credit);
                 } else {
-                    $runningBalance += $trx->credit - $trx->debit;
+                    $runningBalance += ($trx->credit - $trx->debit);
                 }
 
+                // 2. Ambil Akun Lawan untuk kolom REF
+                // Mencari detail lain di jurnal yang sama yang COA-nya bukan akun ini
+                $opposingTrx = \App\Models\JournalDetail::where('journal_id', $trx->journal_id)
+                    ->where('coa_id', '!=', $coaId)
+                    ->with('coa')
+                    ->first();
+
                 $ledger[] = [
-                    'date'        => $trx->journal->journal_date,
-                    'description' => $trx->description ?? '-',
-                    'ref'         => $trx->coa->code ?? '-',
-                    'debit'       => $trx->debit,
-                    'credit'      => $trx->credit,
-                    'balance'     => $runningBalance,
-                    'is_credit'   => $trx->credit > 0,
+                    'date'           => $trx->journal->journal_date,
+                    'description'    => $trx->description ?? $trx->journal->description,
+                    'ref_code'       => $opposingTrx?->coa?->code ?? '-',
+                    'ref_name'       => $opposingTrx?->coa?->name ?? '-',
+                    'debit'          => $trx->debit,
+                    'credit'         => $trx->credit,
+                    'current_balance' => $runningBalance, // Ini nilai saldo setelah transaksi ini
+                    'normal_balance' => $coa->normal_balance
                 ];
             }
 
@@ -145,6 +158,7 @@ class LedgerController extends Controller
         return view('pages.menus.bendahara.ledgers.index', compact(
             'periods',
             'periodId',
+            'period',
             'coas',
             'coa',
             'ledger',
@@ -153,7 +167,7 @@ class LedgerController extends Controller
             'month'
         ));
     }
-    
+
     public function export(Request $request, string $type)
     {
         $periodId = $request->period_id;

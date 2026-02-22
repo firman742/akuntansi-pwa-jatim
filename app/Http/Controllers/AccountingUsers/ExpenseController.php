@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers\AccountingUsers;
 
-use App\Models\Period;
-use App\Models\Journal;
-use App\Models\AccountType;
-use App\Models\Transaction;
-use Illuminate\Http\Request;
-use App\Models\JournalDetail;
+use App\Enums\OpeningBalanceTypeEnum;
 use App\Enums\TransactionType;
-use App\Models\ChartOfAccount;
-use App\Models\OpeningBalance;
-use App\Models\TransactionLine;
 use App\Helpers\CashBalanceHelper;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\AccountType;
+use App\Models\ChartOfAccount;
+use App\Models\Journal;
+use App\Models\JournalDetail;
+use App\Models\OpeningBalance;
+use App\Models\Period;
+use App\Models\Transaction;
+use App\Models\TransactionLine;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseController extends Controller
 {
@@ -151,7 +152,7 @@ class ExpenseController extends Controller
                     'debit_amount' => $line['amount'],
                     'credit_amount' => 0,
                     'description' => $line['description'] ?? null,
-                    'line_type' => 'DEBIT',
+                    'line_type' => OpeningBalanceTypeEnum::DEBIT->value,
                 ]);
             }
 
@@ -161,7 +162,7 @@ class ExpenseController extends Controller
                 'chart_of_account_id' => $request->cash_coa_id,
                 'debit_amount' => 0,
                 'credit_amount' => $totalExpense,
-                'line_type' => 'CREDIT',
+                'line_type' => OpeningBalanceTypeEnum::CREDIT->value,
             ]);
 
             // ================= JOURNAL =================

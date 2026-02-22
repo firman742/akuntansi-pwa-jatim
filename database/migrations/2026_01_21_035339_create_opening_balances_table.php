@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\OpeningBalanceTypeEnum;
+use App\Models\OpeningBalance;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,7 +18,7 @@ return new class extends Migration
             $table->uuid('chart_of_account_id');
             $table->uuid('period_id');
             $table->uuid('created_by')->nullable();
-            $table->enum('balance_type', ['debit', 'credit']);
+            $table->enum('balance_type', OpeningBalanceTypeEnum::values());
             $table->decimal('amount', 15, 2);
 
             $table->foreign('chart_of_account_id')
