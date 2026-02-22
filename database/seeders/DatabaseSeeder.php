@@ -19,8 +19,8 @@ class DatabaseSeeder extends Seeder
             PeriodSeeder::class,
             AccountTypeSeeder::class,
             ChartOfAccountSeeder::class,
-            OpeningBalanceSeeder::class,
-            TransactionSeeder::class,
+            // OpeningBalanceSeeder::class,
+            // TransactionSeeder::class,
         ]);
     }
 }

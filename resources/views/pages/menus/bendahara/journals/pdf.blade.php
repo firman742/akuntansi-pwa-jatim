@@ -88,74 +88,55 @@
             </tr>
         </thead>
         <tbody>
-
-            @foreach ($journals as $journalIndex => $journal)
-                @foreach ($journal->details as $detail)
-                    @php
-                        $isKas = $detail->coa?->accountType->name === 'ASET';
-                        $isCreditRow = $detail->credit > 0;
-                    @endphp
-
-                    {{-- SUBTOTAL --}}
-                    @if ($isKas && $currentKasId && $currentKasId !== $detail->coa_id)
-                        <tr class="subtotal">
-                            <td colspan="5" class="right">TOTAL {{ $currentKasName }}</td>
-                            <td class="right">{{ number_format($totalDebit, 0, ',', '.') }}</td>
-                            <td class="right">{{ number_format($totalCredit, 0, ',', '.') }}</td>
-                        </tr>
-                        @php
-                            $totalDebit = 0;
-                            $totalCredit = 0;
-                        @endphp
-                    @endif
-
-                    {{-- HEADER KAS --}}
-                    @if ($isKas && $currentKasId !== $detail->coa_id)
-                        <tr class="kas-header">
-                            <td colspan="7">{{ $detail->coa->name }} ({{ $detail->coa->code }})</td>
-                        </tr>
-                        @php
-                            $currentKasId = $detail->coa_id;
-                            $currentKasName = $detail->coa->name;
-                        @endphp
-                    @endif
-
-                    <tr>
-                        <td class="center">{{ !$isCreditRow ? $journalIndex + 1 : '' }}</td>
-                        <td class="center">{{ \Carbon\Carbon::parse($journal->journal_date)->format('d-m-Y') }}</td>
-                        <td style="padding-left: {{ $isCreditRow ? '30px' : '6px' }};">
-                            {{ $detail->coa?->name }}
-                        </td>
-                        <td>{{ $detail->description ?? '-' }}</td>
-                        <td class="center">{{ $detail->coa?->code }}</td>
-                        <td class="right">
-                            @if ($detail->debit > 0)
-                                {{ number_format($detail->debit, 0, ',', '.') }}
-                                @php $totalDebit += $detail->debit; @endphp
-                            @endif
-                        </td>
-                        <td class="right">
-                            @if ($detail->credit > 0)
-                                {{ number_format($detail->credit, 0, ',', '.') }}
-                                @php $totalCredit += $detail->credit; @endphp
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            @endforeach
-
-            {{-- TOTAL TERAKHIR --}}
-            @if ($currentKasId)
-                <tr class="subtotal">
-                    <td colspan="5" class="right">TOTAL {{ $currentKasName }}</td>
-                    <td class="right">{{ number_format($totalDebit, 0, ',', '.') }}</td>
-                    <td class="right">{{ number_format($totalCredit, 0, ',', '.') }}</td>
+            @foreach ($journals as $group)
+                {{-- $journals di sini adalah $groupedJournals dari controller --}}
+                {{-- HEADER KAS --}}
+                <tr class="kas-header">
+                    <td colspan="7">{{ $group['account_info'] }}</td>
                 </tr>
-            @endif
 
+                @php
+                    $subTotalDebit = 0;
+                    $subTotalCredit = 0;
+                    $no = 1;
+                @endphp
+
+                @foreach ($group['data'] as $journal)
+                    @foreach ($journal->details as $detail)
+                        @php $isCreditRow = $detail->credit > 0; @endphp
+                        <tr>
+                            <td class="center">{{ !$isCreditRow ? $no++ : '' }}</td>
+                            <td class="center">{{ $journal->journal_date->format('d-m-Y') }}</td>
+                            <td
+                                style="padding-left: {{ $isCreditRow ? '30px' : '6px' }}; {{ $isCreditRow ? 'font-style: italic;' : '' }}">
+                                {{ $detail->coa?->name }}
+                            </td>
+                            <td>{{ $detail->description ?? $journal->description }}</td>
+                            <td class="center">{{ $detail->coa?->code }}</td>
+                            <td class="right">
+                                @if ($detail->debit > 0)
+                                    {{ number_format($detail->debit, 0, ',', '.') }}
+                                    @php $subTotalDebit += $detail->debit @endphp
+                                @endif
+                            </td>
+                            <td class="right">
+                                @if ($detail->credit > 0)
+                                    {{ number_format($detail->credit, 0, ',', '.') }}
+                                    @php $subTotalCredit += $detail->credit @endphp
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                @endforeach
+
+                {{-- SUBTOTAL PER KAS --}}
+                <tr class="subtotal">
+                    <td colspan="5" class="right">TOTAL {{ $group['account_info'] }}</td>
+                    <td class="right">{{ number_format($subTotalDebit, 0, ',', '.') }}</td>
+                    <td class="right">{{ number_format($subTotalCredit, 0, ',', '.') }}</td>
+                </tr>
+            @endforeach
         </tbody>
     </table>
-
 </body>
-
 </html>

@@ -82,5 +82,5 @@
     </form>
 
 
-    <x-core.basic-tables.bendahara.journal-table :journals="$journals" :periods="$periods" :periodId="$periodId" :month="$month" />
+    <x-core.basic-tables.bendahara.journal-table :groupedJournals="$groupedJournals" :periods="$periods" :periodId="$periodId" :month="$month" />
 @endsection

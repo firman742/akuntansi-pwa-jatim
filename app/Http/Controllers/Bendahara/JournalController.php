@@ -28,19 +28,41 @@ class JournalController extends Controller
             ->when($month, function ($q) use ($month) {
                 $startDate = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
                 $endDate   = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
-
                 $q->whereBetween('journal_date', [$startDate, $endDate]);
             })
             ->orderBy('journal_date')
-            ->orderBy('id')
             ->get();
 
-        return view('pages.menus.bendahara.journals.index', compact(
-            'journals',
-            'periods',
-            'periodId',
-            'month'
-        ));
+        // --- PROSES GROUPING ---
+        // Kita kelompokkan berdasarkan COA ID yang bertipe 'ASET' (Kas)
+        $groupedJournals = [];
+
+        foreach ($journals as $journal) {
+            // Cari detail yang merupakan akun Kas/Aset dalam jurnal ini
+            $kasDetail = $journal->details->first(function ($detail) {
+                return $detail->coa?->accountType?->name === 'ASET';
+            });
+
+            if ($kasDetail) {
+                $coaId = $kasDetail->coa_id;
+                $coaName = $kasDetail->coa->name . ' (' . $kasDetail->coa->code . ')';
+
+                if (!isset($groupedJournals[$coaId])) {
+                    $groupedJournals[$coaId] = [
+                        'account_info' => $coaName,
+                        'data' => []
+                    ];
+                }
+                $groupedJournals[$coaId]['data'][] = $journal;
+            }
+        }
+
+        return view('pages.menus.bendahara.journals.index', [
+            'groupedJournals' => $groupedJournals,
+            'periods' => $periods,
+            'periodId' => $periodId,
+            'month' => $month
+        ]);
     }
 
     /**
@@ -80,6 +102,9 @@ class JournalController extends Controller
             ->orderBy('journal_date')
             ->get();
 
+            // TERAPKAN GROUPING DISINI
+        $groupedJournals = $this->groupJournals($journals);
+
         // =====================
         // METADATA EXPORT
         // =====================
@@ -89,8 +114,8 @@ class JournalController extends Controller
             'period_name' => $period?->name,
             'month_label' => ($startMonth && $endMonth)
                 ? Carbon::parse($startMonth)->translatedFormat('F Y')
-                    . ' - ' .
-                  Carbon::parse($endMonth)->translatedFormat('F Y')
+                . ' - ' .
+                Carbon::parse($endMonth)->translatedFormat('F Y')
                 : null,
             'year' => ($startMonth)
                 ? Carbon::parse($startMonth)->year
@@ -99,8 +124,32 @@ class JournalController extends Controller
         ];
 
         return match ($type) {
-            'pdf' => app(JournalPdfExport::class)->download($journals, $meta),
+            // Kirim $groupedJournals, bukan $journals mentah
+            'pdf' => app(JournalPdfExport::class)->download($groupedJournals, $meta),
             default => abort(404),
         };
+    }
+
+
+    private function groupJournals($journals)
+    {
+        $grouped = [];
+        foreach ($journals as $journal) {
+            $kasDetail = $journal->details->first(fn($d) => $d->coa?->accountType?->name === 'ASET');
+
+            if ($kasDetail) {
+                $coaId = $kasDetail->coa_id;
+                $coaName = $kasDetail->coa->name . ' (' . $kasDetail->coa->code . ')';
+
+                if (!isset($grouped[$coaId])) {
+                    $grouped[$coaId] = [
+                        'account_info' => $coaName,
+                        'data' => []
+                    ];
+                }
+                $grouped[$coaId]['data'][] = $journal;
+            }
+        }
+        return $grouped;
     }
 }

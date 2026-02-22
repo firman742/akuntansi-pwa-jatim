@@ -1,4 +1,4 @@
-@props(['journals'])
+@props(['groupedJournals'])
 
 @php
     $currentKasId = null;
@@ -30,118 +30,78 @@
             </thead>
 
             {{-- TABLE BODY --}}
+            {{-- TABLE BODY --}}
             <tbody>
-                @foreach ($journals as $journalIndex => $journal)
-                    @foreach ($journal->details as $detail)
-                        @php
-                            $isKas = $detail->coa?->accountType->name === 'ASET';
-                            $isCreditRow = $detail->credit > 0;
-                        @endphp
-
-                        {{-- SUBTOTAL SEBELUM PINDAH KAS --}}
-                        @if ($isKas && $currentKasId && $currentKasId !== $detail->coa_id)
-                            <tr class="bg-gray-50 font-semibold border-t dark:bg-gray-700 dark:text-gray-200">
-                                <td colspan="5" class="px-6 py-3 text-end text-sm">
-                                    TOTAL {{ $currentKasName }}
-                                </td>
-                                <td class="px-6 py-3 text-end text-sm">
-                                    Rp{{ number_format($totalDebit, 0, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-3 text-end text-sm">
-                                    Rp{{ number_format($totalCredit, 0, ',', '.') }}
-                                </td>
-                            </tr>
-
-                            @php
-                                $totalDebit = 0;
-                                $totalCredit = 0;
-                            @endphp
-                        @endif
-
-                        {{-- HEADER KAS --}}
-                        @if ($isKas && $currentKasId !== $detail->coa_id)
-                            <tr class="bg-gray-100 font-bold dark:bg-gray-800">
-                                <td colspan="7" class="px-6 py-3 text-center text-gray-700 dark:text-gray-300">
-                                    {{ $detail->coa->name }} ({{ $detail->coa->code }})
-                                </td>
-                            </tr>
-
-                            @php
-                                $currentKasId = $detail->coa_id;
-                                $currentKasName = $detail->coa->name;
-                            @endphp
-                        @endif
-
-                        {{-- BARIS TRANSAKSI --}}
-                        <tr
-                            class="{{ $isCreditRow
-                                ? 'border-b-2 border-gray-500 bg-gray-100 dark:bg-gray-800 dark:border-white/20'
-                                : 'border-b border-gray-100 dark:border-white/[0.05]' }}
-                        ">
-
-                            {{-- NO --}}
-                            <td class="px-6 py-3 text-sm text-gray-700 dark:text-gray-400">
-                                @if (!$isCreditRow)
-                                    {{ $journalIndex + 1 }}
-                                @endif
-                            </td>
-
-                            {{-- TANGGAL --}}
-                            <td class="px-6 py-3 text-sm text-gray-700 dark:text-gray-400">
-                                {{ \Carbon\Carbon::parse($journal->journal_date)->translatedFormat('d M Y') }}
-                            </td>
-
-                            {{-- NAMA REKENING --}}
-                            <td
-                                class="px-6 py-3 text-sm text-gray-700 dark:text-gray-400
-                                       {{ $isCreditRow ? 'pl-16 font-medium' : 'pl-6' }}">
-                                {{ $detail->coa?->name }}
-                            </td>
-
-                            {{-- KETERANGAN --}}
-                            <td class="px-6 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $detail->description ?? '-' }}
-                            </td>
-
-                            {{-- REF --}}
-                            <td class="px-6 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $detail->coa?->code }}
-                            </td>
-
-                            {{-- DEBIT --}}
-                            <td class="px-6 py-3 text-sm text-end text-gray-700 dark:text-gray-400">
-                                @if ($detail->debit > 0)
-                                    Rp{{ number_format($detail->debit, 0, ',', '.') }}
-                                    @php $totalDebit += $detail->debit; @endphp
-                                @endif
-                            </td>
-
-                            {{-- KREDIT --}}
-                            <td class="px-6 py-3 text-sm text-end text-gray-700 dark:text-gray-400">
-                                @if ($detail->credit > 0)
-                                    Rp{{ number_format($detail->credit, 0, ',', '.') }}
-                                    @php $totalCredit += $detail->credit; @endphp
-                                @endif
-                            </td>
-
-                        </tr>
-                    @endforeach
-                @endforeach
-
-                {{-- TOTAL KAS TERAKHIR --}}
-                @if ($currentKasId)
-                    <tr class="bg-gray-50 font-semibold border-t dark:bg-gray-700 dark:text-gray-200">
-                        <td colspan="5" class="px-6 py-3 text-end text-sm">
-                            TOTAL {{ $currentKasName }}
-                        </td>
-                        <td class="px-6 py-3 text-end text-sm">
-                            Rp{{ number_format($totalDebit, 0, ',', '.') }}
-                        </td>
-                        <td class="px-6 py-3 text-end text-sm">
-                            Rp{{ number_format($totalCredit, 0, ',', '.') }}
+                @foreach ($groupedJournals as $group)
+                    {{-- HEADER KAS --}}
+                    <tr class="bg-gray-100 font-bold dark:bg-gray-800">
+                        <td colspan="7" class="px-6 py-3 text-center text-gray-700 dark:text-gray-300">
+                            {{ $group['account_info'] }}
                         </td>
                     </tr>
-                @endif
+
+                    @php
+                        $subTotalDebit = 0;
+                        $subTotalCredit = 0;
+                        $no = 1;
+                    @endphp
+
+                    @foreach ($group['data'] as $journal)
+                        @foreach ($journal->details as $detail)
+                            @php $isCreditRow = $detail->credit > 0; @endphp
+
+                            <tr class="{{ $isCreditRow ? 'bg-gray-50/50' : 'border-t border-gray-100' }}">
+                                {{-- NO --}}
+                                <td class="px-6 py-3 text-sm text-gray-700">
+                                    {{ !$isCreditRow ? $no++ : '' }}
+                                </td>
+
+                                {{-- TANGGAL --}}
+                                <td class="px-6 py-3 text-sm text-gray-700">
+                                    {{ $journal->journal_date->translatedFormat('d M Y') }}
+                                </td>
+
+                                {{-- NAMA REKENING --}}
+                                <td class="px-6 py-3 text-sm {{ $isCreditRow ? 'pl-12' : '' }}">
+                                    {{ $detail->coa?->name }}
+                                </td>
+
+                                {{-- KETERANGAN --}}
+                                <td class="px-6 py-3 text-sm text-gray-600">
+                                    {{ $detail->description ?? $journal->description }}
+                                </td>
+
+                                {{-- REF --}}
+                                <td class="px-6 py-3 text-sm text-gray-600">
+                                    {{ $detail->coa?->code }}
+                                </td>
+
+                                {{-- DEBIT --}}
+                                <td class="px-6 py-3 text-sm text-end">
+                                    @if ($detail->debit > 0)
+                                        Rp{{ number_format($detail->debit, 0, ',', '.') }}
+                                        @php $subTotalDebit += $detail->debit @endphp
+                                    @endif
+                                </td>
+
+                                {{-- KREDIT --}}
+                                <td class="px-6 py-3 text-sm text-end">
+                                    @if ($detail->credit > 0)
+                                        Rp{{ number_format($detail->credit, 0, ',', '.') }}
+                                        @php $subTotalCredit += $detail->credit @endphp
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endforeach
+
+                    {{-- SUBTOTAL PER KAS --}}
+                    <tr class="bg-gray-50 font-semibold border-y-2 border-gray-200">
+                        <td colspan="5" class="px-6 py-3 text-end text-sm">TOTAL {{ $group['account_info'] }}</td>
+                        <td class="px-6 py-3 text-end text-sm">Rp{{ number_format($subTotalDebit, 0, ',', '.') }}</td>
+                        <td class="px-6 py-3 text-end text-sm">Rp{{ number_format($subTotalCredit, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
             </tbody>
 
         </table>

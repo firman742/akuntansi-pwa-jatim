@@ -14,8 +14,8 @@
                     <label class="mb-2 block text-sm font-medium text-gray-700">
                         Tanggal
                     </label>
-                    <input type="date" name="transaction_date" value="{{ now()->format('Y-m-d') }}"
-                        class="h-11 w-full rounded-lg border border-stroke bg-transparent px-4 text-sm text-gray-700 outline-none focus:border-primary">
+                    <x-form.date-picker id="transaction_date" name="transaction_date" placeholder="Tanggal Transaksi"
+                        defaultDate="{{ now()->format('Y-m-d') }}" />
                 </div>
 
                 {{-- ================= KAS / BANK ================= --}}
