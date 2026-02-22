@@ -10,7 +10,6 @@ use App\Models\AccountType;
 use App\Models\ChartOfAccount;
 use App\Models\Journal;
 use App\Models\JournalDetail;
-use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\Transaction;
 use App\Models\TransactionLine;

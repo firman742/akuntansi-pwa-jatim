@@ -11,7 +11,6 @@ use App\Models\JournalDetail;
 use App\Models\ChartOfAccount;
 use App\Models\OpeningBalance;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 
 class LedgerController extends Controller
 {
