@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Bendahara;
 
-use App\Enums\OpeningBalanceTypeEnum;
+use App\Enums\NormalBalanceEnum;
 use Carbon\Carbon;
 use App\Models\Period;
 use App\Models\Journal;
@@ -63,7 +63,7 @@ class LedgerController extends Controller
 
 
             if ($opening) {
-                $openingBalance = $opening->balance_type === OpeningBalanceTypeEnum::DEBIT->value
+                $openingBalance = $opening->balance_type === NormalBalanceEnum::DEBIT->value
                     ? $opening->amount
                     : -1 * $opening->amount;
             }
@@ -127,7 +127,7 @@ class LedgerController extends Controller
                 // 1. Hitung Saldo Berjalan
                 // Jika akun DEBIT (Kas): Saldo + Debit - Kredit
                 // Jika akun KREDIT (Hutang): Saldo + Kredit - Debit
-                if ($coa->normal_balance === OpeningBalanceTypeEnum::DEBIT->value) {
+                if ($coa->normal_balance === NormalBalanceEnum::DEBIT->value) {
                     $runningBalance += ($trx->debit - $trx->credit);
                 } else {
                     $runningBalance += ($trx->credit - $trx->debit);

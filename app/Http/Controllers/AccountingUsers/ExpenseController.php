@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\AccountingUsers;
 
-use App\Enums\OpeningBalanceTypeEnum;
+use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
@@ -152,7 +152,7 @@ class ExpenseController extends Controller
                     'debit_amount' => $line['amount'],
                     'credit_amount' => 0,
                     'description' => $line['description'] ?? null,
-                    'line_type' => OpeningBalanceTypeEnum::DEBIT->value,
+                    'line_type' => NormalBalanceEnum::DEBIT->value,
                 ]);
             }
 
@@ -162,7 +162,7 @@ class ExpenseController extends Controller
                 'chart_of_account_id' => $request->cash_coa_id,
                 'debit_amount' => 0,
                 'credit_amount' => $totalExpense,
-                'line_type' => OpeningBalanceTypeEnum::CREDIT->value,
+                'line_type' => NormalBalanceEnum::CREDIT->value,
             ]);
 
             // ================= JOURNAL =================

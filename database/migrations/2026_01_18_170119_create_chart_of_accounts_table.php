@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\NormalBalanceEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +21,7 @@ return new class extends Migration
             $table->string('order')->nullable();
             $table->uuid('account_type_id');
             $table->text('description')->nullable();
-            $table->enum("normal_balance", ["debit", "credit"]);
+            $table->enum("normal_balance", NormalBalanceEnum::values());
             $table->boolean('is_active')->default(true);
             $table->uuid('created_by')->nullable();
             $table->timestamps();

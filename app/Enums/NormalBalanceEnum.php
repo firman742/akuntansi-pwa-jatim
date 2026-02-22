@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum OpeningBalanceTypeEnum: string
+enum NormalBalanceEnum: string
 {
     case DEBIT  = 'DEBIT';
     case CREDIT = 'CREDIT';

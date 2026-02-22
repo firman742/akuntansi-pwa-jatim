@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Enums\OpeningBalanceTypeEnum;
+use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionType;
 use App\Helpers\TransactionNumberHelper;
 use App\Models\ChartOfAccount;
@@ -76,13 +76,13 @@ class TransactionSeeder extends Seeder
                             'chart_of_account_id' => $cash->id,
                             'debit_amount'        => $amount,
                             'credit_amount'       => 0,
-                            'line_type'           => OpeningBalanceTypeEnum::DEBIT->value,
+                            'line_type'           => NormalBalanceEnum::DEBIT->value,
                         ],
                         [
                             'chart_of_account_id' => $income->id,
                             'debit_amount'        => 0,
                             'credit_amount'       => $amount,
-                            'line_type'           => OpeningBalanceTypeEnum::CREDIT->value,
+                            'line_type'           => NormalBalanceEnum::CREDIT->value,
                         ],
                     ]);
 
@@ -136,13 +136,13 @@ class TransactionSeeder extends Seeder
                             'chart_of_account_id' => $expense->id,
                             'debit_amount'        => $amount,
                             'credit_amount'       => 0,
-                            'line_type'           => OpeningBalanceTypeEnum::DEBIT->value,
+                            'line_type'           => NormalBalanceEnum::DEBIT->value,
                         ],
                         [
                             'chart_of_account_id' => $cash->id,
                             'debit_amount'        => 0,
                             'credit_amount'       => $amount,
-                            'line_type'           => OpeningBalanceTypeEnum::CREDIT->value,
+                            'line_type'           => NormalBalanceEnum::CREDIT->value,
                         ],
                     ]);
 
