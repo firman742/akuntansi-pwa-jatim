@@ -131,7 +131,7 @@ class LedgerController extends Controller
                 $ledger[] = [
                     'date'        => $trx->journal->journal_date,
                     'description' => $trx->description ?? '-',
-                    'ref'         => $trx->journal->code ?? '-',
+                    'ref'         => $trx->coa->code ?? '-',
                     'debit'       => $trx->debit,
                     'credit'      => $trx->credit,
                     'balance'     => $runningBalance,

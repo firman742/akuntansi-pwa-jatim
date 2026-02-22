@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Bendahara;
 
+use App\Exports\JournalPdfExport;
 use Carbon\Carbon;
 use App\Models\Period;
 use App\Models\Journal;
 use Illuminate\Http\Request;
-use App\Models\ChartOfAccount;
-use App\Models\OpeningBalance;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
@@ -57,22 +56,50 @@ class JournalController extends Controller
 
     public function export(Request $request, string $type)
     {
-        $periodId = $request->period_id;
-        $month    = $request->month;
+        // =====================
+        // FILTER INPUT
+        // =====================
+        $periodId   = $request->period_id;
+        $startMonth = $request->start_month; // format: Y-m
+        $endMonth   = $request->end_month;   // format: Y-m
 
-        $journals = Journal::with(['details.coa.accountType'])
-            ->where('period_id', $periodId)
-            ->when($month, function ($q) use ($month) {
-                [$year, $m] = explode('-', $month);
-                $q->whereYear('journal_date', $year)
-                  ->whereMonth('journal_date', $m);
-            })
+        $query = Journal::with(['details.coa.accountType']);
+
+        if ($periodId) {
+            $query->where('period_id', $periodId);
+        }
+
+        if ($startMonth && $endMonth) {
+            $start = Carbon::parse($startMonth)->startOfMonth();
+            $end   = Carbon::parse($endMonth)->endOfMonth();
+
+            $query->whereBetween('journal_date', [$start, $end]);
+        }
+
+        $journals = $query
             ->orderBy('journal_date')
             ->get();
 
+        // =====================
+        // METADATA EXPORT
+        // =====================
+        $period = $periodId ? Period::find($periodId) : null;
+
+        $meta = [
+            'period_name' => $period?->name,
+            'month_label' => ($startMonth && $endMonth)
+                ? Carbon::parse($startMonth)->translatedFormat('F Y')
+                    . ' - ' .
+                  Carbon::parse($endMonth)->translatedFormat('F Y')
+                : null,
+            'year' => ($startMonth)
+                ? Carbon::parse($startMonth)->year
+                : now()->year,
+            'user_name' => Auth::user()?->name,
+        ];
+
         return match ($type) {
-            'excel' => app(JournalExcelExport::class)->download($journals),
-            'pdf'   => app(JournalPdfExport::class)->download($journals),
+            'pdf' => app(JournalPdfExport::class)->download($journals, $meta),
             default => abort(404),
         };
     }

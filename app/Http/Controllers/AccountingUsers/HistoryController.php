@@ -26,7 +26,7 @@ class HistoryController extends Controller
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name'
         ])
-            ->orderByDesc('transaction_date')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $transaction = Transaction::first();

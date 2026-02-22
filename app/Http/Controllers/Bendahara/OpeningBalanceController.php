@@ -31,6 +31,7 @@ class OpeningBalanceController extends Controller
 
         $openingBalances = OpeningBalance::with(['chartOfAccount'])
             ->where('period_id', $periodId)
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($item) {
                 return [

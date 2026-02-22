@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\AccountingUsers;
 
-use App\Models\Journal;
-use App\Models\AccountType;
-use App\Models\Transaction;
-use Illuminate\Http\Request;
-use App\Models\JournalDetail;
 use App\Enums\TransactionType;
-use App\Models\ChartOfAccount;
-use App\Models\TransactionLine;
-use Illuminate\Support\Facades\DB;
+use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
+use App\Models\AccountType;
+use App\Models\ChartOfAccount;
+use App\Models\Journal;
+use App\Models\JournalDetail;
 use App\Models\Period;
+use App\Models\Transaction;
+use App\Models\TransactionLine;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Pest\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class IncomeController extends Controller
 {
@@ -37,57 +37,50 @@ class IncomeController extends Controller
     public function create()
     {
         $userId = Auth::id();
-        // Ambil ID Account Type
-        $assetTypeId = AccountType::where('name', 'ASET')->value('id');
+
+        $assetTypeId  = AccountType::where('name', 'ASET')->value('id');
         $incomeTypeId = AccountType::where('name', 'PENDAPATAN')->value('id');
 
-        /*
-        |--------------------------------------------------------------------------
-        | AKUN KAS / BANK (ASET - DEBIT)
-        |--------------------------------------------------------------------------
-        | - ASET
-        | - Normal balance DEBIT
-        | - Leaf account
-        | - Aktif
-        | - TERDAFTAR di user_accounts
-        */
+        // ================= KAS / BANK =================
         $cashCoas = ChartOfAccount::query()
             ->where('account_type_id', $assetTypeId)
             ->where('normal_balance', 'DEBIT')
             ->where('is_active', true)
             ->whereDoesntHave('children')
-            ->whereHas('userAccounts', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
+            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
             ->orderBy('code')
             ->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | AKUN PENDAPATAN (CREDIT)
-        |--------------------------------------------------------------------------
-        | - PENDAPATAN
-        | - Normal balance CREDIT
-        | - Leaf account
-        | - Aktif
-        | - TERDAFTAR di user_accounts
-        */
+        // ================= PENDAPATAN =================
         $incomeCoas = ChartOfAccount::query()
             ->where('account_type_id', $incomeTypeId)
             ->where('normal_balance', 'CREDIT')
             ->where('is_active', true)
             ->whereDoesntHave('children')
-            ->whereHas('userAccounts', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
+            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
             ->orderBy('code')
             ->get();
 
+        // ================= SALDO KAS =================
+        $period = Period::active()->first();
+        $cashBalances = collect();
+
+        if ($period) {
+            foreach ($cashCoas as $coa) {
+                $cashBalances[$coa->id] = CashBalanceHelper::getBalance(
+                    $coa->id,
+                    $period->id
+                );
+            }
+        }
+
         return view('pages.menus.user.incomes.create', compact(
             'cashCoas',
-            'incomeCoas'
+            'incomeCoas',
+            'cashBalances'
         ));
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -102,75 +95,110 @@ class IncomeController extends Controller
             ]);
         }
 
-
+        // ================= VALIDATION =================
         $request->validate([
             'transaction_date' => 'required|date',
             'cash_coa_id' => 'required|exists:chart_of_accounts,id',
+            'income_lines' => 'required|array|min:1',
             'income_lines.*.coa_id' => 'required|exists:chart_of_accounts,id',
             'income_lines.*.amount' => 'required|numeric|min:1',
+            'receipt' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048', // optional, max 2MB
         ]);
 
-        DB::transaction(function () use ($request, $period) {
+        // ================= TOTAL =================
+        $totalIncome = collect($request->income_lines)->sum('amount');
 
-            // 1️⃣ Hitung total
-            $total = collect($request->income_lines)->sum('amount');
+        if ($totalIncome <= 0) {
+            return back()->withErrors([
+                'income_lines' => 'Total penerimaan harus lebih dari 0.',
+            ])->withInput();
+        }
 
-            // 2️⃣ TRANSACTION HEADER
-            $transaction = Transaction::create([
-                'transaction_number' => 'TRX-IN-' . now()->format('YmdHis'),
-                'transaction_date' => $request->transaction_date,
-                'transaction_type' => TransactionType::INCOME,
-                'description' => $request->description,
-                'total_amount' => $total,
-                'status' => 'POSTED',
-                'period_id' => $period->id, // asumsi helper activePeriod()->id
-                'created_by' => Auth::id(),
+        DB::transaction(function () use ($request, $period, $totalIncome) {
+
+        // ================= TRANSACTION HEADER =================
+        $transaction = Transaction::create([
+            'transaction_number' => 'TRX-IN-' . now()->format('YmdHis'),
+            'transaction_date'   => $request->transaction_date,
+            'transaction_type'   => TransactionType::INCOME,
+            'description'        => $request->description,
+            'total_amount'       => $totalIncome,
+            'status'             => 'POSTED',
+            'period_id'          => $period->id,
+            'created_by'         => Auth::id(),
+        ]);
+
+        // ========== Handle file upload if receipt is provided =============
+        if ($request->hasFile('receipt')) {
+
+            $extension = $request->file('receipt')->getClientOriginalExtension();
+
+            $fileName = $transaction->transaction_number . '.' . $extension;
+
+            $media = $transaction
+                ->addMediaFromRequest('receipt')
+                ->usingFileName($fileName)
+                ->toMediaCollection('receipts');
+
+            dd([
+                'media_id' => $media->id,
+                'file_name' => $media->file_name,
+                'disk' => $media->disk,
+                'path_relative' => $media->getPathRelativeToRoot(),
+                'full_path' => $media->getPath(),
+                'url' => $media->getUrl(),
             ]);
 
-            // 3️⃣ LINE KAS (DEBIT)
+            
+            $transaction->update([
+                'receipt_path' => $media->getPathRelativeToRoot()
+            ]);
+        }
+
+        // ================= KAS / BANK (DEBIT) =================
+        TransactionLine::create([
+            'transaction_id'       => $transaction->id,
+            'chart_of_account_id'  => $request->cash_coa_id,
+            'debit_amount'         => $totalIncome,
+            'credit_amount'        => 0,
+            'line_type'            => 'DEBIT',
+        ]);
+
+        // ================= PENDAPATAN (CREDIT) =================
+        foreach ($request->income_lines as $line) {
             TransactionLine::create([
-                'transaction_id' => $transaction->id,
-                'chart_of_account_id' => $request->cash_coa_id,
-                'debit_amount' => $total,
-                'credit_amount' => 0,
-                'line_type' => 'DEBIT',
+                'transaction_id'      => $transaction->id,
+                'chart_of_account_id' => $line['coa_id'],
+                'debit_amount'        => 0,
+                'credit_amount'       => $line['amount'],
+                'description'         => $line['description'] ?? null,
+                'line_type'           => 'CREDIT',
             ]);
+        }
 
-            // 4️⃣ LINE PENDAPATAN (CREDIT)
-            foreach ($request->income_lines as $line) {
-                TransactionLine::create([
-                    'transaction_id' => $transaction->id,
-                    'chart_of_account_id' => $line['coa_id'],
-                    'debit_amount' => 0,
-                    'credit_amount' => $line['amount'],
-                    'description' => $line['description'] ?? null,
-                    'line_type' => 'CREDIT',
-                ]);
-            }
+        // ================= JOURNAL HEADER =================
+        $journal = Journal::create([
+            'journal_number' => 'JR-' . now()->format('YmdHis'),
+            'journal_date'   => $transaction->transaction_date,
+            'description'    => $transaction->description,
+            'total_debit'    => $totalIncome,
+            'total_credit'   => $totalIncome,
+            'period_id'      => $transaction->period_id,
+            'transaction_id' => $transaction->id,
+            'posted_by'      => Auth::id(),
+            'posted_at'      => now(),
+        ]);
 
-            // 5️⃣ JOURNAL HEADER
-            $journal = Journal::create([
-                'journal_number' => 'JR-' . now()->format('YmdHis'),
-                'journal_date' => $transaction->transaction_date,
-                'description' => $transaction->description,
-                'total_debit' => $total,
-                'total_credit' => $total,
-                'period_id' => $transaction->period_id,
-                'transaction_id' => $transaction->id,
-                'posted_by' => Auth::id(),
-                'posted_at' => now(),
+        // ================= JOURNAL DETAIL =================
+        foreach ($transaction->transactionLines as $line) {
+            JournalDetail::create([
+                'journal_id' => $journal->id,
+                'coa_id'     => $line->chart_of_account_id,
+                'debit'      => $line->debit_amount,
+                'credit'     => $line->credit_amount,
+                'description' => $line->description ? $transaction->description . " - " . $line->description : $transaction->description,
             ]);
-
-            // 6️⃣ JOURNAL DETAIL (mirror lines)
-            foreach ($transaction->transactionLines as $line) {
-                JournalDetail::create([
-                    'journal_id' => $journal->id,
-                    'coa_id' => $line->chart_of_account_id,
-                    'debit' => $line->debit_amount,
-                    'credit' => $line->credit_amount,
-                    'description' => $line->description,
-                ]);
-            }
+        }
         });
 
         return redirect()

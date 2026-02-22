@@ -175,4 +175,5 @@ class TransactionSeeder extends Seeder
             }
         });
     }
+    
 }

@@ -2,10 +2,11 @@
 
 namespace App\Config;
 
+
 use App\Enums\RoleEnum;
 use App\Enums\PermissionEnum;
 
-class Menu
+class menu
 {
     public static function byRole(RoleEnum $role): array
     {
@@ -118,27 +119,34 @@ class Menu
                 ['bendahara/neraca-saldo*']
             ),
 
-            [
-                'name' => 'Laporan',
-                'icon' => 'report',
-                'active_on' => [
-                    'bendahara/report*'
-                ],
-                'subItems' => [
-                    self::item(
-                        'Buku Besar',
-                        null,
-                        '/bendahara/report/buku-besar',
-                        ['bendahara/report/buku-besar*']
-                    ),
-                    self::item(
-                        'Neraca Saldo',
-                        null,
-                        '/bendahara/report/neraca-saldo',
-                        ['bendahara/report/neraca-saldo*']
-                    ),
-                ],
-            ],
+            self::item(
+                'Laporan Aktifitas',
+                'ledger',
+                '/bendahara/laporan-aktifitas',
+                ['bendahara/laporan-aktifitas*']
+            ),
+
+            // [
+            //     'name' => 'Laporan',
+            //     'icon' => 'report',
+            //     'active_on' => [
+            //         'bendahara/report*'
+            //     ],
+            //     'subItems' => [
+            //         self::item(
+            //             'Buku Besar',
+            //             null,
+            //             '/bendahara/report/buku-besar',
+            //             ['bendahara/report/buku-besar*']
+            //         ),
+            //         self::item(
+            //             'Neraca Saldo',
+            //             null,
+            //             '/bendahara/report/neraca-saldo',
+            //             ['bendahara/report/neraca-saldo*']
+            //         ),
+            //     ],
+            // ],
         ];
     }
 

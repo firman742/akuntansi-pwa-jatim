@@ -80,7 +80,7 @@ class ExpenseController extends Controller
                 }
             }
 
-        return view('pages.menus.user.incomes.create', compact(
+        return view('pages.menus.user.expenses.create', compact(
             'cashCoas',
             'expenseCoas',
             'cashBalances'
@@ -183,7 +183,7 @@ class ExpenseController extends Controller
                     'coa_id' => $line->chart_of_account_id,
                     'debit' => $line->debit_amount,
                     'credit' => $line->credit_amount,
-                    'description' => $line->description,
+                    'description' => $line->description ? $transaction->description . " - " . $line->description : $transaction->description,
                 ]);
             }
         });
