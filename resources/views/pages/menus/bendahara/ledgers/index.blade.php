@@ -168,7 +168,7 @@
                     <tfoot>
                         <tr class="bg-gray-400 text-white">
                             <td colspan="5"
-                                class="px-4 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                class="px-4 py-4 text-right text-[10px] font-bold uppercase tracking-widest">
                                 Saldo Akhir Keseluruhan
                             </td>
                             <td class="border-r border-gray-700 px-4 py-4 text-right text-lg font-black">

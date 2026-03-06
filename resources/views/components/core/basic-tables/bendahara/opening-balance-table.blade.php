@@ -100,127 +100,35 @@
         }
     }
 }">
-    <div
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <form method="GET" class="px-6 mb-4">
-            <div class="flex items-center gap-3">
-                <select name="period_id"
-                    class="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm
-                           dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
-                    onchange="this.form.submit()">
-                    @foreach ($periods as $period)
-                        <option value="{{ $period->id }}" {{ $periodId == $period->id ? 'selected' : '' }}>
-                            {{ $period->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </form>
-
-        <!-- Header -->
-        <div class="flex flex-col gap-4 px-6 mb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-                    Daftar Saldo Awal
-                </h3>
-            </div>
-            <div class="flex items-center gap-3">
-                {{-- import --}}
-                <a href="">
-                    <x-ui.button variant="outline" size="sm">
-                        <x-slot:startIcon>
-                            <svg class="h-4 w-4 stroke-current fill-white dark:fill-gray-800" viewBox="0 0 20 20"
-                                fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                            </svg>
-                        </x-slot:startIcon>
-
-
-                        Import
-                    </x-ui.button>
-                </a>
-
-                {{-- tambah --}}
-                <a href="{{ route('bendahara.opening-balances.create') }}">
-                    <x-ui.button variant="outline" size="sm">
-                        <x-slot:startIcon>
-                            <svg class="h-4 w-4 stroke-current fill-white dark:fill-gray-800" viewBox="0 0 20 20"
-                                fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 4.16699V15.8337" stroke="" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <path d="M4.16699 10H15.8337" stroke="" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </x-slot:startIcon>
-                        Tambah
-                    </x-ui.button>
-                </a>
-            </div>
-        </div>
-
-        <!-- Table -->
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div class="max-w-full overflow-x-auto">
-            <table class="w-full">
-                <thead
-                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-50 dark:border-white/[0.05] dark:bg-gray-900">
-                    <tr>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            <div class="flex items-center gap-3">
-                                {{-- <div @click="handleSelectAll()"
-                                    class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-md border-[1.25px]"
-                                    :class="selectAll ? 'border-blue-500 dark:border-blue-500 bg-blue-500' :
-                                        'bg-white dark:bg-white/0 border-gray-300 dark:border-gray-700'">
-                                    <svg :class="selectAll ? 'block' : 'hidden'" width="14" height="14"
-                                        viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M11.6668 3.5L5.25016 9.91667L2.3335 7" stroke="white"
-                                            stroke-width="1.94437" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </div> --}}
-                                <span class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">No</span>
-                            </div>
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr
+                        class="bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-600 border-b border-gray-200">
+                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                            No
                         </th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                        <th class="px-6 py-4 text-center border-r border-gray-100">
                             Akun</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                        <th class="px-6 py-4 text-center border-r border-gray-100">
                             Kode</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                        <th class="px-6 py-4 text-center border-r border-gray-100">
                             Debit</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                        <th class="px-6 py-4 text-center border-r border-gray-100">
                             Kredit</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                        <th class="px-6 py-4 text-center border-r border-gray-100">
                             Action</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-center">
                     <template x-for="(row, index) in paginatedData" :key="row.id">
                         <tr class="border-b border-gray-100 dark:border-white/[0.05]">
 
                             <!-- No Urut -->
                             <td class="px-4 sm:px-6 py-3.5">
-                                <div class="flex items-center gap-3">
-                                    {{-- <div @click="handleRowSelect(row.id)"
-                                        class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-md border-[1.25px]"
-                                        :class="selectedRows.includes(row.id) ?
-                                            'border-blue-500 bg-blue-500' :
-                                            'border-gray-300 bg-white dark:bg-white/0 dark:border-gray-700'">
-
-                                        <svg x-show="selectedRows.includes(row.id)" width="14" height="14"
-                                            viewBox="0 0 14 14">
-                                            <path d="M11.6668 3.5L5.25016 9.91667L2.3335 7" stroke="white"
-                                                stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div> --}}
-
-                                    <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
-                                        x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
-                                </div>
+                                <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
+                                    x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
                             </td>
 
                             <!-- Nama -->
@@ -233,12 +141,12 @@
                             <td class="px-4 sm:px-6 py-3.5" x-text="row.account_code"></td>
 
                             <!-- Debit -->
-                            <td class="px-4 sm:px-6 py-3.5"
-                                x-text="row.debit > 0 ? formatCurrency(row.debit) : '-'"></td>
+                            <td class="px-4 sm:px-6 py-3.5" x-text="row.debit > 0 ? formatCurrency(row.debit) : '-'">
+                            </td>
 
                             <!-- Kredit -->
-                            <td class="px-4 sm:px-6 py-3.5"
-                                x-text="row.credit > 0 ? formatCurrency(row.credit) : '-'"></td>
+                            <td class="px-4 sm:px-6 py-3.5" x-text="row.credit > 0 ? formatCurrency(row.credit) : '-'">
+                            </td>
 
                             <!-- Action -->
                             <td class="px-4 sm:px-3 py-2.5">
@@ -309,7 +217,7 @@
     </div>
 
     <!-- Pagination -->
-    <div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
+    {{-- <div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
         <div class="flex items-center justify-between">
             <button @click="prevPage" :disabled="currentPage === 1"
                 :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
@@ -353,6 +261,6 @@
                 </svg>
             </button>
         </div>
-    </div>
+    </div> --}}
 </div>
 </div>

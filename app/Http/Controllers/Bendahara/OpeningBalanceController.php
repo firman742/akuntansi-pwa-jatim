@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Bendahara;
 
+use App\Enums\NormalBalanceEnum;
 use App\Models\Period;
 use Illuminate\Http\Request;
 use App\Models\ChartOfAccount;
@@ -38,8 +39,8 @@ class OpeningBalanceController extends Controller
                     'id'        => $item->id,
                     'account_name' => $item->chartOfAccount->name,
                     'account_code' => $item->chartOfAccount->code,
-                    'debit'     => $item->balance_type === 'debit' ? $item->amount : 0,
-                    'credit'    => $item->balance_type === 'credit' ? $item->amount : 0,
+                    'debit'     => $item->balance_type === NormalBalanceEnum::DEBIT->value ? $item->amount : 0,
+                    'credit'    => $item->balance_type === NormalBalanceEnum::CREDIT->value ? $item->amount : 0,
                 ];
             });
 

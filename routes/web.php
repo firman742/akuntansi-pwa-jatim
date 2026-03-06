@@ -126,6 +126,9 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
 
     // trial balance routes
     Route::get('/neraca-saldo', [App\Http\Controllers\Bendahara\TrialBalanceController::class, 'index'])->name('bendahara.trial-balance.index');
+
+    // activity report routes
+    Route::get('/laporan-aktifitas', [App\Http\Controllers\Bendahara\ActivityReportController::class, 'index'])->name('bendahara.activity-reports.index');
 });
 
 /*

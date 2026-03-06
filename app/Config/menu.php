@@ -93,7 +93,7 @@ class menu
                 ],
             ],
             self::item(
-                'Saldo Awal',
+                'Neraca Saldo Awal',
                 'wallet',
                 '/bendahara/saldo-awal',
                 ['bendahara/saldo-awal*']
@@ -111,20 +111,21 @@ class menu
                 '/bendahara/buku-besar',
                 ['bendahara/buku-besar*']
             ),
-
-            self::item(
-                'Neraca Saldo',
-                'balance',
-                '/bendahara/neraca-saldo',
-                ['bendahara/neraca-saldo*']
-            ),
-
+            
             self::item(
                 'Laporan Aktifitas',
                 'ledger',
                 '/bendahara/laporan-aktifitas',
                 ['bendahara/laporan-aktifitas*']
             ),
+
+            self::item(
+                'Neraca',
+                'balance',
+                '/bendahara/neraca-saldo',
+                ['bendahara/neraca-saldo*']
+            ),
+
 
             // [
             //     'name' => 'Laporan',
