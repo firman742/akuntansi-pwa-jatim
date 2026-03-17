@@ -63,6 +63,13 @@ class menu
                 '/bendahara/periode',
                 ['bendahara/periode*']
             ),
+            
+            self::item(
+                'Sub Periode',
+                'calendar',
+                '/bendahara/sub-periode',
+                ['bendahara/sub-periode*']
+            ),
             [
                 'name' => 'Master Data',
                 'icon' => 'book',

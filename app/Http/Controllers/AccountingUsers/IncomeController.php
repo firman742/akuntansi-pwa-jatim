@@ -11,6 +11,7 @@ use App\Models\ChartOfAccount;
 use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\Period;
+use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Models\TransactionLine;
 use Illuminate\Http\Request;
@@ -22,14 +23,40 @@ class IncomeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $incomes = Transaction::with('transactionLines', 'creator')
-            ->where('transaction_type', TransactionType::INCOME->value)
-            ->orderBy('created_at', 'desc')
+        $query = Transaction::with(['transactionLines', 'creator', 'period', 'subPeriod'])
+            ->where('transaction_type', TransactionType::INCOME->value);
+
+        // ================= FILTER =================
+        if ($request->filled('period_id')) {
+            $query->where('period_id', $request->period_id);
+        }
+
+        if ($request->filled('sub_period_id')) {
+            $query->where('sub_period_id', $request->sub_period_id);
+        }
+
+        $incomes = $query
+            ->orderBy('transaction_date', 'desc')
             ->get();
 
-        return view('pages.menus.user.incomes.index', compact('incomes'));
+        // ================= FILTER DATA =================
+        $periods = Period::where('is_closed', false)->get();
+
+        $subPeriods = collect();
+        if ($request->period_id) {
+            $subPeriods = SubPeriod::where('period_id', $request->period_id)
+                ->active()
+                ->orderBy('start_date')
+                ->get();
+        }
+
+        return view('pages.menus.user.incomes.index', compact(
+            'incomes',
+            'periods',
+            'subPeriods'
+        ));
     }
 
     /**
@@ -41,6 +68,19 @@ class IncomeController extends Controller
 
         $assetTypeId  = AccountType::where('name', 'ASET')->value('id');
         $incomeTypeId = AccountType::where('name', 'PENDAPATAN')->value('id');
+
+        // ================= PERIOD =================
+        $periods = Period::where('is_closed', false)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $selectedPeriodId = request('period_id') ?? $periods->first()?->id;
+
+        // ================= SUB PERIOD =================
+        $subPeriods = SubPeriod::query()
+            ->where('period_id', $selectedPeriodId)
+            ->orderBy('start_date')
+            ->get();
 
         // ================= KAS / BANK =================
         $cashCoas = ChartOfAccount::query()
@@ -63,14 +103,13 @@ class IncomeController extends Controller
             ->get();
 
         // ================= SALDO KAS =================
-        $period = Period::active()->first();
         $cashBalances = collect();
 
-        if ($period) {
+        if ($selectedPeriodId) {
             foreach ($cashCoas as $coa) {
                 $cashBalances[$coa->id] = CashBalanceHelper::getBalance(
                     $coa->id,
-                    $period->id
+                    $selectedPeriodId
                 );
             }
         }
@@ -78,7 +117,10 @@ class IncomeController extends Controller
         return view('pages.menus.user.incomes.create', compact(
             'cashCoas',
             'incomeCoas',
-            'cashBalances'
+            'cashBalances',
+            'periods',
+            'subPeriods',
+            'selectedPeriodId'
         ));
     }
 
@@ -88,7 +130,7 @@ class IncomeController extends Controller
      */
     public function store(Request $request)
     {
-        $period = Period::active()->first();
+        $period = Period::findOrFail($request->period_id);
 
         if (! $period) {
             return back()->withErrors([
@@ -98,6 +140,8 @@ class IncomeController extends Controller
 
         // ================= VALIDATION =================
         $request->validate([
+            'period_id' => 'required|exists:periods,id',
+            'sub_period_id' => 'required|exists:sub_periods,id',
             'transaction_date' => 'required|date',
             'cash_coa_id' => 'required|exists:chart_of_accounts,id',
             'income_lines' => 'required|array|min:1',
@@ -117,89 +161,91 @@ class IncomeController extends Controller
 
         DB::transaction(function () use ($request, $period, $totalIncome) {
 
-        // ================= TRANSACTION HEADER =================
-        $transaction = Transaction::create([
-            'transaction_number' => 'TRX-IN-' . now()->format('YmdHis'),
-            'transaction_date'   => $request->transaction_date,
-            'transaction_type'   => TransactionType::INCOME,
-            'description'        => $request->description,
-            'total_amount'       => $totalIncome,
-            'status'             => 'POSTED',
-            'period_id'          => $period->id,
-            'created_by'         => Auth::id(),
-        ]);
-
-        // ========== Handle file upload if receipt is provided =============
-        if ($request->hasFile('receipt')) {
-
-            $extension = $request->file('receipt')->getClientOriginalExtension();
-
-            $fileName = $transaction->transaction_number . '.' . $extension;
-
-            $media = $transaction
-                ->addMediaFromRequest('receipt')
-                ->usingFileName($fileName)
-                ->toMediaCollection('receipts');
-
-            dd([
-                'media_id' => $media->id,
-                'file_name' => $media->file_name,
-                'disk' => $media->disk,
-                'path_relative' => $media->getPathRelativeToRoot(),
-                'full_path' => $media->getPath(),
-                'url' => $media->getUrl(),
+            // ================= TRANSACTION HEADER =================
+            $transaction = Transaction::create([
+                'transaction_number' => 'TRX-IN-' . now()->format('YmdHis'),
+                'transaction_date'   => $request->transaction_date,
+                'transaction_type'   => TransactionType::INCOME,
+                'description'        => $request->description,
+                'total_amount'       => $totalIncome,
+                'status'             => 'POSTED',
+                'period_id'          => $request->period_id,
+                'sub_period_id'      => $request->sub_period_id,
+                'created_by'         => Auth::id(),
             ]);
 
-            
-            $transaction->update([
-                'receipt_path' => $media->getPathRelativeToRoot()
-            ]);
-        }
+            // ========== Handle file upload if receipt is provided =============
+            if ($request->hasFile('receipt')) {
 
-        // ================= KAS / BANK (DEBIT) =================
-        TransactionLine::create([
-            'transaction_id'       => $transaction->id,
-            'chart_of_account_id'  => $request->cash_coa_id,
-            'debit_amount'         => $totalIncome,
-            'credit_amount'        => 0,
-            'line_type'            => NormalBalanceEnum::DEBIT->value,
-        ]);
+                $extension = $request->file('receipt')->getClientOriginalExtension();
 
-        // ================= PENDAPATAN (CREDIT) =================
-        foreach ($request->income_lines as $line) {
+                $fileName = $transaction->transaction_number . '.' . $extension;
+
+                $media = $transaction
+                    ->addMediaFromRequest('receipt')
+                    ->usingFileName($fileName)
+                    ->toMediaCollection('receipts');
+
+                dd([
+                    'media_id' => $media->id,
+                    'file_name' => $media->file_name,
+                    'disk' => $media->disk,
+                    'path_relative' => $media->getPathRelativeToRoot(),
+                    'full_path' => $media->getPath(),
+                    'url' => $media->getUrl(),
+                ]);
+
+
+                $transaction->update([
+                    'receipt_path' => $media->getPathRelativeToRoot()
+                ]);
+            }
+
+            // ================= KAS / BANK (DEBIT) =================
             TransactionLine::create([
-                'transaction_id'      => $transaction->id,
-                'chart_of_account_id' => $line['coa_id'],
-                'debit_amount'        => 0,
-                'credit_amount'       => $line['amount'],
-                'description'         => $line['description'] ?? null,
-                'line_type'           => NormalBalanceEnum::CREDIT->value,
+                'transaction_id'       => $transaction->id,
+                'chart_of_account_id'  => $request->cash_coa_id,
+                'debit_amount'         => $totalIncome,
+                'credit_amount'        => 0,
+                'line_type'            => NormalBalanceEnum::DEBIT->value,
             ]);
-        }
 
-        // ================= JOURNAL HEADER =================
-        $journal = Journal::create([
-            'journal_number' => 'JR-' . now()->format('YmdHis'),
-            'journal_date'   => $transaction->transaction_date,
-            'description'    => $transaction->description,
-            'total_debit'    => $totalIncome,
-            'total_credit'   => $totalIncome,
-            'period_id'      => $transaction->period_id,
-            'transaction_id' => $transaction->id,
-            'posted_by'      => Auth::id(),
-            'posted_at'      => now(),
-        ]);
+            // ================= PENDAPATAN (CREDIT) =================
+            foreach ($request->income_lines as $line) {
+                TransactionLine::create([
+                    'transaction_id'      => $transaction->id,
+                    'chart_of_account_id' => $line['coa_id'],
+                    'debit_amount'        => 0,
+                    'credit_amount'       => $line['amount'],
+                    'description'         => $line['description'] ?? null,
+                    'line_type'           => NormalBalanceEnum::CREDIT->value,
+                ]);
+            }
 
-        // ================= JOURNAL DETAIL =================
-        foreach ($transaction->transactionLines as $line) {
-            JournalDetail::create([
-                'journal_id' => $journal->id,
-                'coa_id'     => $line->chart_of_account_id,
-                'debit'      => $line->debit_amount,
-                'credit'     => $line->credit_amount,
-                'description' => $line->description ? $transaction->description . " - " . $line->description : $transaction->description,
+            // ================= JOURNAL HEADER =================
+            $journal = Journal::create([
+                'journal_number' => 'JR-' . now()->format('YmdHis'),
+                'journal_date'   => $transaction->transaction_date,
+                'description'    => $transaction->description,
+                'total_debit'    => $totalIncome,
+                'total_credit'   => $totalIncome,
+                'period_id'      => $transaction->period_id,
+                'sub_period_id'  => $transaction->sub_period_id,
+                'transaction_id' => $transaction->id,
+                'posted_by'      => Auth::id(),
+                'posted_at'      => now(),
             ]);
-        }
+
+            // ================= JOURNAL DETAIL =================
+            foreach ($transaction->transactionLines as $line) {
+                JournalDetail::create([
+                    'journal_id' => $journal->id,
+                    'coa_id'     => $line->chart_of_account_id,
+                    'debit'      => $line->debit_amount,
+                    'credit'     => $line->credit_amount,
+                    'description' => $line->description ? $transaction->description . " - " . $line->description : $transaction->description,
+                ]);
+            }
         });
 
         return redirect()
@@ -217,7 +263,8 @@ class IncomeController extends Controller
 
         $transaction->load([
             'creator:id,name',
-            'period:id,name,start_date,end_date',
+            'period:id,name',
+            'subPeriod:id,name',
             'transactionLines.chartOfAccount:id,code,name,normal_balance',
             'journal.details.coa',
         ]);

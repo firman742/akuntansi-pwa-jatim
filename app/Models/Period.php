@@ -19,16 +19,11 @@ class Period extends Model
     protected $fillable = [
         'name',
         'description',
-        'start_date',
-        'end_date',
         'is_closed',
         'closed_at',
-        'closed_by',
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
         'is_closed' => 'boolean',
         'closed_at' => 'datetime',
     ];
@@ -58,6 +53,21 @@ class Period extends Model
         return $this->hasMany(Journal::class, 'period_id');
     }
 
+    /**
+     * Get the sub-periods for the period.
+     * @return HasMany
+     */
+    public function subPeriods(): HasMany
+    {
+        return $this->hasMany(SubPeriod::class, 'period_id');
+    }
+
+     /**
+     * Scope a query to only include active periods.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query

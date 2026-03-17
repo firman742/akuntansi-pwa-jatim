@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
+use App\Models\SubPeriod;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,9 @@ Route::middleware(['auth', 'role:SUPER ADMIN'])->group(function () {
     Route::post('/npm-dev', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'npmDev']);
     Route::post('/npm-build', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'npmBuild']);
     
+    // Install Spatie Media Library
+    Route::post('/install-medialibrary', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'installMediaLibrary']);
+
     // Dashboard
     Route::get('/dashboard', fn() => app(\App\Http\Controllers\Superadmin\DashboardController::class)->index())
         ->name('dashboard');
@@ -83,6 +87,13 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
     Route::put('/periode/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'update'])->name('bendahara.periode.update');
     Route::patch('/periode/{id}/close', [App\Http\Controllers\Bendahara\PeriodController::class, 'close'])->name('bendahara.periode.close');
     Route::delete('/periode/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'destroy'])->name('bendahara.periode.destroy');
+    Route::get('/periode/{id}/sub-periods', [App\Http\Controllers\Bendahara\PeriodController::class, 'getSubPeriods'])->name('bendahara.periode.sub-periods');
+
+    // Sub Period Routes
+    Route::get('/sub-periode', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'index'])->name('bendahara.sub-periode.index');
+    Route::get('/sub-periode/create', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'create'])->name('bendahara.sub-periode.create');
+    Route::post('/sub-periode', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'store'])->name('bendahara.sub-periode.store');
+    Route::delete('/sub-periode/{id}', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'destroy'])->name('bendahara.sub-periode.destroy');
 
     // Master Data - Account Type Routes
     Route::get('/master/account-type', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'index'])->name('bendahara.master.account-type.index');
@@ -110,6 +121,8 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
     Route::get('/saldo-awal', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'index'])->name('bendahara.opening-balances.index');
     Route::get('/saldo-awal/create', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'create'])->name('bendahara.opening-balances.create');
     Route::post('/saldo-awal', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'store'])->name('bendahara.opening-balances.store');
+    Route::get('/saldo-awal/bulk/create', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'createBulk'])->name('bendahara.opening-balances.create-bulk');
+    Route::post('/saldo-awal/bulk', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'storeBulk'])->name('bendahara.opening-balances.store-bulk');
     Route::get('/saldo-awal/{id}/edit', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'edit'])->name('bendahara.opening-balances.edit');
     Route::put('/saldo-awal/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'update'])->name('bendahara.opening-balances.update');
     Route::delete('/saldo-awal/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'destroy'])->name('bendahara.opening-balances.destroy');
@@ -138,21 +151,25 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
 */
 Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->group(function () {
 
-    Route::get('/dashboard', [App\Http\Controllers\Accountingusers\DashboardController::class, 'index'])->name('user.dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\AccountingUsers\DashboardController::class, 'index'])->name('user.dashboard');
+
+    // sub periods routes for select options
+    Route::get('/periode/{id}/sub-periods', [App\Http\Controllers\AccountingUsers\PeriodController::class, 'getSubPeriods'])
+    ->name('user.periode.sub-periods');
 
     // Income Routes
-    Route::get('/transaksi/penerimaan', [App\Http\Controllers\Accountingusers\IncomeController::class, 'index'])->name('user.incomes.index');
-    Route::get('transaksi/penerimaan/create', [App\Http\Controllers\Accountingusers\IncomeController::class, 'create'])->name('user.incomes.create');
-    Route::post('transaksi/penerimaan', [App\Http\Controllers\Accountingusers\IncomeController::class, 'store'])->name('user.incomes.store');
-    Route::get('transaksi/penerimaan/{id}', [App\Http\Controllers\Accountingusers\IncomeController::class, 'show'])->name('user.incomes.show');
+    Route::get('/transaksi/penerimaan', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'index'])->name('user.incomes.index');
+    Route::get('transaksi/penerimaan/create', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'create'])->name('user.incomes.create');
+    Route::post('transaksi/penerimaan', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'store'])->name('user.incomes.store');
+    Route::get('transaksi/penerimaan/{id}', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'show'])->name('user.incomes.show');
     
 
     // Expense Routes
-    Route::get('/transaksi/pengeluaran', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'index'])->name('user.expenses.index');
-    Route::get('transaksi/pengeluaran/create', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'create'])->name('user.expenses.create');
-    Route::post('transaksi/pengeluaran', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'store'])->name('user.expenses.store');
-    Route::get('transaksi/pengeluaran/{id}', [App\Http\Controllers\Accountingusers\ExpenseController::class, 'show'])->name('user.expenses.show');
+    Route::get('/transaksi/pengeluaran', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'index'])->name('user.expenses.index');
+    Route::get('transaksi/pengeluaran/create', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'create'])->name('user.expenses.create');
+    Route::post('transaksi/pengeluaran', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'store'])->name('user.expenses.store');
+    Route::get('transaksi/pengeluaran/{id}', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'show'])->name('user.expenses.show');
 
     // History Routes
-    Route::get('/transaksi/history', [App\Http\Controllers\Accountingusers\HistoryController::class, 'index'])->name('user.histories.index');
+    Route::get('/transaksi/history', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'index'])->name('user.histories.index');
 });

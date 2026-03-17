@@ -6,9 +6,9 @@ use App\Models\User;
 use App\Models\Period;
 use App\Models\ChartOfAccount;
 use App\Models\OpeningBalance;
+use App\Models\SubPeriod;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class OpeningBalanceSeeder extends Seeder
 {
@@ -20,6 +20,7 @@ class OpeningBalanceSeeder extends Seeder
         DB::transaction(function () {
 
             $period = Period::active()->first();
+            $subPeriod = SubPeriod::where('period_id', $period->id)->inRandomOrder()->first();
             $user   = User::query()->inRandomOrder()->first();
 
             $coas = ChartOfAccount::where('is_active', true)->get();
@@ -34,6 +35,7 @@ class OpeningBalanceSeeder extends Seeder
                 OpeningBalance::create([
                     'chart_of_account_id' => $coa->id,
                     'period_id'           => $period->id,
+                    'sub_period_id'       => $subPeriod->id,
                     'created_by'          => $user->id,
                     'balance_type'        => $coa->normal_balance,
                     'amount'              => $amount,

@@ -12,6 +12,38 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="mb-2 block text-sm font-medium text-gray-700">
+                        Periode
+                    </label>
+
+                    <select name="period_id" id="period_id" class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
+                        <option value="">-- Pilih Periode --</option>
+                        @foreach ($periods as $period)
+                            <option value="{{ $period->id }}">
+                                {{ $period->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                        Sub Periode
+                    </label>
+
+                    <select name="sub_period_id" id="sub_period_id"
+                        class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
+
+                        <option value="">-- Pilih Sub Periode --</option>
+                        @foreach ($subPeriods as $subPeriod)
+                            <option value="{{ $subPeriod->id }}">
+                                {{ $subPeriod->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
                         Tanggal
                     </label>
                     <x-form.date-picker id="transaction_date" name="transaction_date" placeholder="Tanggal Transaksi"
@@ -148,6 +180,10 @@
             const displayInput = document.getElementById('amount_display');
             const realInput = document.getElementById('amount_real');
 
+            // For select period and sub-period dinamically 
+            const periodSelect = document.getElementById('period_id');
+            const subPeriodSelect = document.getElementById('sub_period_id');
+
             function updateBalance() {
                 const option = cashSelect.options[cashSelect.selectedIndex];
                 const balance = option.dataset.balance || 0;
@@ -246,6 +282,42 @@
                     }
                 }
             }
+
+
+            // Dinamically load sub-periods based on selected period
+            periodSelect.addEventListener('change', async function() {
+
+                let periodId = this.value;
+
+                subPeriodSelect.innerHTML = '<option value="">Loading...</option>';
+
+                if (!periodId) {
+                    subPeriodSelect.innerHTML = '<option value="">-- Pilih Sub Periode --</option>';
+                    return;
+                }
+
+                try {
+
+                    const response = await fetch(`/user/periode/${periodId}/sub-periods`);
+                    const data = await response.json();
+
+                    subPeriodSelect.innerHTML = '<option value="">-- Pilih Sub Periode --</option>';
+
+                    data.forEach(sub => {
+                        subPeriodSelect.innerHTML += `
+                            <option value="${sub.id}">
+                                ${sub.name}
+                            </option>
+                            `;
+                    });
+
+                } catch (error) {
+
+                    subPeriodSelect.innerHTML = '<option value="">Gagal mengambil data</option>';
+
+                }
+
+            });
         </script>
     @endpush
 @endsection

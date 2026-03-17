@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Bendahara;
 
-use Carbon\Carbon;
-use App\Models\Period;
 use App\Http\Controllers\Controller;
+use App\Models\Period;
+use App\Models\SubPeriod;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\StorePeriodRequest;
-use App\Http\Requests\UpdatePeriodRequest;
 
 class PeriodController extends Controller
 {
@@ -16,25 +15,7 @@ class PeriodController extends Controller
      */
     public function index()
     {
-        $periods = Period::with('closedByUser')->get()->map(function ($period) {
-            return [
-                'id' => $period->id,
-                'name' => $period->name,
-                'description' => $period->description,
-                'start_date' => $period->start_date?->format('Y-m-d'),
-                'end_date' => $period->end_date?->format('Y-m-d'),
-                'is_closed' => $period->is_closed,
-
-                'closed_at' => $period->closed_at
-                    ? $period->closed_at->format('d M Y H:i')
-                    : '-',
-
-                'closed_by' => $period->closedByUser
-                    ? $period->closedByUser->name
-                    : '-',
-            ];
-        });
-
+        $periods = Period::orderBy('is_closed', 'desc')->get();
 
         return view('pages.menus.bendahara.periods.index', compact('periods'));
     }
@@ -53,47 +34,16 @@ class PeriodController extends Controller
     public function store()
     {
         $validated = request()->validate([
-            'start_date' => 'required|date',
-            'end_date'   => 'required|date|after_or_equal:start_date',
+            'name' => 'required',
+            'description'   => 'required',
         ]);
-
-        $start = Carbon::parse($validated['start_date']);
-        $end   = Carbon::parse($validated['end_date']);
-
-        /**
-         * Generate nama periode otomatis
-         */
-        if ($start->year === $end->year && $start->month === $end->month) {
-            // Periode bulanan
-            $name = $start->translatedFormat('F Y');
-            $description = 'Periode ' . $name;
-        } else {
-            // Periode rentang
-            $name = sprintf(
-                '%s %d – %s %d',
-                $start->translatedFormat('M'),
-                $start->year,
-                $end->translatedFormat('M'),
-                $end->year
-            );
-
-            $description = sprintf(
-                'Periode %s %d sampai %s %d',
-                $start->translatedFormat('F'),
-                $start->year,
-                $end->translatedFormat('F'),
-                $end->year
-            );
-        }
 
         Period::create([
-            'name'        => $name,
-            'description' => $description,
-            'start_date'  => $start->toDateString(),
-            'end_date'    => $end->toDateString(),
-
-     
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'is_closed' => false,
         ]);
+
 
         return redirect()
             ->route('bendahara.periode.index')
@@ -161,5 +111,12 @@ class PeriodController extends Controller
         return redirect()
             ->route('bendahara.periode.index')
             ->with('success', 'Periode berhasil dihapus');
+    }
+
+    public function getSubPeriods($periodId)
+    {
+        return SubPeriod::where('period_id', $periodId)
+            ->orderBy('start_date')
+            ->get();
     }
 }

@@ -19,6 +19,7 @@ class Journal extends Model
         'posted_by',
         'posted_at',
         'period_id',
+        'sub_period_id',
         'transaction_id',
     ];
 
@@ -29,6 +30,11 @@ class Journal extends Model
     public function period()
     {
         return $this->belongsTo(Period::class);
+    }
+
+    public function subPeriod()
+    {
+        return $this->belongsTo(SubPeriod::class);
     }
 
     public function transaction()

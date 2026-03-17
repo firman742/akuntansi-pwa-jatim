@@ -30,17 +30,15 @@
                 <div class="grid grid-cols-2 ls:grid-cols-2 gap-4">
                     <div class="grid-row">
                         <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Tanggal Masuk
+                            Nama 
                         </label>
-                        <x-form.date-picker id="start_date" name="start_date" placeholder="Tentukan Tanggal Mulai Periode"
-                            defaultDate="{{ now()->format('Y-m-d') }}" />
+                        <input type="text" name="name" id="name" class="" placeholder="masukkan nama periode">
                     </div>
                     <div class="grid-row">
                         <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Tanggal Keluar
+                            Deskripsi
                         </label>
-                        <x-form.date-picker id="end_date" name="end_date" placeholder="Tentukan Tanggal Mulai Periode"
-                            defaultDate="{{ now()->format('Y-m-d') }}" />
+                        <input type="text" name="description" id="description" class="" placeholder="masukkan deskripsi periode">
                     </div>
                 </div>
 

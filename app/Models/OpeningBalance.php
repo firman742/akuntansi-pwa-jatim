@@ -12,6 +12,7 @@ class OpeningBalance extends Model
     protected $fillable = [
         'chart_of_account_id',
         'period_id',
+        'sub_period_id',
         'created_by',
         'balance_type',
         'amount',
@@ -25,6 +26,11 @@ class OpeningBalance extends Model
     public function period()
     {
         return $this->belongsTo(Period::class, 'period_id');
+    }
+
+    public function subPeriod()
+    {
+        return $this->belongsTo(SubPeriod::class, 'sub_period_id');
     }
 
     public function creator()

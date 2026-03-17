@@ -16,6 +16,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('chart_of_account_id');
             $table->uuid('period_id');
+            $table->uuid('sub_period_id')->nullable();
             $table->uuid('created_by')->nullable();
             $table->enum('balance_type', NormalBalanceEnum::values());
             $table->decimal('amount', 15, 2);
@@ -28,6 +29,10 @@ return new class extends Migration
                 ->references('id')
                 ->on('periods')
                 ->onDelete('cascade');
+            $table->foreign('sub_period_id')
+                ->references('id')
+                ->on('sub_periods')
+                ->nullOnDelete();
             $table->foreign('created_by')
                 ->references('id')->on('users')
                 ->onDelete('set null');

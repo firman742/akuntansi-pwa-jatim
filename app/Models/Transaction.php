@@ -23,6 +23,7 @@ class Transaction extends Model implements HasMedia
         'total_amount',
         'receipt_path',
         'period_id',
+        'sub_period_id',
         'created_by',
     ];
 
@@ -59,6 +60,11 @@ class Transaction extends Model implements HasMedia
     public function period()
     {
         return $this->belongsTo(Period::class, 'period_id');
+    }
+
+    public function subPeriod()
+    {
+        return $this->belongsTo(SubPeriod::class, 'sub_period_id');
     }
 
     public function creator()

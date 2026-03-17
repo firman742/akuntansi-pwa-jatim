@@ -23,12 +23,17 @@ return new class extends Migration
             $table->string('referencree_number')->nullable();
             $table->uuid('created_by')->nullable();
             $table->uuid('period_id');
+            $table->uuid('sub_period_id')->nullable();
             $table->date('posted_at')->nullable();
 
             $table->foreign('period_id')
                 ->references('id')
                 ->on('periods')
                 ->onDelete('cascade');
+            $table->foreign('sub_period_id')
+                ->references('id')
+                ->on('sub_periods')
+                ->onDelete('set null');
             $table->foreign('created_by')
                 ->references('id')->on('users')
                 ->onDelete('set null');

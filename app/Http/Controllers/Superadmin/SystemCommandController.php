@@ -50,4 +50,35 @@ class SystemCommandController extends Controller
 
         return response()->json(['message' => 'npm run build finished']);
     }
+
+    public function installMediaLibrary()
+    {
+        // if (!app()->environment('local')) {
+        //     abort(403, 'Only allowed in local environment');
+        // }
+
+        $commands = [
+            'composer require "spatie/laravel-medialibrary"',
+            'php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-migrations"',
+            'php artisan migrate',
+            'php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-config"',
+        ];
+
+        $output = [];
+
+        foreach ($commands as $cmd) {
+            $process = Process::fromShellCommandline($cmd);
+            $process->run();
+
+            $output[] = [
+                'command' => $cmd,
+                'result' => $process->getOutput()
+            ];
+        }
+
+        return response()->json([
+            'message' => 'Media Library installation finished',
+            'logs' => $output
+        ]);
+    }
 }

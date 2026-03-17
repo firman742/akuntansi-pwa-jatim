@@ -74,8 +74,8 @@
                         <th colspan="2" class="border-b border-gray-200 bg-gray-100/50 px-6 py-2 text-center">Jumlah</th>
                     </tr>
                     <tr class="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                        <th class="border-b border-r border-gray-200 px-6 py-2 text-right">Debit (Kiri)</th>
-                        <th class="border-b px-6 py-2 text-right">Kredit (Kanan)</th>
+                        <th class="border-b border-r border-gray-200 px-6 py-2 text-right">Debit</th>
+                        <th class="border-b px-6 py-2 text-right">Kredit</th>
                     </tr>
                 </thead>
 
@@ -95,7 +95,7 @@
                             </td>
                             <td class="px-6 py-3 text-right text-gray-300 border-r border-gray-100">-</td>
                             <td class="px-6 py-3 text-right font-medium text-gray-900">
-                                {{ $item->amount != 0 ? number_format($item->amount, 0, ',', '.') : '-' }}
+                                {{ $item->total_credit != 0 ? number_format($item->total_credit, 0, ',', '.') : '-' }}
                             </td>
                         </tr>
                     @endforeach
@@ -128,7 +128,7 @@
                                 {{ $item->name }}
                             </td>
                             <td class="px-6 py-3 text-right border-r border-gray-100 font-medium text-gray-900">
-                                {{ $item->amount != 0 ? number_format($item->amount, 0, ',', '.') : '-' }}
+                                {{ $item->total_debit != 0 ? number_format($item->total_debit, 0, ',', '.') : '-' }}
                             </td>
                             <td class="px-6 py-3 text-right text-gray-300">-</td>
                         </tr>

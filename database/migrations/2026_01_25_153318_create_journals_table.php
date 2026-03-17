@@ -21,10 +21,12 @@ return new class extends Migration
             $table->uuid('posted_by')->nullable();
             $table->dateTime('posted_at')->nullable();
             $table->uuid('period_id');
+            $table->uuid('sub_period_id')->nullable();
             $table->uuid('transaction_id')->nullable();
 
             $table->foreign('posted_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('period_id')->references('id')->on('periods')->onDelete('cascade');
+            $table->foreign('sub_period_id')->references('id')->on('sub_periods')->onDelete('set null');
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('set null');
             $table->timestamps();
         });

@@ -74,11 +74,11 @@
     },
     getStatusClass(status) {
         return status == 1 ?
-            'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-500' :
-            'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-500';
+            'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-500' :
+            'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-500';
     },
     getStatusLabel(status) {
-        return status == 1 ? 'Ditutup' : 'Tidak Ditutup';
+        return status == 1 ? 'Ditutup' : 'Aktif';
     },
 
 
@@ -164,25 +164,16 @@
                         </th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Periode</th>
+                            Nama</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Deskirpsi</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Tanggal Mulai</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Tanggal Berakhir</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Apakah Ditutup</th>
+                            Status</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Ditutup Pada</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Ditutup Oleh</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Action</th>
@@ -221,12 +212,6 @@
                             <!-- Deskripsi -->
                             <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
 
-                            <!-- Tanggal Mulai -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.start_date"></td>
-
-                            <!-- Tanggal Berakhir -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.end_date"></td>
-
                             <!-- Apakah ditutup -->
                             <td class="px-4 sm:px-6 py-3.5">
                                 <span class="inline-block rounded-full px-2 py-0.5 text-theme-xs font-medium"
@@ -236,17 +221,6 @@
 
                             <!-- Ditutup pada -->
                             <td class="px-4 sm:px-6 py-3.5" x-text="row.closed_at"></td>
-
-                            <!-- Ditutup Oleh -->
-                            <td class="px-4 sm:px-6 py-3.5">
-                                <span
-                                    class="inline-flex items-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
-                                    :class="row.closed_by !== '-' ?
-                                        'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400' :
-                                        'bg-gray-100 text-gray-500 dark:bg-gray-500/15 dark:text-gray-400'"
-                                    x-text="row.closed_by">
-                                </span>
-                            </td>
 
                             <!-- Action -->
                             <td class="px-4 sm:px-3 py-2.5">

@@ -2,6 +2,8 @@
     'openingBalances' => collect(),
     'periods' => collect(),
     'periodId' => null,
+    'subPeriods' => collect(),
+    'subPeriodId' => null,
 ])
 
 <div x-data="{
@@ -110,6 +112,8 @@
                             No
                         </th>
                         <th class="px-6 py-4 text-center border-r border-gray-100">
+                            Sub Periode</th>
+                        <th class="px-6 py-4 text-center border-r border-gray-100">
                             Akun</th>
                         <th class="px-6 py-4 text-center border-r border-gray-100">
                             Kode</th>
@@ -130,6 +134,9 @@
                                 <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
                                     x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
                             </td>
+
+                            <!-- Sub Periode -->
+                            <td class="px-4 sm:px-6 py-3.5" x-text="row.sub_period ?? '-'"></td>
 
                             <!-- Nama -->
                             <td class="px-4 sm:px-6 py-3.5">
