@@ -3,42 +3,59 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Exports\JournalPdfExport;
-use Carbon\Carbon;
-use App\Models\Period;
-use App\Models\Journal;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Journal;
+use App\Models\Period;
+use App\Models\SubPeriod;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class JournalController extends Controller
 {
     public function index(Request $request)
     {
-        $periodId = $request->get('period_id');
-        $month    = $request->get('month'); // YYYY-MM
+        $periodId =  $request->period_id;
+        $subPeriodId =  $request->sub_period_id;
+        $startDate =  $request->start_date;
+        $endDate = $request->end_date;
 
-        $periods = Period::orderBy('start_date', 'desc')->get();
+        // Initial Query
+        $query  = Journal::with(['details.coa.accountType', 'postedBy']);
 
-        $period = $periodId
-            ? Period::findOrFail($periodId)
-            : Period::active()->firstOrFail();
+        // ================= FILTER =================
+        if ($request->filled('period_id')) {
+            $query->where('period_id', $periodId);
+        }
 
-        $journals = Journal::with(['details.coa.accountType', 'postedBy'])
-            ->where('period_id', $period->id)
-            ->when($month, function ($q) use ($month) {
-                $startDate = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-                $endDate   = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
-                $q->whereBetween('journal_date', [$startDate, $endDate]);
-            })
-            ->orderBy('journal_date')
+        if ($request->filled('sub_period_id')) {
+            $query->where('sub_period_id', $subPeriodId);
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('journal_date', '>=', $startDate);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('journal_date', '<=', $endDate);
+        }
+
+        // ======================= ORDER ============
+        $journals = $query->orderBy('journal_date', 'desc')
             ->get();
 
-        // --- PROSES GROUPING ---
-        // Kita kelompokkan berdasarkan COA ID yang bertipe 'ASET' (Kas)
+        $periods = Period::where('is_closed', false)->get();
+        $subPeriods = collect();
+        if ($request->period_id) {
+            $subPeriods = SubPeriod::where('period_id', $request->period_id)
+                ->orderBy('start_date')
+                ->get();
+        }
+
+        // --- GROUPING (tetap sama) ---
         $groupedJournals = [];
 
         foreach ($journals as $journal) {
-            // Cari detail yang merupakan akun Kas/Aset dalam jurnal ini
             $kasDetail = $journal->details->first(function ($detail) {
                 return $detail->coa?->accountType?->name === 'ASET';
             });
@@ -53,6 +70,7 @@ class JournalController extends Controller
                         'data' => []
                     ];
                 }
+
                 $groupedJournals[$coaId]['data'][] = $journal;
             }
         }
@@ -60,8 +78,11 @@ class JournalController extends Controller
         return view('pages.menus.bendahara.journals.index', [
             'groupedJournals' => $groupedJournals,
             'periods' => $periods,
+            'subPeriods' => $subPeriods, // ⬅️ tambahan
             'periodId' => $periodId,
-            'month' => $month
+            'subPeriodId' => $subPeriodId, // ⬅️ tambahan
+            'startDate' => $startDate,
+            'endDate' => $endDate
         ]);
     }
 
@@ -102,7 +123,7 @@ class JournalController extends Controller
             ->orderBy('journal_date')
             ->get();
 
-            // TERAPKAN GROUPING DISINI
+        // TERAPKAN GROUPING DISINI
         $groupedJournals = $this->groupJournals($journals);
 
         // =====================

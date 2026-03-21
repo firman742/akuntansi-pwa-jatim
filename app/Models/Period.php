@@ -71,8 +71,6 @@ class Period extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query
-            ->where('is_closed', false)
-            ->whereDate('start_date', '<=', now())
-            ->whereDate('end_date', '>=', now());
+            ->where('is_closed', false);
     }
 }

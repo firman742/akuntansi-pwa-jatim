@@ -11,7 +11,7 @@
                 {{-- Period --}}
                 <div class="flex flex-col gap-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Periode</label>
-                    <select name="period_id"
+                    <select name="period_id" id="filter_period"
                         class="w-48 rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm transition focus:border-primary focus:bg-white focus:ring-primary">
                         <option value="">Semua Periode</option>
                         @foreach ($periods as $p)
@@ -25,19 +25,19 @@
                     <label class="text-xs font-bold uppercase tracking-wider text-gray-500">
                         Sub Periode
                     </label>
-                
-                    <select name="sub_period_id"
+
+                    <select name="sub_period_id" id="filter_sub_period"
                         class="w-48 rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
                                transition focus:border-primary focus:bg-white focus:ring-primary">
-                
+
                         <option value="">Semua Sub Periode</option>
-                
+
                         @foreach ($subPeriods as $sp)
                             <option value="{{ $sp->id }}" @selected($subPeriodId == $sp->id)>
                                 {{ $sp->name }}
                             </option>
                         @endforeach
-                
+
                     </select>
                 </div>
 
@@ -89,6 +89,36 @@
     </div>
 
     <div class="space-y-6">
-        <x-core.basic-tables.bendahara.opening-balance-table :openingBalances="$openingBalances" :periods="$periods" :periodId="$periodId" :subPeriods="$subPeriods" :subPeriodId="$subPeriodId" />
+        <x-core.basic-tables.bendahara.opening-balance-table :openingBalances="$openingBalances" :periods="$periods" :periodId="$periodId"
+            :subPeriods="$subPeriods" :subPeriodId="$subPeriodId" />
     </div>
+
+
+    <script>
+        const periodFilter = document.getElementById('filter_period');
+        const subPeriodFilter = document.getElementById('filter_sub_period');
+
+        periodFilter.addEventListener('change', async function() {
+
+            let periodId = this.value;
+
+            subPeriodFilter.innerHTML = '<option>Loading...</option>';
+
+            if (!periodId) {
+                subPeriodFilter.innerHTML = '<option value="">Semua</option>';
+                return;
+            }
+
+            const res = await fetch(`/bendahara/periode/${periodId}/sub-periods`);
+            const data = await res.json();
+
+            subPeriodFilter.innerHTML = '<option value="">Semua</option>';
+
+            data.forEach(sub => {
+                subPeriodFilter.innerHTML += `
+                <option value="${sub.id}">${sub.name}</option>
+            `;
+            });
+        });
+    </script>
 @endsection
