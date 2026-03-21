@@ -2,28 +2,41 @@
 
 namespace App\Http\Controllers\Bendahara;
 
-use Carbon\Carbon;
-use App\Models\Period;
-use App\Models\Journal;
-use Illuminate\Http\Request;
-use App\Models\JournalDetail;
-use App\Models\ChartOfAccount;
-use App\Models\OpeningBalance;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\ChartOfAccount;
+use App\Models\Journal;
+use App\Models\JournalDetail;
+use App\Models\OpeningBalance;
+use App\Models\Period;
+use App\Models\SubPeriod;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TrialBalanceController extends Controller
 {
     public function index(Request $request)
     {
-        $periods = Period::orderBy('start_date', 'desc')->get();
-        $periodId = $request->period_id ?? Period::active()->first()->id;
-        $period = Period::findOrFail($periodId);
-        $month = $request->month;
+        $periods = Period::orderBy('created_at', 'desc')->get();
+        $periodId = $request->period_id ?? optional(Period::first())->id;
+        $subPeriodId = $request->sub_period_id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get SUB PERIOD 
+        |--------------------------------------------------------------------------
+        */
+        $subPeriods = SubPeriod::where('period_id', $periodId)
+            ->orderBy('id')
+            ->get();
 
         $coas = ChartOfAccount::orderBy('code')->get();
 
-        // Inisialisasi Kategori
+        /*
+        |--------------------------------------------------------------------------
+        | INIT DATA
+        |--------------------------------------------------------------------------
+        */
         $data = [
             'aset_lancar' => [],
             'aset_tidak_lancar' => [],
@@ -32,68 +45,111 @@ class TrialBalanceController extends Controller
         ];
 
         foreach ($coas as $coa) {
-            // 1. Ambil Saldo Awal
+
+            /*
+            |--------------------------------------------------------------------------
+            | OPENING BALANCE
+            |--------------------------------------------------------------------------
+            */
             $opening = OpeningBalance::where('chart_of_account_id', $coa->id)
-                ->where('period_id', $period->id)->first();
+                ->where('period_id', $periodId)
+                ->where('sub_period_id', $subPeriodId)
+                ->first();
+
             $openingAmount = $opening ? $opening->amount : 0;
 
-            // 2. Hitung Mutasi
+            /*
+            |--------------------------------------------------------------------------
+            | MUTATION QUERY (SUDAH PAKAI FILTER BARU)
+            |--------------------------------------------------------------------------
+            */
             $mutationQuery = JournalDetail::where('coa_id', $coa->id)
-                ->whereHas('journal', function ($q) use ($period, $month) {
-                    $q->where('period_id', $period->id);
-                    if ($month) {
-                        $q->whereMonth('journal_date', Carbon::parse($month)->month)
-                            ->whereYear('journal_date', Carbon::parse($month)->year);
+                ->whereHas('journal', function ($q) use ($periodId, $subPeriodId) {
+
+                    $q->where('period_id', $periodId);
+
+                    if ($subPeriodId) {
+                        $q->where('sub_period_id', $subPeriodId);
                     }
                 });
 
-            $debit = (clone $mutationQuery)->sum('debit');
+            $debit  = (clone $mutationQuery)->sum('debit');
             $credit = (clone $mutationQuery)->sum('credit');
 
-            // 3. Saldo Akhir
+            /*
+            |--------------------------------------------------------------------------
+            | ENDING BALANCE
+            |--------------------------------------------------------------------------
+            */
             if ($coa->normal_balance === 'DEBIT') {
                 $balance = $openingAmount + $debit - $credit;
             } else {
                 $balance = $openingAmount + $credit - $debit;
             }
 
-            // Pengelompokan berdasarkan Kode Akun (Header)
-            $row = ['code' => $coa->code, 'name' => $coa->name, 'amount' => $balance];
+            $row = [
+                'code' => $coa->code,
+                'name' => $coa->name,
+                'amount' => $balance
+            ];
 
-            if (str_starts_with($coa->code, '11')) $data['aset_lancar'][] = $row;
-            elseif (str_starts_with($coa->code, '12')) $data['aset_tidak_lancar'][] = $row;
-            elseif (str_starts_with($coa->code, '2')) $data['hutang'][] = $row;
-            elseif (str_starts_with($coa->code, '3')) $data['modal'][] = $row;
+            if (str_starts_with($coa->code, '11')) {
+                $data['aset_lancar'][] = $row;
+            } elseif (str_starts_with($coa->code, '12')) {
+                $data['aset_tidak_lancar'][] = $row;
+            } elseif (str_starts_with($coa->code, '2')) {
+                $data['hutang'][] = $row;
+            } elseif (str_starts_with($coa->code, '3')) {
+                $data['modal'][] = $row;
+            }
         }
 
-        // Hitung Selisih Pendapatan & Biaya (Surplus/Defisit)
+        /*
+        |--------------------------------------------------------------------------
+        | SURPLUS DEFICIT (PAKAI FILTER)
+        |--------------------------------------------------------------------------
+        */
+        $journalFilter = function ($q) use ($periodId, $subPeriodId) {
+            $q->where('period_id', $periodId);
+
+            if ($subPeriodId) {
+                $q->where('sub_period_id', $subPeriodId);
+            }
+
+        };
+
         $totalRevenue = JournalDetail::whereHas('coa', fn($q) => $q->where('code', 'like', '4%'))
-            ->whereHas('journal', fn($q) => $q->where('period_id', $period->id))->sum(DB::raw('credit - debit'));
+            ->whereHas('journal', $journalFilter)
+            ->sum(DB::raw('credit - debit'));
+
         $totalExpense = JournalDetail::whereHas('coa', fn($q) => $q->where('code', 'like', '5%'))
-            ->whereHas('journal', fn($q) => $q->where('period_id', $period->id))->sum(DB::raw('debit - credit'));
+            ->whereHas('journal', $journalFilter)
+            ->sum(DB::raw('debit - credit'));
+
         $surplusDeficit = $totalRevenue - $totalExpense;
 
-        // LOGIKA BARU UNTUK MODAL
-        $totalAsetLancar = collect($data['aset_lancar'])->sum('amount');
+        /*
+        |--------------------------------------------------------------------------
+        | MODAL LOGIC
+        |--------------------------------------------------------------------------
+        */
+        $totalAsetLancar      = collect($data['aset_lancar'])->sum('amount');
         $totalAsetTidakLancar = collect($data['aset_tidak_lancar'])->sum('amount');
-        $totalKeseluruhanAset = $totalAsetLancar + $totalAsetTidakLancar;
-        $totalHutang = collect($data['hutang'])->sum('amount');
+        $totalAset            = $totalAsetLancar + $totalAsetTidakLancar;
+        $totalHutang          = collect($data['hutang'])->sum('amount');
 
-        // 1. Modal Tetap = Jumlah Aset Tidak Lancar
-        $modalTetap = $totalAsetTidakLancar;
-
-        // 2. Modal Lancar = Total Aset - Modal Tetap - Surplus/Defisit - Hutang
-        $modalLancar = $totalKeseluruhanAset - $modalTetap - $surplusDeficit - $totalHutang;
+        $modalTetap  = $totalAsetTidakLancar;
+        $modalLancar = $totalAset - $modalTetap - $surplusDeficit - $totalHutang;
 
         return view('pages.menus.bendahara.trial-balances.index', compact(
             'data',
             'surplusDeficit',
-            'modalTetap',   // Kirim ke view
-            'modalLancar',  // Kirim ke view
+            'modalTetap',
+            'modalLancar',
             'periods',
             'periodId',
-            'month',
-            'period'
+            'subPeriods',
+            'subPeriodId',
         ));
     }
 

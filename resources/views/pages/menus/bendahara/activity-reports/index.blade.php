@@ -5,43 +5,49 @@
 
     {{-- FILTER CARD --}}
     <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <form method="GET" class="flex flex-wrap items-end gap-5">
-            <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Periode</label>
-                <select name="period_id"
-                    class="w-48 rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm transition focus:border-primary focus:bg-white focus:ring-primary">
-                    @foreach ($periods as $p)
-                        <option value="{{ $p->id }}" @selected($period->id == $p->id)>{{ $p->name }}</option>
-                    @endforeach
-                </select>
-            </div>
+        <form method="GET">
 
-            <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Bulan (Opsional)</label>
-                <input type="month" name="month" value="{{ $month }}"
-                    class="rounded-xl border-gray-200 bg-gray-50 px-4 py-2 text-sm transition focus:border-primary focus:bg-white focus:ring-primary">
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
-            <div class="ml-auto flex gap-3">
-                <x-ui.button type="submit" variant="primary" class="rounded-xl px-6 shadow-md shadow-primary/20">
-                    <span class="flex items-center gap-2">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                {{-- PERIOD --}}
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Periode</label>
+                    <select name="period_id" id="filter_period"
+                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm">
+                        @foreach ($periods as $p)
+                            <option value="{{ $p->id }}" @selected($periodId == $p->id)>
+                                {{ $p->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- SUB PERIOD --}}
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Sub Periode</label>
+                    <select name="sub_period_id" id="filter_sub_period"
+                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm">
+                        <option value="">Semua</option>
+                        @foreach ($subPeriods as $sp)
+                            <option value="{{ $sp->id }}" @selected($subPeriodId == $sp->id)>
+                                {{ $sp->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- BUTTON --}}
+                <div class="flex items-end">
+                    <x-ui.button type="submit" variant="primary"
+                        class="w-full rounded-xl px-6 shadow-md shadow-primary/20">
                         Tampilkan
-                    </span>
-                </x-ui.button>
-                {{--  <a href="#"> 
-                    <x-ui.button variant="outline" type="button"
-                        class="rounded-xl border-gray-300 bg-white hover:bg-gray-50">
-                        Export PDF
                     </x-ui.button>
-                </a> --}}
+                </div>
             </div>
+
         </form>
     </div>
-
+    
     {{-- MAIN REPORT CARD --}}
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {{-- HEADER STATUS --}}
@@ -51,10 +57,10 @@
                     <h2 class="text-xl font-bold text-gray-800">Laporan Aktivitas</h2>
                     <p class="text-sm font-medium text-gray-500">Periode: <span
                             class="text-primary">{{ $period->name }}</span>
-                        @if ($month)
-                            | Bulan: <span class="text-primary">{{ \Carbon\Carbon::parse($month)->format('F Y') }}</span>
-                        @endif
                     </p>
+                    <p class="text-sm font-medium text-gray-500">Sub Periode: <span
+                        class="text-primary">{{ $subPeriod->name }}</span>
+                </p>
                 </div>
             </div>
             <div class="mt-4 text-right sm:mt-0">
@@ -167,8 +173,7 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <span
-                                        class="block text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">Hasil
+                                    <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">Hasil
                                         Akhir Laporan</span>
                                     <span class="text-lg font-extrabold uppercase tracking-tight">
                                         SELISIH PENDAPATAN & BIAYA
@@ -190,4 +195,31 @@
             </table>
         </div>
     </div>
+
+    
+    {{-- SCRIPT DEPENDENT --}}
+    <script>
+        const periodFilter = document.getElementById('filter_period');
+        const subPeriodFilter = document.getElementById('filter_sub_period');
+
+        periodFilter.addEventListener('change', async function() {
+            let periodId = this.value;
+
+            subPeriodFilter.innerHTML = '<option>Loading...</option>';
+
+            if (!periodId) {
+                subPeriodFilter.innerHTML = '<option value="">Semua</option>';
+                return;
+            }
+
+            const res = await fetch(`/bendahara/periode/${periodId}/sub-periods`);
+            const data = await res.json();
+
+            subPeriodFilter.innerHTML = '<option value="">Semua</option>';
+
+            data.forEach(sub => {
+                subPeriodFilter.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+            });
+        });
+    </script>
 @endsection
