@@ -30,17 +30,19 @@ class menu
             self::item(
                 'Dashboard',
                 'dashboard',
-                '/dashboard'
+                '/superadmin/dashboard'
             ),
             self::item(
                 'Pengguna',
                 'user-profile',
-                '/users'
+                '/superadmin/users',
+                ['superadmin/users*'],
             ),
             self::item(
                 'Peran & Izin',
                 'roles',
-                '/roles'
+                '/superadmin/roles',   
+                ['superadmin/roles*'],
             ),
         ];
     }
@@ -60,15 +62,15 @@ class menu
             self::item(
                 'Periode',
                 'calendar',
-                '/bendahara/periode',
-                ['bendahara/periode*']
+                '/bendahara/periods',
+                ['bendahara/periods*']
             ),
             
             self::item(
                 'Sub Periode',
                 'calendar',
-                '/bendahara/sub-periode',
-                ['bendahara/sub-periode*']
+                '/bendahara/sub-periods',
+                ['bendahara/sub-periods*']
             ),
             [
                 'name' => 'Master Data',
@@ -80,21 +82,21 @@ class menu
                     self::item(
                         'Tipe Akun',
                         null,
-                        '/bendahara/master/account-type',
-                        ['bendahara/master/account-type*']
+                        '/bendahara/master/account-types',
+                        ['bendahara/master/account-types*']
                     ),
                     self::item(
                         'COA (Chart of Account)',
                         null,
-                        '/bendahara/master/coa',
-                        ['bendahara/master/coa*'],
+                        '/bendahara/master/coas',
+                        ['bendahara/master/coas*'],
                         PermissionEnum::COA_VIEW
                     ),
                     self::item(
                         'Pengguna COA',
                         null,
-                        '/bendahara/master/account-user',
-                        ['bendahara/master/account-user*'],
+                        '/bendahara/master/account-users',
+                        ['bendahara/master/account-users*'],
                         PermissionEnum::COA_ASSIGN_USER
                     ),
                 ],
@@ -102,59 +104,38 @@ class menu
             self::item(
                 'Neraca Saldo Awal',
                 'wallet',
-                '/bendahara/saldo-awal',
-                ['bendahara/saldo-awal*']
+                '/bendahara/opening-balances',
+                ['bendahara/opening-balances*']
             ),
+
+            // REPORTS
             self::item(
                 'Jurnal Umum',
                 'database',
-                '/bendahara/jurnal-umum',
-                ['bendahara/jurnal-umum*']
+                '/bendahara/reports/journal',
+                ['bendahara/reports/journal*']
             ),
 
             self::item(
                 'Buku Besar',
                 'ledger',
-                '/bendahara/buku-besar',
-                ['bendahara/buku-besar*']
+                '/bendahara/reports/ledger',
+                ['bendahara/reports/ledger*']
             ),
             
             self::item(
                 'Laporan Aktifitas',
                 'ledger',
-                '/bendahara/laporan-aktifitas',
-                ['bendahara/laporan-aktifitas*']
+                '/bendahara/reports/activity',
+                ['bendahara/reports/activity*']
             ),
 
             self::item(
                 'Neraca',
                 'balance',
-                '/bendahara/neraca-saldo',
-                ['bendahara/neraca-saldo*']
+                '/bendahara/reports/trial-balance',
+                ['bendahara/reports/trial-balance*']
             ),
-
-
-            // [
-            //     'name' => 'Laporan',
-            //     'icon' => 'report',
-            //     'active_on' => [
-            //         'bendahara/report*'
-            //     ],
-            //     'subItems' => [
-            //         self::item(
-            //             'Buku Besar',
-            //             null,
-            //             '/bendahara/report/buku-besar',
-            //             ['bendahara/report/buku-besar*']
-            //         ),
-            //         self::item(
-            //             'Neraca Saldo',
-            //             null,
-            //             '/bendahara/report/neraca-saldo',
-            //             ['bendahara/report/neraca-saldo*']
-            //         ),
-            //     ],
-            // ],
         ];
     }
 
@@ -172,20 +153,20 @@ class menu
             self::item(
                 'Penerimaan',
                 'income',
-                '/user/transaksi/penerimaan',
-                ['user/transaksi/penerimaan*']
+                '/user/transactions/incomes',
+                ['user/transactions/incomes*']
             ),
             self::item(
                 'Pengeluaran',
                 'expense',
-                '/user/transaksi/pengeluaran',
-                ['user/transaksi/pengeluaran*']
+                '/user/transactions/expenses',
+                ['user/transactions/expenses*']
             ),
             self::item(
                 'Riwayat Transaksi',
                 'cash',
-                '/user/transaksi/history',
-                ['user/transaksi/history*']
+                '/user/transactions/histories',
+                ['user/transactions/histories*']
             ),
 
         ];

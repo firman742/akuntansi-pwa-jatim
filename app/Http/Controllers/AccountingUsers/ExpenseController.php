@@ -263,7 +263,7 @@ class ExpenseController extends Controller
         });
 
         return redirect()
-            ->route('user.expenses.index')
+            ->route('user.transactions.expenses.index')
             ->with('success', 'Transaksi pengeluaran berhasil disimpan');
     }
 

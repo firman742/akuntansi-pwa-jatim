@@ -6,7 +6,7 @@
     tableRowData: @js($incomes),
     itemsPerPage: 10,
     currentPage: 1,
-    showUrl: '{{ route('user.incomes.show', ':id') }}',
+    showUrl: '{{ route('user.transactions.incomes.show', ':id') }}',
     {{-- destroyUrl: '{{ route('user.incomes.destroy', ':id') }}', --}}
 
     get totalPages() {

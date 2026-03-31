@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'Master Data - Penghubung COA ke Pengguna')
+
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Assign COA ke Pengguna" />
+    <x-common.page-breadcrumb pageTitle="Penghubung COA ke Pengguna" />
 
     <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
         <div class="mb-6 rounded-xl border border-gray-200 bg-gray-50 px-5 py-4
@@ -23,13 +25,13 @@
 
         <div class="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
             <div class="space-y-6">
-                <form action="{{ route('bendahara.master.account-user.sync', $user->id) }}" method="POST">
+                <form action="{{ route('bendahara.master.account-users.sync', $user->id) }}" method="POST">
                     @csrf
 
                     <x-core.lists.list-user-account-checkbox :coas="$coas" :assignedCoaIds="$assignedCoaIds" />
 
                     <div class="mt-6 flex justify-end gap-3">
-                        <a href="{{ route('bendahara.master.account-user.index') }}">
+                        <a href="{{ route('bendahara.master.account-users.index') }}">
                             <x-ui.button variant="outline" size="sm">Batal</x-ui.button>
                         </a>
 

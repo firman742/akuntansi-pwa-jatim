@@ -1,6 +1,6 @@
 @props(['groupedJournals'])
 
-<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+<div class="overflow-hidden border border-gray-200 bg-white shadow-sm">
     <div class="max-w-full overflow-x-auto">
         <table class="w-full border-collapse">
             {{-- TABLE HEADER --}}

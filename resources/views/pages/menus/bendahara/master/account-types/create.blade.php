@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Master Data - Tambah Tipe Akun')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Tambah Tipe Akun" />
 
@@ -27,7 +29,7 @@
 
         </p>
 
-        <form method="POST" action="{{ route('bendahara.master.account-type.store') }}">
+        <form method="POST" action="{{ route('bendahara.master.account-types.store') }}">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <div class="col-span-1 md:col-span-2">
@@ -90,7 +92,7 @@
             </div>
 
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('bendahara.master.account-type.index') }}">
+                <a href="{{ route('bendahara.master.account-types.index') }}">
                     <x-ui.button variant="outline" size="sm">
                         Kembali
                     </x-ui.button>

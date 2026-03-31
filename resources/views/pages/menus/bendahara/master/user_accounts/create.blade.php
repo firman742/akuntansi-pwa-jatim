@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Master Data - Tambah Akun COA')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Tambah Akun COA" />
 
@@ -22,7 +24,7 @@
     @endif
 
     <x-common.component-card title="Tambah Akun COA">
-        <form method="POST" action="{{ route('bendahara.master.coa.store') }}">
+        <form method="POST" action="{{ route('bendahara.master.account-users.store') }}">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4" 
                 x-data="{
@@ -34,7 +36,7 @@
                 
                     async fetchCode() {
                         try {
-                            let url = '{{ route('bendahara.master.coa.generate-code') }}';
+                            let url = '{{ route('bendahara.master.account-users.generate-code') }}';
                             if (this.parentId) url += '?parent_id=' + this.parentId;
                 
                             const response = await fetch(url);
@@ -165,7 +167,7 @@
 
             {{-- Submit --}}
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('bendahara.master.coa.index') }}">
+                <a href="{{ route('bendahara.master.account-users.index') }}">
                     <x-ui.button variant="outline" size="sm">Kembali</x-ui.button>
                 </a>
                 <x-ui.button type="submit" variant="primary" size="sm">Buat Akun COA</x-ui.button>

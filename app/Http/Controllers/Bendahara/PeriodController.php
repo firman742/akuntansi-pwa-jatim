@@ -46,7 +46,7 @@ class PeriodController extends Controller
 
 
         return redirect()
-            ->route('bendahara.periode.index')
+            ->route('bendahara.periods.index')
             ->with('success', 'Periode berhasil ditambahkan');
     }
 
@@ -78,7 +78,7 @@ class PeriodController extends Controller
         $period->update($validated);
 
         return redirect()
-            ->route('bendahara.periode.index')
+            ->route('bendahara.periods.index')
             ->with('success', 'Periode berhasil diperbarui');
     }
 
@@ -96,7 +96,7 @@ class PeriodController extends Controller
         $period->save();
 
         return redirect()
-            ->route('bendahara.periode.index')
+            ->route('bendahara.periods.index')
             ->with('success', 'Periode berhasil ditutup');
     }
 
@@ -109,7 +109,7 @@ class PeriodController extends Controller
         $period->delete();
 
         return redirect()
-            ->route('bendahara.periode.index')
+            ->route('bendahara.periods.index')
             ->with('success', 'Periode berhasil dihapus');
     }
 

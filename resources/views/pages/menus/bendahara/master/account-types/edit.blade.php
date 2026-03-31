@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Master Data - Edit Tipe Akun')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Edit Tipe Akun" />
 
@@ -27,7 +29,7 @@
 
         </p>
 
-        <form method="POST" action="{{ route('bendahara.master.account-type.update', $accountType->id) }}">
+        <form method="POST" action="{{ route('bendahara.master.account-types.update', $accountType->id) }}">
             @csrf
             @method('PUT')  
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
@@ -91,7 +93,7 @@
             </div>
 
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('bendahara.master.account-type.index') }}">
+                <a href="{{ route('bendahara.master.account-types.index') }}">
                     <x-ui.button variant="outline" size="sm">
                         Kembali
                     </x-ui.button>

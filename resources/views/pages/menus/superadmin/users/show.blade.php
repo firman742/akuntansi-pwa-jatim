@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Detail Pengguna')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Detail Pengguna" />
     <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
@@ -8,7 +10,7 @@
                 Profile
             </h3>
 
-            <a href="{{ route('users.index') }}">
+            <a href="{{ route('superadmin.users.index') }}">
                 <x-ui.button variant="outline" size="sm" >
                     <x-slot:startIcon>
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

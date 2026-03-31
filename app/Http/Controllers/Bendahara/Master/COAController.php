@@ -154,7 +154,7 @@ class COAController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        return redirect()->route('bendahara.master.coa.index')
+        return redirect()->route('bendahara.master.coas.index')
             ->with('success', 'Akun COA berhasil dibuat dengan kode: ' . $result['code']);
     }
 

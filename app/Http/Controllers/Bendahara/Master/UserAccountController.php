@@ -70,7 +70,7 @@ class UserAccountController extends Controller
         });
 
         return redirect()
-            ->route('bendahara.master.account-user.index')
+            ->route('bendahara.master.account-users.index')
             ->with('success', 'Akun COA berhasil diperbarui.');
     }
 }

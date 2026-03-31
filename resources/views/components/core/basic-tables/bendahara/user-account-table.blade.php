@@ -8,7 +8,7 @@
     currentPage: 1,
     selectedRows: [],
     selectAll: false,
-    showUrl: '{{ route('bendahara.master.account-user.edit', ':id') }}',
+    showUrl: '{{ route('bendahara.master.account-users.edit', ':id') }}',
     getInitial(name) {
         if (!name) return '';
         const names = name.split(' ');
@@ -27,6 +27,43 @@
         const start = (this.currentPage - 1) * this.itemsPerPage;
         return this.tableRowData.slice(start, start + this.itemsPerPage);
     },
+    get displayedPages() {
+        const total = this.totalPages;
+        const current = this.currentPage;
+        const delta = 2; // jumlah page kiri & kanan
+
+        const pages = [];
+        let start = Math.max(1, current - delta);
+        let end = Math.min(total, current + delta);
+
+        // pastikan selalu 5 angka kalau memungkinkan
+        if (current <= delta + 1) {
+            end = Math.min(total, 1 + delta * 2);
+        }
+
+        if (current + delta >= total) {
+            start = Math.max(1, total - delta * 2);
+        }
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+
+        return pages;
+    },
+    prevPage() {
+        if (this.currentPage > 1) this.currentPage--;
+    },
+
+    nextPage() {
+        if (this.currentPage < this.totalPages) this.currentPage++;
+    },
+
+    goToPage(page) {
+        if (page !== '...' && page >= 1 && page <= this.totalPages) {
+            this.currentPage = page;
+        }
+    },
 
     getStatusClass(status) {
         return status == 1 ?
@@ -39,19 +76,7 @@
 
 }">
 
-    <div
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <!-- Header -->
-        <div class="flex flex-col gap-4 px-6 mb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-                    Daftar Pengguna COA
-                </h3>
-            </div>
-            <div class="flex items-center gap-3">
-            </div>
-        </div>
-
+    <div class="overflow-hidden border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
         <!-- Table -->
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
@@ -134,7 +159,8 @@
                                             viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5 c4.478 0 8.268 2.943 9.542 7-1.274 4.057 -5.064 7 -9.542 7-4.477 0 -8.268 -2.943 -9.542 -7z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5 c4.478 0 8.268 2.943 9.542 7-1.274 4.057 -5.064 7 -9.542 7-4.477 0 -8.268 -2.943 -9.542 -7z" />
                                         </svg>
                                     </a>
                                 </div>

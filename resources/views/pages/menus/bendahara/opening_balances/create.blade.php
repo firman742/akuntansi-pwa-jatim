@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Neraca Saldo Awal - Buat Manual')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Neraca Saldo Awal - Buat Manual" />
 
@@ -246,7 +248,7 @@
 
             try {
 
-                const response = await fetch(`/bendahara/periode/${periodId}/sub-periods`);
+                const response = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
                 const data = await response.json();
 
                 subPeriodSelect.innerHTML = '<option value="">-- Pilih Sub Periode --</option>';

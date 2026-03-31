@@ -1,59 +1,62 @@
 @extends('layouts.app')
 
+@section('title', 'Sub Periode')
+
 @section('content')
-<x-common.page-breadcrumb pageTitle="Sub Periode" />
+    <x-common.page-breadcrumb pageTitle="Sub Periode" />
 
-{{-- FILTER CARD --}}
-<div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-    <form method="GET" class="flex flex-wrap items-end justify-between gap-5">
+    {{-- FILTER & ACTION CARD --}}
+    <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="GET" class="space-y-6">
 
-        <div class="flex flex-wrap items-end gap-5">
-            {{-- Period --}}
-            <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Periode</label>
-                <select name="period_id"
-                    class="w-48 rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm transition focus:border-primary focus:bg-white focus:ring-primary">
-                    @foreach ($periods as $p)
-                        <option value="{{ $p->id }}" @selected($periodId == $p->id)>{{ $p->name }}</option>
-                    @endforeach
-                </select>
-            </div>
+            {{-- FILTER SECTION --}}
+            <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-5">
 
-            {{-- Action Buttons --}}
-            <div class="flex gap-2">
-                <x-ui.button type="submit" variant="primary" class="rounded-xl px-6 shadow-md shadow-primary/20">
-                    <span class="flex items-center gap-2">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                {{-- PERIOD --}}
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Periode
+                    </label>
+                    <select name="period_id" id="filter_period"
+                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
+                           focus:border-primary focus:bg-white focus:ring-primary transition">
+                        <option value="">Semua</option>
+                        @foreach ($periods as $period)
+                            <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
+                                {{ $period->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- FILTER ACTION --}}
+                <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
+                    <x-ui.button type="submit" variant="primary"
+                        class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
                         Tampilkan
-                    </span>
-                </x-ui.button>
+                    </x-ui.button>
+
+                    <a href="{{ route('bendahara.sub-periods.index') }}" class="flex-1">
+                        <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
+                            Reset
+                        </x-ui.button>
+                    </a>
+                </div>
             </div>
-        </div>
+        </form>
+    </div>
 
-        <div class="flex items-center gap-3">
-            <a href="{{ route('bendahara.sub-periode.create') }}">
-                <x-ui.button variant="danger" size="sm" class="rounded-xl px-4 flex items-center gap-2">
-                    <svg class="h-4 w-4 stroke-current" viewBox="0 0 20 20" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 4.16699V15.8337" stroke="" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                        <path d="M4.16699 10H15.8337" stroke="" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    Tambah
-                </x-ui.button>
-            </a>
-        </div>
-    </form>
-</div>
+    <div class="space-y-6">
+        <x-core.basic-tables.core-table title="Daftar Sub Periode" description="Berikut adalah daftar sub periode yang tersedia.">
+            <x-slot name="actions">
+                <a href="{{ route('bendahara.sub-periods.create') }}">
+                    <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
+                        + Tambah Sub Periode
+                    </x-ui.button>
+                </a>
+            </x-slot>
 
-<div class="space-y-6">
-    <x-core.basic-tables.bendahara.sub-period-table
-        :sub_periods="$sub_periods"
-        :periods="$periods"
-    />
-</div>
+            <x-core.basic-tables.bendahara.sub-period-table :sub_periods="$sub_periods" :periods="$periods" />
+        </x-core.basic-tables.core-table>
+    </div>
 @endsection

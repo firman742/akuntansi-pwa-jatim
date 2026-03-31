@@ -1,10 +1,12 @@
 @extends('layouts.app')
 
+@section('title', 'Tambah Penerimaan')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Tambah Penerimaan" />
 
     <x-common.component-card title="Transaksi Penerimaan">
-        <form method="POST" action="{{ route('user.incomes.store') }}" enctype="multipart/form-data" class="space-y-6"
+        <form method="POST" action="{{ route('user.transactions.incomes.store') }}" enctype="multipart/form-data" class="space-y-6"
             x-data="receiptUpload()">
             @csrf
 
@@ -158,7 +160,7 @@
 
             {{-- ================= ACTION ================= --}}
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('user.incomes.index') }}">
+                <a href="{{ route('user.transactions.incomes.index') }}">
                     <x-ui.button variant="outline" size="sm">
                         Kembali
                     </x-ui.button>

@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Periode')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Edit Periode" />
 

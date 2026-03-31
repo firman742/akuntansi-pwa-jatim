@@ -6,7 +6,7 @@
     tableRowData: @js($expenses),
     itemsPerPage: 10,
     currentPage: 1,
-    showUrl: '{{ route('user.expenses.show', ':id') }}',
+    showUrl: '{{ route('user.transactions.expenses.show', ':id') }}',
     {{-- destroyUrl: '{{ route('user.expenses.destroy', ':id') }}', --}}
 
     get totalPages() {

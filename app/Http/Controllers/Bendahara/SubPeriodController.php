@@ -76,7 +76,7 @@ class SubPeriodController extends Controller
         ]);
 
         return redirect()
-            ->route('bendahara.sub-periode.index')
+            ->route('bendahara.sub-periods.index')
             ->with('success', 'Sub Periode berhasil ditambahkan');
     }
 
@@ -89,7 +89,7 @@ class SubPeriodController extends Controller
         $subPeriod->delete();
 
         return redirect()
-            ->route('bendahara.sub-periode.index')
+            ->route('bendahara.sub-periods.index')
             ->with('success', 'Sub Periode berhasil dihapus');
     }
 }

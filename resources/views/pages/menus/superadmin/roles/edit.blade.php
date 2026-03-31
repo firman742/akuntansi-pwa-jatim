@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Pengguna')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Edit Pengguna" />
 
@@ -110,7 +112,7 @@
             </div>
 
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('users.index') }}">
+                <a href="{{ route('superadmin.users.index') }}">
                     <x-ui.button variant="outline" size="sm">
                         Kembali
                     </x-ui.button>

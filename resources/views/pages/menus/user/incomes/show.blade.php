@@ -1,10 +1,12 @@
 @extends('layouts.app')
 
+@section('title', 'Detail Penerimaan')
+
 @section('content')
     <div class="max-w-6xl mx-auto space-y-4">
 
         {{-- BACK --}}
-        <a href="{{ route('user.incomes.index') }}" class="mb-5">
+        <a href="{{ route('user.transactions.incomes.index') }}" class="mb-5">
             <x-ui.button variant="outline" size="sm" class="mb-5">
                 ← Kembali
             </x-ui.button>

@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Pengguna')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Edit Pengguna" />
 
@@ -26,7 +28,7 @@
 
         </p>
 
-        <form method="POST" action="{{ route('users.update', $user->id) }}">
+        <form method="POST" action="{{ route('superadmin.users.update', $user->id) }}">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
@@ -110,7 +112,7 @@
             </div>
 
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('users.index') }}">
+                <a href="{{ route('superadmin.users.index') }}">
                     <x-ui.button variant="outline" size="sm">
                         Kembali
                     </x-ui.button>

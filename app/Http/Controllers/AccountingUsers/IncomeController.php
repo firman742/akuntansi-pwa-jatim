@@ -249,7 +249,7 @@ class IncomeController extends Controller
         });
 
         return redirect()
-            ->route('user.incomes.index')
+            ->route('user.transactions.incomes.index')
             ->with('success', 'Transaksi penerimaan berhasil disimpan');
     }
 

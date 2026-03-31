@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Jurnal Umum')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Jurnal Umum" />
 
@@ -71,43 +73,28 @@
                             Tampilkan
                         </span>
                     </x-ui.button>
+                </div>
 
-                    <a href="{{ route('bendahara.journals.index') }}" class="w-full">
+                <div class="flex items-end gap-2">
+                    <a href="{{ route('bendahara.reports.journal.index') }}" class="w-full">
                         <x-ui.button variant="outline"
                             class="w-full justify-center rounded-xl px-6 shadow-md shadow-primary/20">
                             Reset
                         </x-ui.button>
                     </a>
                 </div>
-
-                {{-- EXPORT GROUP --}}
-                <div class="flex items-center gap-3">
-                    {{-- <a href="" class="w-full">
-                        <x-ui.button variant="success" class="w-full justify-center rounded-xl px-6 shadow-md shadow-primary/20">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            Excel
-                        </x-ui.button>
-                    </a>
-                    <a href="" class="w-full">
-                        <x-ui.button variant="danger" class="w-full justify-center rounded-xl px-6 shadow-md shadow-primary/20">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            PDF
-                        </x-ui.button>
-                    </a> --}}
-                </div>
             </div>
         </form>
     </div>
 
-    <x-core.basic-tables.bendahara.journal-table :groupedJournals="$groupedJournals" />
+    {{-- TABLE --}}
+    <x-core.basic-tables.core-table title="Daftar Jurnal Umum" description="Berikut adalah daftar jurnal umum yang telah dibuat.">
+        <x-slot name="actions">
+            
+        </x-slot>
+
+        <x-core.basic-tables.bendahara.journal-table :groupedJournals="$groupedJournals" />
+    </x-core.basic-tables.core-table>
 
 
     <script>
@@ -125,7 +112,7 @@
                 return;
             }
 
-            const res = await fetch(`/bendahara/periode/${periodId}/sub-periods`);
+            const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
             const data = await res.json();
 
             subPeriodFilter.innerHTML = '<option value="">Semua</option>';

@@ -50,7 +50,7 @@ class UserController extends Controller
         $user->assignRole($validated['role']);
 
         return redirect()
-            ->route('users.index')
+            ->route('superadmin.users.index')
             ->with('success', 'User berhasil ditambahkan');
     }
 
@@ -85,7 +85,7 @@ class UserController extends Controller
         $user->syncRoles([$validated['role']]);
 
         return redirect()
-            ->route('users.index')
+            ->route('superadmin.users.index')
             ->with('success', 'User berhasil diperbarui');
     }
 
@@ -101,7 +101,7 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()
-            ->route('users.index')
+            ->route('superadmin.users.index')
             ->with('success', 'User berhasil dihapus');
     }
 }

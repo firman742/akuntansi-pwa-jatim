@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Master Data - COA')
+
 @section('content')
 <x-common.page-breadcrumb pageTitle="Master Data - COA" />
 
@@ -54,7 +56,7 @@
                     </span>
 
                     {{-- Edit --}}
-                    <a href="{{ route('bendahara.master.coa.edit', $coa->id) }}" class="inline-flex items-center justify-center">
+                    <a href="{{ route('bendahara.master.coas.edit', $coa->id) }}" class="inline-flex items-center justify-center">
                         <svg class="h-5 w-5 text-gray-700 hover:text-green-500 dark:text-gray-400 dark:hover:text-green-500"
                              fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -64,7 +66,7 @@
                     </a>
 
                     {{-- Delete --}}
-                    <form action="{{ route('bendahara.master.coa.destroy', $coa->id) }}" method="POST"
+                    <form action="{{ route('bendahara.master.coas.destroy', $coa->id) }}" method="POST"
                           onsubmit="return confirm('Yakin ingin menghapus COA ini?')" class="inline-flex">
                         @csrf
                         @method('DELETE')
@@ -102,26 +104,25 @@
     };
 @endphp
 
-<div class="border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03] p-6 rounded-xl border">
-    <!-- Header -->
-    <div class="flex flex-col gap-4 px-6 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Daftar COA (Chart of Accounts)
-            </h3>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('bendahara.master.coa.create') }}">
-                <x-ui.button variant="outline" size="sm">
-                    Tambah
+<div class="space-y-6">
+    <x-core.basic-tables.core-table title="Daftar COA" description="Berikut adalah daftar Chart of Accounts (COA) yang tersedia.">
+        <x-slot name="actions">
+            <a href="{{ route('bendahara.master.coas.create') }}">
+                <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
+                    + Tambah COA
                 </x-ui.button>
             </a>
-        </div>
-    </div>
+        </x-slot>
 
-    {{-- Render root --}}
-    @php
-        $renderTree(null, 0);
-    @endphp
+        {{-- Table Component UI --}}
+        {{-- Karena ini tree, kita render manual di bawah --}}
+        <div class="border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03] p-6 rounded-xl border">
+            {{-- Render root --}}
+            @php
+                $renderTree(null, 0);
+            @endphp
+        </div>
+
+    </x-core.basic-tables.core-table>
 </div>
 @endsection

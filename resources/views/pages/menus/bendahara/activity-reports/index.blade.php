@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Laporan Aktivitas Bendahara')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Laporan Aktivitas" />
 
@@ -36,18 +38,24 @@
                     </select>
                 </div>
 
-                {{-- BUTTON --}}
-                <div class="flex items-end">
+                {{-- FILTER ACTION --}}
+                <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
                     <x-ui.button type="submit" variant="primary"
-                        class="w-full rounded-xl px-6 shadow-md shadow-primary/20">
+                        class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
                         Tampilkan
                     </x-ui.button>
+
+                    <a href="{{ route('bendahara.reports.activity.index') }}" class="flex-1">
+                        <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
+                            Reset
+                        </x-ui.button>
+                    </a>
                 </div>
             </div>
 
         </form>
     </div>
-    
+
     {{-- MAIN REPORT CARD --}}
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {{-- HEADER STATUS --}}
@@ -59,8 +67,8 @@
                             class="text-primary">{{ $period->name }}</span>
                     </p>
                     <p class="text-sm font-medium text-gray-500">Sub Periode: <span
-                        class="text-primary">{{ $subPeriod->name }}</span>
-                </p>
+                            class="text-primary">{{ $subPeriod->name }}</span>
+                    </p>
                 </div>
             </div>
             <div class="mt-4 text-right sm:mt-0">
@@ -173,7 +181,8 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">Hasil
+                                    <span
+                                        class="block text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">Hasil
                                         Akhir Laporan</span>
                                     <span class="text-lg font-extrabold uppercase tracking-tight">
                                         SELISIH PENDAPATAN & BIAYA
@@ -196,7 +205,7 @@
         </div>
     </div>
 
-    
+
     {{-- SCRIPT DEPENDENT --}}
     <script>
         const periodFilter = document.getElementById('filter_period');
@@ -212,7 +221,7 @@
                 return;
             }
 
-            const res = await fetch(`/bendahara/periode/${periodId}/sub-periods`);
+            const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
             const data = await res.json();
 
             subPeriodFilter.innerHTML = '<option value="">Semua</option>';

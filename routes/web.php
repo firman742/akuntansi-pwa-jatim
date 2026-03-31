@@ -46,28 +46,24 @@ Route::get('/', function () {
 | Super Admin (Global)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:SUPER ADMIN'])->group(function () {
-
-    // System Commands (only in local environment)
+Route::middleware(['auth', 'role:SUPER ADMIN'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    // System Commands
     Route::post('/optimize-clear', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'optimizeClear']);
     Route::post('/migrate-fresh-seed', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'migrateFreshSeed']);
     Route::post('/npm-dev', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'npmDev']);
     Route::post('/npm-build', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'npmBuild']);
-    
-    // Install Spatie Media Library
+
     Route::post('/install-medialibrary', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'installMediaLibrary']);
 
     // Dashboard
     Route::get('/dashboard', fn() => app(\App\Http\Controllers\Superadmin\DashboardController::class)->index())
         ->name('dashboard');
 
-    // User Management
+    // Resource
     Route::resource('users', App\Http\Controllers\Superadmin\UserController::class);
-    // role management
     Route::resource('roles', App\Http\Controllers\Superadmin\RoleController::class);
-    // permission management
-    Route::resource('permissions', App\Http\Controllers\Superadmin\PermissionController::class)->only(['index', 'create', 'store']);
-
+    Route::resource('permissions', App\Http\Controllers\Superadmin\PermissionController::class)
+        ->only(['index', 'create', 'store']);
 });
 
 /*
@@ -75,73 +71,117 @@ Route::middleware(['auth', 'role:SUPER ADMIN'])->group(function () {
 | Accounting Module - Bendahara
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(function () {
+Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendahara.')->group(function () {
 
-    Route::get('/dashboard', [App\Http\Controllers\Bendahara\DashboardController::class, 'index'])->name('bendahara.dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\Bendahara\DashboardController::class, 'index'])
+        ->name('dashboard');
 
-    // Period Routes
-    Route::get('/periode', [App\Http\Controllers\Bendahara\PeriodController::class, 'index'])->name('bendahara.periode.index');
-    Route::get('/periode/create', [App\Http\Controllers\Bendahara\PeriodController::class, 'create'])->name('bendahara.periode.create');
-    Route::post('/periode', [App\Http\Controllers\Bendahara\PeriodController::class, 'store'])->name('bendahara.periode.store');
-    Route::get('/periode/{id}/edit', [App\Http\Controllers\Bendahara\PeriodController::class, 'edit'])->name('bendahara.periode.edit');
-    Route::put('/periode/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'update'])->name('bendahara.periode.update');
-    Route::patch('/periode/{id}/close', [App\Http\Controllers\Bendahara\PeriodController::class, 'close'])->name('bendahara.periode.close');
-    Route::delete('/periode/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'destroy'])->name('bendahara.periode.destroy');
-    Route::get('/periode/{id}/sub-periods', [App\Http\Controllers\Bendahara\PeriodController::class, 'getSubPeriods'])->name('bendahara.periode.sub-periods');
+    /*
+    |--------------------------------------------------------------------------
+    | PERIOD
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('periods')->name('periods.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bendahara\PeriodController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Bendahara\PeriodController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Bendahara\PeriodController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\PeriodController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'destroy'])->name('destroy');
 
-    // Sub Period Routes
-    Route::get('/sub-periode', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'index'])->name('bendahara.sub-periode.index');
-    Route::get('/sub-periode/create', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'create'])->name('bendahara.sub-periode.create');
-    Route::post('/sub-periode', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'store'])->name('bendahara.sub-periode.store');
-    Route::delete('/sub-periode/{id}', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'destroy'])->name('bendahara.sub-periode.destroy');
+        Route::patch('/{id}/close', [App\Http\Controllers\Bendahara\PeriodController::class, 'close'])
+            ->name('close');
 
-    // Master Data - Account Type Routes
-    Route::get('/master/account-type', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'index'])->name('bendahara.master.account-type.index');
-    Route::get('/master/account-type/create', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'create'])->name('bendahara.master.account-type.create');
-    Route::post('/master/account-type', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'store'])->name('bendahara.master.account-type.store');
-    Route::get('/master/account-type/{id}/edit', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'edit'])->name('bendahara.master.account-type.edit');
-    Route::put('/master/account-type/{id}', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'update'])->name('bendahara.master.account-type.update');
-    Route::delete('/master/account-type/{id}', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'destroy'])->name('bendahara.master.account-type.destroy');
+        Route::get('/{id}/sub-periods', [App\Http\Controllers\Bendahara\PeriodController::class, 'getSubPeriods'])
+            ->name('sub-periods');
+    });
 
-     // Master Data - COA Routes
-    Route::get('/master/coa', [App\Http\Controllers\Bendahara\Master\COAController::class, 'index'])->name('bendahara.master.coa.index');
-    Route::get('/master/coa/create', [App\Http\Controllers\Bendahara\Master\COAController::class, 'create'])->name('bendahara.master.coa.create');
-    Route::get('/master/coa/generate-code', [App\Http\Controllers\Bendahara\Master\COAController::class, 'generateCodeApi'])->name('bendahara.master.coa.generate-code');
-    Route::post('/master/coa', [App\Http\Controllers\Bendahara\Master\COAController::class, 'store'])->name('bendahara.master.coa.store');
-    Route::get('/master/coa/{id}/edit', [App\Http\Controllers\Bendahara\Master\COAController::class, 'edit'])->name('bendahara.master.coa.edit');
-    Route::put('/master/coa/{id}', [App\Http\Controllers\Bendahara\Master\COAController::class, 'update'])->name('bendahara.master.coa.update');
-    Route::delete('/master/coa/{id}', [App\Http\Controllers\Bendahara\Master\COAController::class, 'destroy'])->name('bendahara.master.coa.destroy');
+    /*
+    |--------------------------------------------------------------------------
+    | SUB PERIOD
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('sub-periods')->name('sub-periods.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'store'])->name('store');
+        Route::delete('/{id}', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'destroy'])->name('destroy');
+    });
 
-    // Master Data - User Account Routes
-    Route::get('/master/account-user', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'index'])->name('bendahara.master.account-user.index');
-    Route::get('/master/account-user/{id}/edit', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'edit'])->name('bendahara.master.account-user.edit');
-    Route::post('/master/account-user/{id}', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'sync'])->name('bendahara.master.account-user.sync');
+    /*
+    |--------------------------------------------------------------------------
+    | MASTER DATA
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('master')->name('master.')->group(function () {
 
-    // Opening Balance Routes
-    Route::get('/saldo-awal', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'index'])->name('bendahara.opening-balances.index');
-    Route::get('/saldo-awal/create', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'create'])->name('bendahara.opening-balances.create');
-    Route::post('/saldo-awal', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'store'])->name('bendahara.opening-balances.store');
-    Route::get('/saldo-awal/bulk/create', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'createBulk'])->name('bendahara.opening-balances.create-bulk');
-    Route::post('/saldo-awal/bulk', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'storeBulk'])->name('bendahara.opening-balances.store-bulk');
-    Route::get('/saldo-awal/{id}/edit', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'edit'])->name('bendahara.opening-balances.edit');
-    Route::put('/saldo-awal/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'update'])->name('bendahara.opening-balances.update');
-    Route::delete('/saldo-awal/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'destroy'])->name('bendahara.opening-balances.destroy');
+        // Account Type
+        Route::prefix('account-types')->name('account-types.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'update'])->name('update');
+            Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\AccountTypeController::class, 'destroy'])->name('destroy');
+        });
 
+        // COA
+        Route::prefix('coas')->name('coas.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Bendahara\Master\COAController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Bendahara\Master\COAController::class, 'create'])->name('create');
+            Route::get('/generate-code', [App\Http\Controllers\Bendahara\Master\COAController::class, 'generateCodeApi'])->name('generate-code');
+            Route::post('/', [App\Http\Controllers\Bendahara\Master\COAController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\COAController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\COAController::class, 'update'])->name('update');
+            Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\COAController::class, 'destroy'])->name('destroy');
+        });
 
-    // journal routes
-    Route::get('/jurnal-umum', [App\Http\Controllers\Bendahara\JournalController::class, 'index'])->name('bendahara.journals.index');
-    Route::get('/jurnal-umum/{id}', [App\Http\Controllers\Bendahara\JournalController::class, 'show'])->name('bendahara.journals.show');
-    Route::get('/jurnal-umum/export/{type}', [App\Http\Controllers\Bendahara\JournalController::class, 'export'])->name('bendahara.journals.export');
+        // User Account
+        Route::prefix('account-users')->name('account-users.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'index'])->name('index');
+            Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'edit'])->name('edit');
+            Route::post('/{id}', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'sync'])->name('sync');
+        });
 
-    // ledger routes
-    Route::get('/buku-besar', [App\Http\Controllers\Bendahara\LedgerController::class, 'index'])->name('bendahara.ledgers.index');
-    Route::get('/buku-besar/export', [App\Http\Controllers\Bendahara\LedgerController::class, 'export'])->name('bendahara.ledgers.export');
+    });
 
-    // trial balance routes
-    Route::get('/neraca-saldo', [App\Http\Controllers\Bendahara\TrialBalanceController::class, 'index'])->name('bendahara.trial-balance.index');
+    /*
+    |--------------------------------------------------------------------------
+    | OPENING BALANCE
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('opening-balances')->name('opening-balances.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'store'])->name('store');
 
-    // activity report routes
-    Route::get('/laporan-aktifitas', [App\Http\Controllers\Bendahara\ActivityReportController::class, 'index'])->name('bendahara.activity-reports.index');
+        Route::get('/bulk/create', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'createBulk'])->name('create-bulk');
+        Route::post('/bulk', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'storeBulk'])->name('store-bulk');
+
+        Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | REPORTS
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/journal', [App\Http\Controllers\Bendahara\JournalController::class, 'index'])->name('journal.index');
+        Route::get('/journal/{id}', [App\Http\Controllers\Bendahara\JournalController::class, 'show'])->name('journal.show');
+        Route::get('/journal/export/{type}', [App\Http\Controllers\Bendahara\JournalController::class, 'export'])->name('journal.export');
+
+        Route::get('/ledger', [App\Http\Controllers\Bendahara\LedgerController::class, 'index'])->name('ledger.index');
+        Route::get('/ledger/export', [App\Http\Controllers\Bendahara\LedgerController::class, 'export'])->name('ledger.export');
+        
+        Route::get('/activity', [App\Http\Controllers\Bendahara\ActivityReportController::class, 'index'])->name('activity.index');
+       
+        Route::get('/trial-balance', [App\Http\Controllers\Bendahara\TrialBalanceController::class, 'index'])->name('trial-balance.index');
+
+    });
+
 });
 
 /*
@@ -149,27 +189,48 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->group(functi
 | Accounting Module - User
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->group(function () {
+Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.')->group(function () {
 
-    Route::get('/dashboard', [App\Http\Controllers\AccountingUsers\DashboardController::class, 'index'])->name('user.dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\AccountingUsers\DashboardController::class, 'index'])
+        ->name('dashboard');
 
-    // sub periods routes for select options
-    Route::get('/periode/{id}/sub-periods', [App\Http\Controllers\AccountingUsers\PeriodController::class, 'getSubPeriods'])
-    ->name('user.periode.sub-periods');
+    /*
+    |--------------------------------------------------------------------------
+    | PERIOD HELPER
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('periode')->name('periods.')->group(function () {
+        Route::get('/{id}/sub-periods', [App\Http\Controllers\AccountingUsers\PeriodController::class, 'getSubPeriods'])
+            ->name('sub-periods');
+    });
 
-    // Income Routes
-    Route::get('/transaksi/penerimaan', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'index'])->name('user.incomes.index');
-    Route::get('transaksi/penerimaan/create', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'create'])->name('user.incomes.create');
-    Route::post('transaksi/penerimaan', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'store'])->name('user.incomes.store');
-    Route::get('transaksi/penerimaan/{id}', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'show'])->name('user.incomes.show');
-    
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSACTIONS
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('transactions')->name('transactions.')->group(function () {
 
-    // Expense Routes
-    Route::get('/transaksi/pengeluaran', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'index'])->name('user.expenses.index');
-    Route::get('transaksi/pengeluaran/create', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'create'])->name('user.expenses.create');
-    Route::post('transaksi/pengeluaran', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'store'])->name('user.expenses.store');
-    Route::get('transaksi/pengeluaran/{id}', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'show'])->name('user.expenses.show');
+        // Income
+        Route::prefix('incomes')->name('incomes.')->group(function () {
+            Route::get('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'store'])->name('store');
+            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'show'])->name('show');
+        });
 
-    // History Routes
-    Route::get('/transaksi/history', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'index'])->name('user.histories.index');
+        // Expense
+        Route::prefix('expenses')->name('expenses.')->group(function () {
+            Route::get('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'store'])->name('store');
+            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'show'])->name('show');
+        });
+
+        // History
+        Route::prefix('histories')->name('histories.')->group(function () {
+            Route::get('/', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'index'])->name('index');
+        });
+
+    });
 });

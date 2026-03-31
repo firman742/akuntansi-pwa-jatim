@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Neraca Saldo Awal - Buat Multi Periode')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Neraca Saldo Awal - Buat Multi Periode" />
 

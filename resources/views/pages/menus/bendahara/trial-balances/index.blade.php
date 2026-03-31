@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Neraca (Balance Sheet)')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Neraca (Balance Sheet)" />
 
@@ -37,12 +39,18 @@
                     </select>
                 </div>
 
-                {{-- BUTTON --}}
-                <div class="flex items-end">
+                {{-- FILTER ACTION --}}
+                <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
                     <x-ui.button type="submit" variant="primary"
-                        class="w-full rounded-xl px-6 shadow-md shadow-primary/20">
+                        class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
                         Tampilkan
                     </x-ui.button>
+
+                    <a href="{{ route('bendahara.reports.trial-balance.index') }}" class="flex-1">
+                        <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
+                            Reset
+                        </x-ui.button>
+                    </a>
                 </div>
             </div>
 
@@ -256,7 +264,7 @@
                 return;
             }
 
-            const res = await fetch(`/bendahara/periode/${periodId}/sub-periods`);
+            const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
             const data = await res.json();
 
             subPeriodFilter.innerHTML = '<option value="">Semua</option>';

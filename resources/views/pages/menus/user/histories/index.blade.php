@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Riwayat Transaksi')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Riwayat Transaksi" />
 
@@ -85,7 +87,7 @@
                         </span>
                     </x-ui.button>
 
-                    <a href="{{ route('user.histories.index') }}" class="w-full">
+                    <a href="{{ route('user.transactions.histories.index') }}" class="w-full">
                         <x-ui.button variant="outline"
                             class="w-full justify-center rounded-xl px-6 shadow-md shadow-primary/20">
                             Reset

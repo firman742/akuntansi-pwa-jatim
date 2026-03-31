@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Periode')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Edit Periode" />
 
@@ -23,7 +25,7 @@
     @endif
 
     <x-common.component-card title="Edit Periode">
-        <form method="POST" action="{{ route('bendahara.periode.update', $period->id) }}">
+        <form method="POST" action="{{ route('bendahara.periods.update', $period->id) }}">
             @csrf
             @method('PUT')
 
@@ -99,7 +101,7 @@
             </div>
 
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('bendahara.periode.index') }}">
+                <a href="{{ route('bendahara.periods.index') }}">
                     <x-ui.button variant="outline" size="sm">
                         Kembali
                     </x-ui.button>

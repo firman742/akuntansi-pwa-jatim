@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Buku Besar')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Buku Besar" />
 
@@ -87,40 +89,41 @@
 
                 </div>
             </div>
-
-            {{-- ===================== --}}
-            {{-- ACTION --}}
-            {{-- ===================== --}}
-            <div class="flex justify-end gap-3 pt-4">
-                <x-ui.button type="submit" variant="primary" class="rounded-xl px-6 shadow-md shadow-primary/20">
-                    <span class="flex items-center gap-2">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        Tampilkan
-                    </span>
-                </x-ui.button>
-
-                @if ($coa)
-                    <a
-                        href="{{ route('bendahara.ledgers.export', [
-                            'period_id' => request('period_id'),
-                            'sub_period_id' => request('sub_period_id'),
-                            'start_date' => request('start_date'),
-                            'end_date' => request('end_date'),
-                            'coa_id' => request('coa_id'),
-                        ]) }}">
-                        <x-ui.button variant="outline" type="button"
-                            class="rounded-xl border-gray-300 bg-white hover:bg-gray-50">
-                            Export
+            <div>
+                <div class="grid grid-cols md:grid-cols-2 gap-5">
+                    {{-- FILTER ACTION --}}
+                    <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
+                        <x-ui.button type="submit" variant="primary"
+                            class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
+                            Tampilkan
                         </x-ui.button>
-                    </a>
-                @endif
-            </div>
 
+                        <a href="{{ route('bendahara.reports.ledger.index') }}" class="flex-1">
+                            <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
+                                Reset
+                            </x-ui.button>
+                        </a>
+
+                        @if ($coa)
+                            <a
+                                href="{{ route('bendahara.reports.ledger.export', [
+                                    'period_id' => request('period_id'),
+                                    'sub_period_id' => request('sub_period_id'),
+                                    'start_date' => request('start_date'),
+                                    'end_date' => request('end_date'),
+                                    'coa_id' => request('coa_id'),
+                                ]) }}" class="flex-1">
+                                <x-ui.button variant="primary" class="w-full justify-center rounded-xl px-5 py-2.5">
+                                    Export
+                                </x-ui.button>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
+
 
     {{-- LEDGER TABLE --}}
     @if ($coa)
@@ -251,7 +254,7 @@
                 return;
             }
 
-            const res = await fetch(`/bendahara/periode/${periodId}/sub-periods`);
+            const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
             const data = await res.json();
 
             subPeriodFilter.innerHTML = '<option value="">Semua</option>';

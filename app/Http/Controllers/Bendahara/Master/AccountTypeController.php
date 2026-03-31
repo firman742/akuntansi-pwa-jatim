@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Bendahara\Master;
 
 use App\Models\AccountType;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreAccountTypeRequest;
-use App\Http\Requests\UpdateAccountTypeRequest;
 
 class AccountTypeController extends Controller
 {
@@ -39,7 +37,7 @@ class AccountTypeController extends Controller
 
         AccountType::create($validated);
 
-        return redirect()->route('bendahara.master.account-type.index')->with('success', 'Account Type created successfully.');
+        return redirect()->route('bendahara.master.account-types.index')->with('success', 'Account Type created successfully.');
     }
 
     /**
@@ -67,7 +65,7 @@ class AccountTypeController extends Controller
 
         $accountType->update($validated);
 
-        return redirect()->route('bendahara.master.account-type.index')->with('success', 'Account Type updated successfully.');
+        return redirect()->route('bendahara.master.account-types.index')->with('success', 'Account Type updated successfully.');
     }
 
     /**
@@ -79,6 +77,6 @@ class AccountTypeController extends Controller
         $accountType = AccountType::findOrFail($id);
         $accountType->delete();
 
-        return redirect()->route('bendahara.master.account-type.index')->with('success', 'Account Type deleted successfully.');
+        return redirect()->route('bendahara.master.account-types.index')->with('success', 'Account Type deleted successfully.');
     }
 }

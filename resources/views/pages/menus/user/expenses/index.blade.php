@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Pengeluaran')
+
 @section('content')
     <x-common.page-breadcrumb pageTitle="Pengeluaran" />
 
@@ -52,7 +54,7 @@
                     </x-ui.button>
 
                     {{-- button reset --}}
-                    <a href="{{ route('user.expenses.index') }}">
+                    <a href="{{ route('user.transactions.expenses.index') }}">
                         <x-ui.button variant="outline" class="rounded-xl px-6 shadow-md shadow-primary/20">
                             <span class="flex items-center gap-2">
                                 Reset
@@ -65,7 +67,7 @@
             {{-- CREATE GROUP --}}
             <div class="flex items-center gap-3">
                 {{-- Create Manual --}}
-                <a href="{{ route('user.expenses.create') }}">
+                <a href="{{ route('user.transactions.expenses.create') }}">
                     <x-ui.button variant="danger" size="sm" class="rounded-xl px-4 flex items-center gap-2">
                         <svg class="h-4 w-4 stroke-current" viewBox="0 0 20 20" fill="none"
                             xmlns="http://www.w3.org/2000/svg">

@@ -102,7 +102,7 @@
         }
     }
 }">
-    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div class="overflow-hidden border border-gray-200 bg-white shadow-sm">
         <div class="max-w-full overflow-x-auto">
             <table class="w-full border-collapse">
                 <thead>
@@ -223,8 +223,9 @@
         </div>
     </div>
 
+    
     <!-- Pagination -->
-    {{-- <div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
+    <div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
         <div class="flex items-center justify-between">
             <button @click="prevPage" :disabled="currentPage === 1"
                 :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
@@ -268,6 +269,5 @@
                 </svg>
             </button>
         </div>
-    </div> --}}
-</div>
+    </div>
 </div>
