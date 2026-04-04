@@ -214,6 +214,7 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
         // Income
         Route::prefix('incomes')->name('incomes.')->group(function () {
             Route::get('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'index'])->name('index');
+            Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'getCashBalance'])->name('cash-balance');
             Route::get('/create', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'store'])->name('store');
             Route::get('/{id}', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'show'])->name('show');
@@ -222,6 +223,7 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
         // Expense
         Route::prefix('expenses')->name('expenses.')->group(function () {
             Route::get('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'index'])->name('index');
+            Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'getCashBalance'])->name('cash-balance');
             Route::get('/create', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'store'])->name('store');
             Route::get('/{id}', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'show'])->name('show');

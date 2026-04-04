@@ -34,7 +34,8 @@ class SubPeriodController extends Controller
 
         $sub_periods = $query->get();
 
-        return view('pages.menus.bendahara.sub_periods.index',
+        return view(
+            'pages.menus.bendahara.sub_periods.index',
             compact('sub_periods', 'periods', 'periodId')
         );
     }
@@ -65,6 +66,18 @@ class SubPeriodController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // validation check sub period in range of period
+        $period = Period::findOrFail($validated['period_id']);
+
+        if (
+            $validated['start_date'] < $period->start_date ||
+            $validated['end_date'] > $period->end_date
+        ) {
+            return back()->withErrors([
+                'start_date' => 'Sub periode harus berada dalam rentang periode utama.'
+            ]);
+        }
 
         SubPeriod::create([
             'period_id' => $validated['period_id'],

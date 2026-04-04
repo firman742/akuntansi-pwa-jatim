@@ -21,7 +21,7 @@
                         </label>
                         <select name="period_id" id="filter_period"
                             class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm transition focus:border-primary focus:bg-white focus:ring-primary">
-                            <option value="">Semua</option>
+                            <option value="">-- Pilih Periode --</option>
                             @foreach ($periods as $period)
                                 <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
                                     {{ $period->name }}
@@ -37,7 +37,6 @@
                         </label>
                         <select name="sub_period_id" id="filter_sub_period"
                             class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm transition focus:border-primary focus:bg-white focus:ring-primary">
-                            <option value="">Semua</option>
                             @foreach ($subPeriods as $sub)
                                 <option value="{{ $sub->id }}" @selected(request('sub_period_id') == $sub->id)>
                                     {{ $sub->name }}
@@ -257,7 +256,7 @@
             const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
             const data = await res.json();
 
-            subPeriodFilter.innerHTML = '<option value="">Semua</option>';
+            subPeriodFilter.innerHTML = '';
 
             data.forEach(sub => {
                 subPeriodFilter.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;

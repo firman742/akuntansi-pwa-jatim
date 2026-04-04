@@ -66,6 +66,16 @@
 
     getStatusLabel(status) {
         return status ? 'Aktif' : 'Non Aktif';
+    },
+    
+    formatDate(date) {
+        if (!date) return '-';
+
+        return new Date(date).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
     }
 }">
 
@@ -106,10 +116,10 @@
 
                             <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="new Date(row.start_date).toLocaleDateString()">
+                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.start_date)">
                             </td>
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="new Date(row.end_date).toLocaleDateString()">
+                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.end_date)">
                             </td>
 
                             <td class="px-4 sm:px-6 py-3.5">
@@ -123,48 +133,6 @@
                             <!-- Action -->
                             <td class="px-4 sm:px-3 py-2.5">
                                 <div class="flex items-center gap-2">
-
-                                    <!-- Close & Edit hanya jika BELUM ditutup -->
-                                    <template x-if="!row.is_closed">
-                                        <div class="flex items-center gap-2">
-
-                                            <!-- Close -->
-                                            {{-- <form :action="closeUrl.replace(':id', row.id)" method="POST"
-                                                onsubmit="return confirm('Apakah anda yakin MENUTUP periode ini?')">
-                                                @csrf
-                                                @method('PATCH')
-
-                                                <button type="submit"
-                                                    class="flex h-8 w-8 items-center justify-center rounded-md
-                                                        text-yellow-600 hover:bg-yellow-50
-                                                        dark:text-yellow-400 dark:hover:bg-yellow-500/10"
-                                                    title="Tutup Periode">
-                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                        stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                                    </svg>
-                                                </button>
-                                            </form> --}}
-
-                                            <!-- Edit -->
-                                            <a :href="editUrl.replace(':id', row.id)"
-                                                class="flex h-8 w-8 items-center justify-center rounded-md
-                                                text-green-600 hover:bg-green-50
-                                                dark:text-green-400 dark:hover:bg-green-500/10"
-                                                title="Edit Periode">
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279
-                                                            8.364-8.643a3.027 3.027 0 0 0-2.14-5.165
-                                                            3.03 3.03 0 0 0-2.14.886L6.5 13.5" />
-                                                </svg>
-                                            </a>
-
-                                        </div>
-                                    </template>
 
                                     <!-- Delete SELALU tampil -->
                                     <form :action="destroyUrl.replace(':id', row.id)" method="POST"

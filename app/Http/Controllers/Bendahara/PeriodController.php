@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use App\Models\Period;
 use App\Models\SubPeriod;
+use App\Services\Bendahara\PeriodService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 
 class PeriodController extends Controller
 {
@@ -36,11 +38,15 @@ class PeriodController extends Controller
         $validated = request()->validate([
             'name' => 'required',
             'description'   => 'required',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
         ]);
 
         Period::create([
             'name' => $validated['name'],
             'description' => $validated['description'],
+            'start_date' => Carbon::parse($validated['start_date']),
+            'end_date' => Carbon::parse($validated['end_date']),
             'is_closed' => false,
         ]);
 
@@ -70,7 +76,6 @@ class PeriodController extends Controller
         $validated = request()->validate([
             'name'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'is_active'  => 'required|boolean',
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
         ]);
@@ -83,21 +88,27 @@ class PeriodController extends Controller
     }
 
     /**
-     * Close the specified resource.
-     * TODO: Add validation to prevent closing if there are pending transactions.
+     * Close period
+     * @param PeriodService $service
+     * @param string $id
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function close(string $id)
+    public function close(PeriodService $service, string $id)
     {
         $period = Period::findOrFail($id);
 
-        $period->is_closed = true;
-        $period->closed_at = now();
-        $period->closed_by = Auth::id();
-        $period->save();
+        try {
+            $service->close($period);
 
-        return redirect()
-            ->route('bendahara.periods.index')
-            ->with('success', 'Periode berhasil ditutup');
+            return redirect()
+                ->route('bendahara.periods.index')
+                ->with('success', 'Periode - ' . ($period->name ?? '-') . ' berhasil ditutup');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'period' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -116,6 +127,7 @@ class PeriodController extends Controller
     public function getSubPeriods($periodId)
     {
         return SubPeriod::where('period_id', $periodId)
+            ->active()
             ->orderBy('start_date')
             ->get();
     }

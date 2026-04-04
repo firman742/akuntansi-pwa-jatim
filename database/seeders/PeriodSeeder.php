@@ -16,6 +16,8 @@ class PeriodSeeder extends Seeder
             [
                 "name" => "2023",
                 "description" => "Fiscal year 2023",
+                "start_date" => "2023-01-01",
+                "end_date" => "2023-12-31",
                 "is_closed" => false,
                 "closed_at" => null,
                 "sub_periods" => [
@@ -66,6 +68,8 @@ class PeriodSeeder extends Seeder
             [
                 "name" => "2024",
                 "description" => "Fiscal year 2024",
+                "start_date" => "2024-01-01",
+                "end_date" => "2024-12-31",
                 "is_closed" => false,
                 "closed_at" => null,
                 "sub_periods" => [
@@ -116,6 +120,8 @@ class PeriodSeeder extends Seeder
             [
                 "name" => "2025",
                 "description" => "Fiscal year 2025",
+                "start_date" => "2025-01-01",
+                "end_date" => "2025-12-31",
                 "is_closed" => false,
                 "closed_at" => null,
                 "sub_periods" => [
@@ -166,6 +172,8 @@ class PeriodSeeder extends Seeder
             [
                 "name" => "2026",
                 "description" => "Fiscal year 2026",
+                "start_date" => "2026-01-01",
+                "end_date" => "2026-12-31",
                 "is_closed" => false,
                 "closed_at" => null,
                 "sub_periods" => [

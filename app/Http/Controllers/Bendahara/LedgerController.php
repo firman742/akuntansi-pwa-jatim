@@ -22,7 +22,7 @@ class LedgerController extends Controller
         | MASTER DATA
         |--------------------------------------------------------------------------
         */
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::get();
 
         $periodId = $request->period_id;
         $coaId       = $request->coa_id;
@@ -48,6 +48,7 @@ class LedgerController extends Controller
         */
         $ledger         = [];
         $openingBalance = 0;
+        $runningBalance = 0;
         $endingBalance  = 0;
         $coa            = null;
 
@@ -67,6 +68,11 @@ class LedgerController extends Controller
             */
             $opening = OpeningBalance::where('chart_of_account_id', $coaId)
                 ->where('period_id', $periodId)
+                ->whereHas('subPeriod', function ($q) use ($subPeriodId) {
+                    if ($subPeriodId) {
+                        $q->where('id', $subPeriodId);
+                    }
+                })
                 ->first();
 
             if ($opening) {
@@ -93,13 +99,16 @@ class LedgerController extends Controller
                     }
                 });
 
-            $mutationDebit  = (clone $mutationQuery)->sum('debit');
-            $mutationCredit = (clone $mutationQuery)->sum('credit');
+            $runningBalance = $openingBalance;
+            if ($startDate) {
+                $mutationDebit  = (clone $mutationQuery)->sum('debit');
+                $mutationCredit = (clone $mutationQuery)->sum('credit');
 
-            if ($coa->normal_balance === NormalBalanceEnum::DEBIT->value) {
-                $openingBalance += $mutationDebit - $mutationCredit;
-            } else {
-                $openingBalance += $mutationCredit - $mutationDebit;
+                if ($coa->normal_balance === NormalBalanceEnum::DEBIT->value) {
+                    $runningBalance += $mutationDebit - $mutationCredit;
+                } else {
+                    $runningBalance += $mutationCredit - $mutationDebit;
+                }
             }
 
             /*
@@ -135,8 +144,6 @@ class LedgerController extends Controller
             | 4️⃣ RUNNING BALANCE
             |--------------------------------------------------------------------------
             */
-            $runningBalance = $openingBalance;
-
             foreach ($transactions as $trx) {
 
                 // Hitung saldo berjalan
@@ -174,6 +181,7 @@ class LedgerController extends Controller
             'coa',
             'ledger',
             'openingBalance',
+            'runningBalance',
             'endingBalance',
             'subPeriods',
             'subPeriodId',

@@ -22,43 +22,51 @@
         <form method="POST" action="{{ route('bendahara.sub-periods.store') }}">
             @csrf
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
 
-                <div>
-                    <label class="block text-sm mb-2">Periode</label>
+                <div class="grid grid-cols-2 ls:grid-cols-2 gap-4">
+                    <div class="grid-row">
+                        <label class="block text-sm mb-2">Periode</label>
 
-                    <select name="period_id" class="w-full border rounded-lg p-2">
-                        <option value="">Pilih Periode</option>
-                        @foreach ($periods as $period)
-                            <option value="{{ $period->id }}">
-                                {{ $period->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                        <select name="period_id" class="w-full border rounded-lg p-2">
+                            <option value="">Pilih Periode</option>
+                            @foreach ($periods as $period)
+                                <option value="{{ $period->id }}">
+                                    {{ $period->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="grid-row">
+                        <label class="block text-sm mb-2">Nama Sub Periode</label>
+
+                        <input type="text" name="name" class="w-full border rounded-lg p-2"
+                            placeholder="Masukkan nama sub periode">
+                    </div>
+
+                    <div class="grid-row">
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                            Tanggal Masuk
+                        </label>
+                        <x-form.date-picker id="start_date" name="start_date" placeholder="Tentukan Tanggal Mulai Periode"
+                            defaultDate="{{ now()->format('Y-m-d') }}" />
+                    </div>
+                    <div class="grid-row">
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                            Tanggal Keluar
+                        </label>
+                        <x-form.date-picker id="end_date" name="end_date" placeholder="Tentukan Tanggal Mulai Periode"
+                            defaultDate="{{ now()->format('Y-m-d') }}" />
+                    </div>
                 </div>
-
-                <div>
-                    <label class="block text-sm mb-2">Nama Sub Periode</label>
-                    <input type="text" name="name" class="w-full border rounded-lg p-2"
-                        placeholder="Masukkan nama sub periode">
-                </div>
-
-                <div>
-                    <label class="block text-sm mb-2">Tanggal Mulai</label>
-                    <input type="date" name="start_date" class="w-full border rounded-lg p-2">
-                </div>
-
-                <div>
-                    <label class="block text-sm mb-2">Tanggal Selesai</label>
-                    <input type="date" name="end_date" class="w-full border rounded-lg p-2">
-                </div>
-
-                <div class="col-span-2">
+                
+                <div class="col-span-1 md:col-span-2">
                     <label class="block text-sm mb-2">Deskripsi</label>
                     <textarea name="description" class="w-full border rounded-lg p-2" rows="3"></textarea>
                 </div>
 
-                <div class="col-span-2">
+                <div class="col-span-1 md:col-span-2">
                     <label class="flex items-center gap-2">
                         <input type="checkbox" name="is_active" value="1">
                         Aktifkan Sub Periode

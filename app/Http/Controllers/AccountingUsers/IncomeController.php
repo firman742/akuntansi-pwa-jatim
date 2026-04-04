@@ -17,6 +17,7 @@ use App\Models\TransactionLine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class IncomeController extends Controller
 {
@@ -76,9 +77,16 @@ class IncomeController extends Controller
 
         $selectedPeriodId = request('period_id') ?? $periods->first()?->id;
 
+        if (!$selectedPeriodId) {
+            return back()->withErrors([
+                'period' => 'Tidak ada periode aktif.'
+            ]);
+        }
+
         // ================= SUB PERIOD =================
         $subPeriods = SubPeriod::query()
             ->where('period_id', $selectedPeriodId)
+            ->active()
             ->orderBy('start_date')
             ->get();
 
@@ -102,25 +110,12 @@ class IncomeController extends Controller
             ->orderBy('code')
             ->get();
 
-        // ================= SALDO KAS =================
-        $cashBalances = collect();
-
-        if ($selectedPeriodId) {
-            foreach ($cashCoas as $coa) {
-                $cashBalances[$coa->id] = CashBalanceHelper::getBalance(
-                    $coa->id,
-                    $selectedPeriodId
-                );
-            }
-        }
-
         return view('pages.menus.user.incomes.create', compact(
             'cashCoas',
             'incomeCoas',
-            'cashBalances',
             'periods',
             'subPeriods',
-            'selectedPeriodId'
+            'selectedPeriodId',
         ));
     }
 
@@ -294,5 +289,31 @@ class IncomeController extends Controller
     public function destroy(Transaction $transaction)
     {
         //
+    }
+
+    /**
+     * Get cash balance for a specific COA and period.
+     */
+    public function getCashBalance(Request $request)
+    {
+        $coaId       = $request->coa_id;
+        $periodId    = $request->period_id;
+        $subPeriodId = $request->sub_period_id;
+
+        if (!$coaId || !$periodId) {
+            return response()->json([
+                'balance' => 0
+            ]);
+        }
+
+        $balance = CashBalanceHelper::getBalance(
+            $coaId,
+            $periodId,
+            $subPeriodId
+        );
+
+        return response()->json([
+            'balance' => $balance
+        ]);
     }
 }

@@ -44,7 +44,7 @@ class JournalController extends Controller
         $journals = $query->orderBy('journal_date', 'desc')
             ->get();
 
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::get();
         $subPeriods = collect();
         if ($request->period_id) {
             $subPeriods = SubPeriod::where('period_id', $request->period_id)

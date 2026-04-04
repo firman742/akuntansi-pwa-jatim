@@ -107,22 +107,9 @@ class ExpenseController extends Controller
             ->get();
 
 
-
-        $cashBalances = collect();
-
-        if ($selectedPeriodId) {
-            foreach ($cashCoas as $coa) {
-                $cashBalances[$coa->id] = CashBalanceHelper::getBalance(
-                    $coa->id,
-                    $selectedPeriodId
-                );
-            }
-        }
-
         return view('pages.menus.user.expenses.create', compact(
             'cashCoas',
             'expenseCoas',
-            'cashBalances',
             'periods',
             'subPeriods',
             'selectedPeriodId'
@@ -157,7 +144,8 @@ class ExpenseController extends Controller
 
         $currentBalance = CashBalanceHelper::getBalance(
             $request->cash_coa_id,
-            $period->id
+            $period->id,
+            $request->sub_period_id
         );
 
         if ($currentBalance <= 0) {
@@ -307,5 +295,29 @@ class ExpenseController extends Controller
     public function destroy(Transaction $transaction)
     {
         //
+    }
+
+    
+    public function getCashBalance(Request $request)
+    {
+        $coaId       = $request->coa_id;
+        $periodId    = $request->period_id;
+        $subPeriodId = $request->sub_period_id;
+
+        if (!$coaId || !$periodId) {
+            return response()->json([
+                'balance' => 0
+            ]);
+        }
+
+        $balance = CashBalanceHelper::getBalance(
+            $coaId,
+            $periodId,
+            $subPeriodId
+        );
+
+        return response()->json([
+            'balance' => $balance
+        ]);
     }
 }

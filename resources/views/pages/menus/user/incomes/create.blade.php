@@ -6,61 +6,52 @@
     <x-common.page-breadcrumb pageTitle="Tambah Penerimaan" />
 
     <x-common.component-card title="Transaksi Penerimaan">
-        <form method="POST" action="{{ route('user.transactions.incomes.store') }}" enctype="multipart/form-data" class="space-y-6"
-            x-data="receiptUpload()">
+        <form method="POST" action="{{ route('user.transactions.incomes.store') }}" enctype="multipart/form-data"
+            class="space-y-6" x-data="receiptUpload()">
             @csrf
 
             {{-- ================= HEADER ================= --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
-                        Periode
-                    </label>
 
+                {{-- PERIOD --}}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Periode</label>
                     <select name="period_id" id="period_id" class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
                         <option value="">-- Pilih Periode --</option>
                         @foreach ($periods as $period)
-                            <option value="{{ $period->id }}">
+                            <option value="{{ $period->id }}" @selected($period->id == $selectedPeriodId)>
                                 {{ $period->name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
+                {{-- SUB PERIOD --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
-                        Sub Periode
-                    </label>
-
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Sub Periode</label>
                     <select name="sub_period_id" id="sub_period_id"
                         class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
-
                         <option value="">-- Pilih Sub Periode --</option>
-                        @foreach ($subPeriods as $subPeriod)
-                            <option value="{{ $subPeriod->id }}">
-                                {{ $subPeriod->name }}
-                            </option>
+                        @foreach ($subPeriods as $sub)
+                            <option value="{{ $sub->id }}">{{ $sub->name }}</option>
                         @endforeach
                     </select>
                 </div>
 
+                {{-- TANGGAL --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
-                        Tanggal
-                    </label>
-                    <x-form.date-picker id="transaction_date" name="transaction_date" placeholder="Tanggal Transaksi"
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Tanggal</label>
+                    <x-form.date-picker id="transaction_date" name="transaction_date"
                         defaultDate="{{ now()->format('Y-m-d') }}" />
                 </div>
 
-                {{-- ================= KAS / BANK ================= --}}
+                {{-- KAS / BANK --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
-                        Kas / Bank
-                    </label>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Kas / Bank</label>
                     <select name="cash_coa_id" id="cash_coa_id"
-                        class="h-11 w-full rounded-lg border border-stroke bg-transparent px-4 text-sm text-gray-700 outline-none focus:border-primary">
+                        class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
                         @foreach ($cashCoas as $coa)
-                            <option value="{{ $coa->id }}" data-balance="{{ $cashBalances[$coa->id] ?? 0 }}">
+                            <option value="{{ $coa->id }}">
                                 {{ $coa->code }} — {{ $coa->name }}
                             </option>
                         @endforeach
@@ -72,31 +63,26 @@
                             Rp 0
                         </span>
                     </p>
-
                 </div>
 
+                {{-- KETERANGAN --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
-                        Keterangan
-                    </label>
-                    <input type="text" name="description" placeholder="Contoh: Penerimaan iuran anggota"
-                        class="h-11 w-full rounded-lg border border-stroke bg-transparent px-4 text-sm text-gray-700 outline-none focus:border-primary">
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Keterangan</label>
+                    <input type="text" name="description"
+                        class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
                 </div>
             </div>
 
-            {{-- ================= DETAIL PENDAPATAN ================= --}}
+            {{-- ================= DETAIL ================= --}}
             <div class="space-y-3">
-                <h4 class="text-base font-semibold text-gray-800">
-                    Detail Pendapatan
-                </h4>
+                <h4 class="text-base font-semibold text-gray-800">Detail Pendapatan</h4>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700">
-                            Akun Pendapatan
-                        </label>
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Akun Pendapatan</label>
                         <select name="income_lines[0][coa_id]"
-                            class="h-11 w-full rounded-lg border border-stroke bg-transparent px-4 text-sm text-gray-700 outline-none focus:border-primary">
+                            class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
                             @foreach ($incomeCoas as $coa)
                                 <option value="{{ $coa->id }}">
                                     {{ $coa->code }} — {{ $coa->name }}
@@ -106,220 +92,131 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700">
-                            Nominal
-                        </label>
-                        <input type="text" id="amount_display" placeholder="Rp 0"
-                            class="rupiah-input h-11 w-full rounded-lg border border-stroke bg-transparent px-4 text-sm text-gray-700 outline-none focus:border-primary">
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Nominal</label>
+
+                        <input type="text" id="amount_display"
+                            class="rupiah-input h-11 w-full rounded-lg border border-stroke px-4 text-sm"
+                            placeholder="Rp 0">
 
                         <input type="hidden" name="income_lines[0][amount]" id="amount_real">
-
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700">
-                            Keterangan
-                        </label>
-                        <input type="text" name="income_lines[0][description]" placeholder="Opsional"
-                            class="h-11 w-full rounded-lg border border-stroke bg-transparent px-4 text-sm text-gray-700 outline-none focus:border-primary">
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Keterangan</label>
+                        <input type="text" name="income_lines[0][description]"
+                            class="h-11 w-full rounded-lg border border-stroke px-4 text-sm">
                     </div>
                 </div>
             </div>
-
-            {{-- ================= BUKTI TRANSAKSI ================= --}}
-            <div class="space-y-3">
-                <h4 class="text-base font-semibold text-gray-800">
-                    Bukti Transaksi
-                </h4>
-
-                <div>
-                    <input type="file" name="receipt" accept="image/*" x-ref="fileInput" @change="handleImage"
-                        class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 
-                      file:rounded-lg file:border-0 file:text-sm file:font-semibold 
-                      file:bg-primary file:text-white hover:file:bg-opacity-90">
-
-                    <p class="mt-1 text-xs text-gray-500">
-                        Maksimal 2MB. Gambar akan dikompresi otomatis.
-                    </p>
-
-                    <div x-show="loading" class="mt-2 text-sm text-blue-600">
-                        Mengompresi gambar...
-                    </div>
-                </div>
-
-                {{-- Preview --}}
-                <template x-if="preview">
-                    <div class="mt-3">
-                        <img :src="preview" class="w-48 rounded-lg border border-gray-200 shadow-sm">
-                    </div>
-                </template>
-            </div>
-
-
-
 
             {{-- ================= ACTION ================= --}}
-            <div class="mt-8 flex justify-end gap-3">
+            <div class="flex justify-end gap-3">
                 <a href="{{ route('user.transactions.incomes.index') }}">
-                    <x-ui.button variant="outline" size="sm">
-                        Kembali
-                    </x-ui.button>
+                    <x-ui.button variant="outline" size="sm">Kembali</x-ui.button>
                 </a>
 
                 <x-ui.button type="submit" variant="primary" size="sm">
-                    Simpan Transaksi
+                    Simpan
                 </x-ui.button>
             </div>
         </form>
     </x-common.component-card>
-
-    @push('scripts')
-        <script src="https://unpkg.com/browser-image-compression@latest/dist/browser-image-compression.js"></script>
-
-        <script>
-            const cashSelect = document.getElementById('cash_coa_id');
-            const balanceText = document.getElementById('cash-balance');
-            const displayInput = document.getElementById('amount_display');
-            const realInput = document.getElementById('amount_real');
-
-            // For select period and sub-period dinamically 
-            const periodSelect = document.getElementById('period_id');
-            const subPeriodSelect = document.getElementById('sub_period_id');
-
-            function updateBalance() {
-                const option = cashSelect.options[cashSelect.selectedIndex];
-                const balance = option.dataset.balance || 0;
-
-                balanceText.textContent =
-                    'Rp ' + Number(balance).toLocaleString('id-ID');
-
-                balanceText.classList.toggle(
-                    'text-red-600',
-                    Number(balance) <= 0
-                );
-            }
-
-            cashSelect.addEventListener('change', updateBalance);
-            document.addEventListener('DOMContentLoaded', updateBalance);
-
-            function formatRupiah(value) {
-                return new Intl.NumberFormat('id-ID').format(value);
-            }
-
-            displayInput.addEventListener('input', function(e) {
-                let raw = this.value.replace(/\D/g, ''); // hanya angka
-                realInput.value = raw; // kirim angka bersih ke backend
-
-                if (raw) {
-                    this.value = 'Rp ' + formatRupiah(raw);
-                } else {
-                    this.value = '';
-                }
-            });
-
-            function receiptUpload() {
-                return {
-                    preview: null,
-                    loading: false,
-
-                    async handleImage(event) {
-                        const input = event.target;
-                        const file = input.files[0];
-
-                        if (!file) return;
-
-                        // ===== VALIDASI TYPE =====
-                        if (!file.type.startsWith('image/')) {
-                            alert("File harus berupa gambar.");
-                            input.value = "";
-                            return;
-                        }
-
-                        // ===== VALIDASI SIZE AWAL (2MB) =====
-                        if (file.size > 2 * 1024 * 1024) {
-                            alert("Ukuran maksimal 2MB.");
-                            input.value = "";
-                            return;
-                        }
-
-                        this.loading = true;
-
-                        const options = {
-                            maxSizeMB: 0.8,
-                            maxWidthOrHeight: 1280,
-                            initialQuality: 0.7,
-                            useWebWorker: true
-                        };
-
-                        try {
-                            const compressedBlob = await imageCompression(file, options);
-
-                            // Pastikan benar-benar File object
-                            const compressedFile = new File(
-                                [compressedBlob],
-                                file.name, {
-                                    type: compressedBlob.type
-                                }
-                            );
-
-                            // Preview
-                            this.preview = URL.createObjectURL(compressedFile);
-
-                            // ===== SAFE DataTransfer =====
-                            if (typeof DataTransfer !== "undefined") {
-                                const dt = new DataTransfer();
-                                dt.items.add(compressedFile);
-                                input.files = dt.files;
-                            } else {
-                                console.warn("Browser tidak support DataTransfer.");
-                            }
-
-                        } catch (error) {
-                            console.error(error);
-                            alert("Gagal mengompresi gambar.");
-                            input.value = "";
-                        }
-
-                        this.loading = false;
-                    }
-                }
-            }
-
-
-            // Dinamically load sub-periods based on selected period
-            periodSelect.addEventListener('change', async function() {
-
-                let periodId = this.value;
-
-                subPeriodSelect.innerHTML = '<option value="">Loading...</option>';
-
-                if (!periodId) {
-                    subPeriodSelect.innerHTML = '<option value="">-- Pilih Sub Periode --</option>';
-                    return;
-                }
-
-                try {
-
-                    const response = await fetch(`/user/periode/${periodId}/sub-periods`);
-                    const data = await response.json();
-
-                    subPeriodSelect.innerHTML = '<option value="">-- Pilih Sub Periode --</option>';
-
-                    data.forEach(sub => {
-                        subPeriodSelect.innerHTML += `
-                            <option value="${sub.id}">
-                                ${sub.name}
-                            </option>
-                            `;
-                    });
-
-                } catch (error) {
-
-                    subPeriodSelect.innerHTML = '<option value="">Gagal mengambil data</option>';
-
-                }
-
-            });
-        </script>
-    @endpush
 @endsection
+
+
+@push('scripts')
+    <script>
+        const cashBalanceUrl = "{{ route('user.transactions.incomes.cash-balance') }}";
+        const cashSelect = document.getElementById('cash_coa_id');
+        const periodSelect = document.getElementById('period_id');
+        const subPeriodSelect = document.getElementById('sub_period_id');
+        const balanceText = document.getElementById('cash-balance');
+
+        const displayInput = document.getElementById('amount_display');
+        const realInput = document.getElementById('amount_real');
+
+        function formatRupiah(value) {
+            return new Intl.NumberFormat('id-ID').format(value);
+        }
+
+        // ================= FORMAT RUPIAH =================
+        displayInput.addEventListener('input', function() {
+            let raw = this.value.replace(/\D/g, '');
+            realInput.value = raw;
+
+            this.value = raw ? 'Rp ' + formatRupiah(raw) : '';
+        });
+
+        // ================= LOAD SALDO =================
+        async function loadCashBalance() {
+            const coaId = cashSelect.value;
+            const periodId = periodSelect.value;
+            const subPeriodId = subPeriodSelect.value;
+
+            if (!coaId || !periodId) {
+                balanceText.innerText = 'Rp 0';
+                return;
+            }
+
+            try {
+                const res = await fetch(
+                    `/user/transactions/incomes/cash-balance?coa_id=${coaId}&period_id=${periodId}&sub_period_id=${subPeriodId}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }
+                );
+
+                const data = await res.json();
+
+                balanceText.innerText = 'Rp ' + formatRupiah(data.balance);
+
+            } catch (err) {
+                balanceText.innerText = 'Error';
+            }
+        }
+
+        // ================= DEBOUNCE =================
+        let timeout;
+
+        function debounceLoad() {
+            clearTimeout(timeout);
+            timeout = setTimeout(loadCashBalance, 300);
+        }
+
+        // ================= EVENT =================
+        cashSelect.addEventListener('change', debounceLoad);
+        periodSelect.addEventListener('change', async function() {
+
+            let periodId = this.value;
+
+            subPeriodSelect.innerHTML = '<option>Loading...</option>';
+
+            if (!periodId) {
+                subPeriodSelect.innerHTML = '<option value="">-- Pilih Sub Periode --</option>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/user/periode/${periodId}/sub-periods`);
+                const data = await res.json();
+
+                subPeriodSelect.innerHTML = '<option value="">-- Pilih Sub Periode --</option>';
+
+                data.forEach(sub => {
+                    subPeriodSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                });
+
+            } catch {
+                subPeriodSelect.innerHTML = '<option>Error</option>';
+            }
+
+            debounceLoad();
+        });
+
+        subPeriodSelect.addEventListener('change', debounceLoad);
+
+        // ================= INIT =================
+        document.addEventListener('DOMContentLoaded', loadCashBalance);
+    </script>
+@endpush

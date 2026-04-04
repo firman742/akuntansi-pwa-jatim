@@ -146,6 +146,7 @@
 
     @push('scripts')
         <script>
+            const cashBalanceUrl = "{{ route('user.transactions.expenses.cash-balance') }}";
             const cashSelect = document.getElementById('cash_coa_id');
             const balanceText = document.getElementById('cash-balance');
             const displayInput = document.getElementById('amount_display');
@@ -153,26 +154,6 @@
             // For select period and sub-period dinamically 
             const periodSelect = document.getElementById('period_id');
             const subPeriodSelect = document.getElementById('sub_period_id');
-
-
-            function updateBalance() {
-                const option = cashSelect.options[cashSelect.selectedIndex];
-                const balance = option.dataset.balance || 0;
-
-                console.log(balance);
-                balanceText.textContent =
-                    'Rp ' + Number(balance).toLocaleString('id-ID');
-
-                balanceText.classList.toggle(
-                    'text-red-600',
-                    Number(balance) <= 0
-                );
-            }
-            console.log(updateBalance);
-
-            cashSelect.addEventListener('change', updateBalance);
-            document.addEventListener('DOMContentLoaded', updateBalance);
-
 
             function formatRupiah(value) {
                 return new Intl.NumberFormat('id-ID').format(value);
@@ -188,6 +169,46 @@
                     this.value = '';
                 }
             });
+
+            // ================= LOAD SALDO =================
+            async function loadCashBalance() {
+                const coaId = cashSelect.value;
+                const periodId = periodSelect.value;
+                const subPeriodId = subPeriodSelect.value;
+
+                if (!coaId || !periodId) {
+                    balanceText.innerText = 'Rp 0';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(
+                        `/user/transactions/incomes/cash-balance?coa_id=${coaId}&period_id=${periodId}&sub_period_id=${subPeriodId}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        }
+                    );
+
+                    const data = await res.json();
+
+                    balanceText.innerText = 'Rp ' + formatRupiah(data.balance);
+
+                } catch (err) {
+                    balanceText.innerText = 'Error';
+                }
+            }
+
+            // ================= DEBOUNCE =================
+            let timeout;
+
+            function debounceLoad() {
+                clearTimeout(timeout);
+                timeout = setTimeout(loadCashBalance, 300);
+            }
+
+            // ================= EVENT =================
+            cashSelect.addEventListener('change', debounceLoad);
 
             // Dinamically load sub-periods based on selected period
             periodSelect.addEventListener('change', async function() {

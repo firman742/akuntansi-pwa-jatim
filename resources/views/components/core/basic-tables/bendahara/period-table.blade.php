@@ -81,6 +81,15 @@
         return status == 1 ? 'Ditutup' : 'Aktif';
     },
 
+    formatDate(date) {
+        if (!date) return '-';
+
+        return new Date(date).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    },
 
     deleteRow(id) {
         if (confirm('Are you sure you want to delete this order?')) {
@@ -93,8 +102,7 @@
         }
     }
 }">
-    <div
-        class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <!-- Table -->
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
@@ -113,6 +121,12 @@
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Deskirpsi</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Mulai</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Berakhir</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Status</th>
@@ -144,6 +158,12 @@
                             <!-- Deskripsi -->
                             <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
 
+                            <!-- Tanggal Mulai -->
+                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.start_date)"></td>
+
+                            <!-- Tanggal Berakhir -->
+                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.end_date)"></td>
+
                             <!-- Apakah ditutup -->
                             <td class="px-4 sm:px-6 py-3.5">
                                 <span class="inline-block rounded-full px-2 py-0.5 text-theme-xs font-medium"
@@ -152,7 +172,7 @@
                             </td>
 
                             <!-- Ditutup pada -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.closed_at"></td>
+                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.closed_at)"></td>
 
                             <!-- Action -->
                             <td class="px-4 sm:px-3 py-2.5">
@@ -213,8 +233,7 @@
                                             title="Hapus Periode">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
                                                        a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
                                                        m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
                                             </svg>
