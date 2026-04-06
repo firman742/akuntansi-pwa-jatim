@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Bendahara;
 use App\Enums\NormalBalanceEnum;
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
+use App\Models\ClosingBalance;
 use App\Models\Journal;
 use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OpeningBalanceController extends Controller
 {
@@ -60,7 +62,8 @@ class OpeningBalanceController extends Controller
                 ];
             });
 
-        return view('pages.menus.bendahara.opening_balances.index',
+        return view(
+            'pages.menus.bendahara.opening_balances.index',
             compact('openingBalances', 'periods', 'periodId', 'subPeriods', 'subPeriodId')
         );
     }
@@ -87,20 +90,20 @@ class OpeningBalanceController extends Controller
     {
         $validated = $request->validate([
             'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
-            'sub_period_id' => 'required|exists:sub_periods,id',
-            'balance_type' => 'required|in:DEBIT,CREDIT',
-            'amount' => 'required|numeric|min:0'
+            'sub_period_id'       => 'required|exists:sub_periods,id',
+            'balance_type'        => 'required|in:DEBIT,CREDIT',
+            'amount'              => 'required|numeric|min:0', // Ini adalah saldo sisa/akhir periode lalu
+            'additional_amount'   => 'nullable|numeric|min:0', // Ini adalah saldo tambahan baru
         ], [
             'chart_of_account_id.required' => 'Akun wajib dipilih.',
-            'sub_period_id.required' => 'Sub periode wajib dipilih.',
-            'balance_type.required' => 'Tipe saldo wajib dipilih.',
-            'amount.required' => 'Nominal saldo awal wajib diisi.',
-            'amount.numeric' => 'Nominal harus berupa angka.',
-            'amount.min' => 'Nominal tidak boleh negatif.'
+            'sub_period_id.required'       => 'Sub periode wajib dipilih.',
+            'balance_type.required'        => 'Tipe saldo wajib dipilih.',
+            'amount.required'              => 'Nominal saldo sisa wajib diisi (isi 0 jika tidak ada).',
+            'amount.min'                   => 'Nominal tidak boleh negatif.'
         ]);
 
 
-        $subPeriod = SubPeriod::findOrFail($validated['sub_period_id']);
+        $subPeriod = SubPeriod::with('period')->findOrFail($validated['sub_period_id']);
         $accountId = $validated['chart_of_account_id'];
 
 
@@ -161,7 +164,7 @@ class OpeningBalanceController extends Controller
         $futureJournalExists = Journal::whereHas('subPeriod', function ($q) use ($subPeriod) {
             $q->where('start_date', '>', $subPeriod->start_date);
         })->exists();
-        
+
         if ($futureJournalExists) {
             return back()->withErrors([
                 'sub_period_id' => 'Tidak dapat reset saldo karena sudah ada transaksi setelah periode ini.'
@@ -172,14 +175,14 @@ class OpeningBalanceController extends Controller
         /**
          * ================================
          * VALIDASI 5
-         * NOMINAL TIDAK BOLEH NOL
+         * CEK NOMINAL AKHIR (SISA + TAMBAHAN) HARUS LEBIH DARI 0
          * ================================
          */
+        $totalAmount = (float) $validated['amount'] + (float) ($validated['additional_amount'] ?? 0);
 
-        if ($validated['amount'] == 0) {
-            return back()->withErrors([
-                'amount' => 'Nominal saldo awal tidak boleh 0.'
-            ])->withInput();
+        // 5. VALIDASI: Nominal Akhir
+        if ($totalAmount <= 0) {
+            return back()->withErrors(['amount' => 'Total saldo (Sisa + Tambahan) harus lebih besar dari 0.'])->withInput();
         }
 
         /**
@@ -188,18 +191,25 @@ class OpeningBalanceController extends Controller
          * ================================
          */
 
-        OpeningBalance::create([
-            'chart_of_account_id' => $accountId,
-            'period_id' => $subPeriod->period_id,
-            'sub_period_id' => $subPeriod->id,
-            'balance_type' => $validated['balance_type'],
-            'amount' => $validated['amount'],
-            'created_by' => Auth::id()
-        ]);
+        DB::beginTransaction();
+        try {
+            OpeningBalance::create([
+                'chart_of_account_id' => $accountId,
+                'period_id' => $subPeriod->period_id,
+                'sub_period_id' => $subPeriod->id,
+                'balance_type' => $validated['balance_type'],
+                'amount' => $totalAmount,
+                'created_by' => Auth::id()
+            ]);
 
-        return redirect()
-            ->route('bendahara.opening-balances.index')
-            ->with('success', 'Saldo awal berhasil dibuat.');
+            DB::commit();
+
+            return redirect()->route('bendahara.opening-balances.index')
+                ->with('success', 'Opening balance berhasil dibuat.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function createBulk()
@@ -217,39 +227,93 @@ class OpeningBalanceController extends Controller
             'period_ids.*' => 'exists:periods,id',
             'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
             'balance_type' => 'required|in:DEBIT,CREDIT',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0', // Ini bertindak sebagai nilai tambahan/manual
         ]);
 
-        foreach ($validated['period_ids'] as $periodId) {
+        DB::beginTransaction();
+        try {
+            foreach ($validated['period_ids'] as $periodId) {
+                // 1. Cari sub periode pertama di tahun tersebut
+                $firstSubPeriod = SubPeriod::where('period_id', $periodId)
+                    ->orderBy('start_date')
+                    ->first();
 
-            $firstSubPeriod = SubPeriod::where('period_id', $periodId)
-                ->orderBy('start_date')
-                ->first();
+                if (!$firstSubPeriod) continue;
 
-            if (!$firstSubPeriod) {
-                continue;
+                // 2. Validasi: Jangan timpa jika sudah ada atau ada jurnal
+                $exists = OpeningBalance::where([
+                    'chart_of_account_id' => $validated['chart_of_account_id'],
+                    'sub_period_id' => $firstSubPeriod->id
+                ])->exists();
+
+                $journalExists = Journal::where('sub_period_id', $firstSubPeriod->id)->exists();
+
+                if ($exists || $journalExists) continue;
+
+                // 3. CARI SALDO SISA PERIODE SEBELUMNYA (Masing-masing periode)
+                $lastSubPeriod = SubPeriod::where('end_date', '<', $firstSubPeriod->start_date)
+                    ->orderBy('end_date', 'desc')
+                    ->first();
+
+                $lastClosingAmount = 0;
+                if ($lastSubPeriod) {
+                    $closing = ClosingBalance::where('chart_of_account_id', $validated['chart_of_account_id'])
+                        ->where('period_id', $lastSubPeriod->period_id)
+                        ->first();
+                    $lastClosingAmount = $closing ? $closing->amount : 0;
+                }
+
+                // 4. TOTAL = Saldo Sisa + Input Nominal
+                $finalAmount = (float) $lastClosingAmount + (float) $validated['amount'];
+
+                if ($finalAmount > 0) {
+                    OpeningBalance::create([
+                        'chart_of_account_id' => $validated['chart_of_account_id'],
+                        'period_id' => $periodId,
+                        'sub_period_id' => $firstSubPeriod->id,
+                        'balance_type' => $validated['balance_type'],
+                        'amount' => $finalAmount,
+                        'created_by' => Auth::id()
+                    ]);
+                }
             }
 
-            $exists = OpeningBalance::where([
-                'chart_of_account_id' => $validated['chart_of_account_id'],
-                'sub_period_id' => $firstSubPeriod->id
-            ])->exists();
+            DB::commit();
+            return redirect()->route('bendahara.opening-balances.index')
+                ->with('success', 'Bulk Opening balance berhasil diproses.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Gagal simpan bulk: ' . $e->getMessage()])->withInput();
+        }
+    }
 
-            if ($exists) {
-                continue;
-            }
+    /**
+     * Endpoint Baru untuk AJAX: Mengambil Saldo Terakhir
+     * Berguna untuk tombol "Lihat Saldo Sebelumnya"
+     */
+    public function getLastClosingBalance(Request $request)
+    {
+        $coaId = $request->coa_id;
+        $currentSubPeriodId = $request->sub_period_id;
 
-            OpeningBalance::create([
-                'chart_of_account_id' => $validated['chart_of_account_id'],
-                'period_id' => $periodId,
-                'sub_period_id' => $firstSubPeriod->id,
-                'balance_type' => $validated['balance_type'],
-                'amount' => $validated['amount'],
-                'created_by' => Auth::id()
-            ]);
+        $currentSubPeriod = SubPeriod::findOrFail($currentSubPeriodId);
+
+        // Mencari sub periode terakhir sebelum tanggal mulai sub periode saat ini
+        $lastSubPeriod = SubPeriod::where('end_date', '<', $currentSubPeriod->start_date)
+            ->orderBy('end_date', 'desc')
+            ->first();
+
+        if (!$lastSubPeriod) {
+            return response()->json(['amount' => 0, 'balance_type' => 'DEBIT']);
         }
 
-        return redirect()->route('bendahara.opening-balances.index')
-            ->with('success', 'Opening balance berhasil dibuat untuk beberapa periode.');
+        $closing = ClosingBalance::where('chart_of_account_id', $coaId)
+            ->where('period_id', $lastSubPeriod->period_id)
+            ->first();
+
+        return response()->json([
+            'amount' => $closing ? $closing->amount : 0,
+            'balance_type' => $closing ? $closing->balance_type : 'DEBIT'
+        ]);
     }
 }

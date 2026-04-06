@@ -152,6 +152,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
     */
     Route::prefix('opening-balances')->name('opening-balances.')->group(function () {
         Route::get('/', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'index'])->name('index');
+        Route::get('/get-last-closing', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'getLastClosingBalance'])->name('get-last-balance');
         Route::get('/create', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'store'])->name('store');
 
