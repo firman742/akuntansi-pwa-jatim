@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ChartOfAccount extends Model
 {
     /** @use HasFactory<\Database\Factories\ChartOfAccountFactory> */
-    use HasUuids, HasFactory;
+    use HasUuids, HasFactory, SoftDeletes;
 
     protected $table = 'chart_of_accounts';
     protected $fillable = [

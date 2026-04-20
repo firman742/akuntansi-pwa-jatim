@@ -84,7 +84,6 @@
     </div>
     
     <div class="space-y-6">
-
         <x-core.basic-tables.user.income-table :incomes="$incomes" />
     </div>
 @endsection

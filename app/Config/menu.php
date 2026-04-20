@@ -99,6 +99,20 @@ class menu
                         ['bendahara/master/account-users*'],
                         PermissionEnum::COA_ASSIGN_USER
                     ),
+                    // pajak
+                    self::item(
+                        'Pajak',
+                        null,
+                        '/bendahara/master/taxes',
+                        ['bendahara/master/taxes*'],
+                    ),
+                    // bunga
+                    self::item(
+                        'Bunga',
+                        null,
+                        '/bendahara/master/interests',
+                        ['bendahara/master/interests*'],
+                    ),
                 ],
             ],
             self::item(

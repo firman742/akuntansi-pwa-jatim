@@ -143,6 +143,16 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
             Route::post('/{id}', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'sync'])->name('sync');
         });
 
+        // tax
+        Route::prefix('taxes')->name('taxes.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'update'])->name('update');
+            Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'destroy'])->name('destroy');
+        });
+
     });
 
     /*

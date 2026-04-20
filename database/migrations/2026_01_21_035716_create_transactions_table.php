@@ -19,8 +19,10 @@ return new class extends Migration
             $table->enum('transaction_type', TransactionType::values())->default(TransactionType::INCOME->value);
             $table->text('description')->nullable();
             $table->enum('status', ['DRAFT', 'SUBMITTED', 'POSTED', 'REVERSED'])->default('DRAFT');
-            $table->decimal('total_amount', 15, 2)->default(0);
+            $table->decimal('gross_amount', 18, 2);
+            $table->decimal('net_amount', 18, 2);
             $table->string('referencree_number')->nullable();
+            $table->string('receipt_path')->nullable(); // For file path
             $table->uuid('created_by')->nullable();
             $table->uuid('period_id');
             $table->uuid('sub_period_id')->nullable();

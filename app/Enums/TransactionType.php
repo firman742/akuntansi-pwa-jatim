@@ -6,6 +6,7 @@ enum TransactionType: string
 {
     case INCOME  = 'INCOME';
     case EXPENSE = 'EXPENSE';
+    case TRANSFER = 'TRANSFER';
 
     /**
      * Label untuk UI
@@ -15,6 +16,7 @@ enum TransactionType: string
         return match ($this) {
             self::INCOME  => 'Penerimaan',
             self::EXPENSE => 'Pengeluaran',
+            self::TRANSFER => 'Transfer',
         };
     }
     
