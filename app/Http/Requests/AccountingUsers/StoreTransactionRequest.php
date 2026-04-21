@@ -5,7 +5,6 @@ namespace App\Http\Requests\AccountingUsers;
 use App\Enums\TransactionType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 
 class StoreTransactionRequest extends FormRequest
 {
@@ -26,14 +25,14 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
 
-            // ── COMMON ───────────────────────────────────────────
+        // ── COMMON ───────────────────────────────────────────
             'type' => ['required', Rule::in(TransactionType::values())],
             'period_id'        => 'required|exists:periods,id',
             'sub_period_id'    => 'required|exists:sub_periods,id',
             'transaction_date' => 'required|date',
             'description'      => 'nullable|string|max:255',
 
-            /*
+        /*
         |--------------------------------------------------------------------------
         | 🔹 INCOME
         |--------------------------------------------------------------------------
@@ -55,7 +54,7 @@ class StoreTransactionRequest extends FormRequest
 
             'interest_lines' => 'nullable|array',
             'interest_lines.*.interest_id' => 'required_with:interest_lines|exists:interests,id',
-            'interest_lines.*.coa_id' => 'required_with:interest_lines|exists:chart_of_accounts,id',
+            // 'interest_lines.*.coa_id' => 'required_with:interest_lines|exists:chart_of_accounts,id',
             'interest_lines.*.amount' => 'required_with:interest_lines|numeric|min:0',
 
             'tax_lines' => 'nullable|array',
@@ -63,7 +62,7 @@ class StoreTransactionRequest extends FormRequest
             'tax_lines.*.coa_id' => 'required_with:tax_lines|exists:chart_of_accounts,id',
             'tax_lines.*.amount' => 'required_with:tax_lines|numeric|min:0',
 
-            /*
+        /*
         |--------------------------------------------------------------------------
         | 🔹 EXPENSE
         |--------------------------------------------------------------------------
@@ -78,7 +77,7 @@ class StoreTransactionRequest extends FormRequest
             'expense_lines.*.amount' => 'required_with:expense_lines|numeric|min:1',
             'expense_lines.*.description' => 'nullable|string|max:255',
 
-            /*
+        /*
         |--------------------------------------------------------------------------
         | 🔹 TRANSFER
         |--------------------------------------------------------------------------

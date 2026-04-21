@@ -46,7 +46,8 @@ class CashBalanceHelper
         $totalCredit = (clone $baseQuery)
             ->where('position', NormalBalanceEnum::CREDIT)
             ->sum('amount');
-
+        // $total = ($opening + $totalDebit) - $totalCredit;
+        // dd($opening, $totalDebit, $totalCredit, $total);
         return ($opening + $totalDebit) - $totalCredit;
     }
 }

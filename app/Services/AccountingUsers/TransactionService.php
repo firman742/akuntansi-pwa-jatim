@@ -5,12 +5,14 @@ namespace App\Services\AccountingUsers;
 use App\Enums\MetaTypeTransactionEnum;
 use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionType;
+use App\Models\ChartOfAccount;
 use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\Transaction;
 use App\Models\TransactionLine;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TransactionService
 {
@@ -25,6 +27,11 @@ class TransactionService
         return DB::transaction(function () use ($data) {
 
             $type = $data['type'];
+
+            // ── 0. VALIDASI SALDO UNTUK TRANSFER ────────────────
+            if ($type === TransactionType::TRANSFER->value) {
+                $this->validateTransferBalance($data);
+            }
 
             // ── 1. Build Lines (UNIVERSAL) ─────────────────────
             $lines = match ($type) {
@@ -96,6 +103,77 @@ class TransactionService
             return $transaction;
         });
     }
+
+    /**
+     * Validasi saldo akun asal untuk transfer
+     *
+     * @param array $data
+     * @throws ValidationException
+     */
+    private function validateTransferBalance(array $data): void
+    {
+        $fromCoaId = $data['from_coa_id'];
+        $toCoaId = $data['to_coa_id'];
+        $amount = (float) $data['amount'];
+        $periodId = $data['period_id'];
+        $subPeriodId = $data['sub_period_id'];
+
+        // Validasi field wajib
+        if (empty($fromCoaId) || empty($toCoaId) || $amount <= 0) {
+            throw ValidationException::withMessages([
+                'from_coa_id' => 'Akun asal dan tujuan harus dipilih serta nominal harus lebih dari 0.',
+                'amount' => 'Nominal transfer harus lebih dari 0.',
+            ]);
+        }
+
+        // Validasi akun asal ≠ akun tujuan
+        if ($fromCoaId === $toCoaId) {
+            throw ValidationException::withMessages([
+                'from_coa_id' => 'Akun asal dan tujuan tidak boleh sama.',
+            ]);
+        }
+
+        // Hitung saldo akun asal
+        $fromCoaBalance = $this->getAccountBalance($fromCoaId, $periodId, $subPeriodId);
+
+        if ($fromCoaBalance < $amount) {
+            $fromCoa = ChartOfAccount::find($fromCoaId);
+            $fromCoaName = $fromCoa ? $fromCoa->code . ' - ' . $fromCoa->name : 'Akun Asal';
+
+            throw ValidationException::withMessages([
+                'amount' => "Saldo {$fromCoaName} tidak mencukupi. Saldo saat ini: Rp " .
+                    number_format($fromCoaBalance, 0, ',', '.') .
+                    ", Nominal transfer: Rp " . number_format($amount, 0, ',', '.'),
+            ]);
+        }
+    }
+
+    /**
+     * Mendapatkan saldo akun berdasarkan periode dan sub periode
+     *
+     * @param string $coaId
+     * @param string $periodId
+     * @param string|null $subPeriodId
+     * @return float
+     */
+    private function getAccountBalance(string $coaId, string $periodId, ?string $subPeriodId): float
+    {
+        $query = DB::table('journal_details as jd')
+            ->join('journals as j', 'jd.journal_id', '=', 'j.id')
+            ->where('jd.coa_id', $coaId)
+            ->where('j.period_id', $periodId);
+
+        if ($subPeriodId) {
+            $query->where('j.sub_period_id', $subPeriodId);
+        }
+
+        $totalDebit = $query->clone()->sum('jd.debit');
+        $totalCredit = $query->clone()->sum('jd.credit');
+
+        // Saldo = Debit - Credit (untuk kas/bank biasanya normal balance DEBIT)
+        return (float) ($totalDebit - $totalCredit);
+    }
+
 
     /** =========================================================
      * 🔹 INCOME
