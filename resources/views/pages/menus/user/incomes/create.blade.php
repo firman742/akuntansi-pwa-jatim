@@ -169,11 +169,17 @@
                                             @change="onInterestSelect($event,i)" class="flex-1 border rounded px-2">
 
                                             @foreach ($interests as $int)
-                                                <option value="{{ $int->id }}" data-rate="{{ $int->rate ?? 0 }}">
+                                                <option value="{{ $int->id }}" data-rate="{{ $int->rate }}"
+                                                    data-type="{{ $int->type }}"
+                                                    data-interest-coa="{{ $int->account_interest_id }}"
+                                                    data-expense-coa="{{ $int->account_expense_id }}">
                                                     {{ $int->name }}
                                                 </option>
                                             @endforeach
                                         </select>
+
+                                        <input type="hidden" :name="`interest_lines[${i}][coa_id]`"
+                                            x-model="line.coa_id">
 
                                         <input type="text" :value="'Rp ' + formatRupiah(line.amount)" readonly
                                             class="w-28 border rounded px-2 bg-gray-100">
@@ -413,13 +419,42 @@
 
                 onInterestSelect(e, i) {
                     const opt = e.target.selectedOptions[0];
+                    
                     const rate = Number(opt.dataset.rate || 0);
+                    const interestCoa = opt.dataset.interestCoa || '';
+
+                    this.interestLines[i].coa_id = interestCoa;
 
                     const income = this.incomeLines.reduce((s, l) => s + Number(l.amount || 0), 0);
                     this.interestLines[i].amount = (income * rate) / 100;
 
+                    console.log(this.interestLines[i]);
+                    
+
                     this.calculateSummary();
                 },
+
+                // onInterestSelect(e, i) {
+                //     const opt = e.target.selectedOptions[0];
+                //     const rate = Number(opt.dataset.rate || 0);
+                //     // const type = opt.dataset.type;
+
+                //     const interestCoa = opt.dataset.interestCoaId;
+                //     const expenseCoa = opt.dataset.expenseCoa;
+
+                //     const income = this.incomeLines.reduce((s, l) => s + Number(l.amount || 0), 0);
+                //     const amount = (income * rate) / 100;
+
+                //     this.interestLines[i].amount = amount;
+
+                //     // if (type === 'INCOME') {
+                //     this.interestLines[i].coa_id = interestCoa;
+                //     // } else {
+                //     //     this.interestLines[i].coa_id = expenseCoa;
+                //     // }
+
+                //     this.calculateSummary();
+                // }
 
                 async loadCashBalance() {
                     if (!this.cash_coa_id || !this.period_id) return;

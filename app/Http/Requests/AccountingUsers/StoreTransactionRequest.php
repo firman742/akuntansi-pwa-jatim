@@ -54,7 +54,7 @@ class StoreTransactionRequest extends FormRequest
 
             'interest_lines' => 'nullable|array',
             'interest_lines.*.interest_id' => 'required_with:interest_lines|exists:interests,id',
-            // 'interest_lines.*.coa_id' => 'required_with:interest_lines|exists:chart_of_accounts,id',
+            'interest_lines.*.coa_id' => 'required_with:interest_lines|exists:chart_of_accounts,id',
             'interest_lines.*.amount' => 'required_with:interest_lines|numeric|min:0',
 
             'tax_lines' => 'nullable|array',

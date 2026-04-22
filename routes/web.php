@@ -221,6 +221,10 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
     |--------------------------------------------------------------------------
     */
     Route::prefix('transactions')->name('transactions.')->group(function () {
+        // transaction
+        Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'getCashBalance'])->name('cash-balance');
+        Route::get('/create', [App\Http\Controllers\AccountingUsers\TransactionController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\AccountingUsers\TransactionController::class, 'store'])->name('store');
 
         // Income
         Route::prefix('incomes')->name('incomes.')->group(function () {

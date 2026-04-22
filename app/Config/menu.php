@@ -165,17 +165,23 @@ class menu
                 ['user/dashboard*']
             ),
             self::item(
-                'Penerimaan',
+                'Buat Transaksi',
                 'income',
-                '/user/transactions/incomes',
-                ['user/transactions/incomes*']
+                '/user/transactions/create',
+                ['user/transactions/create*']
             ),
-            self::item(
-                'Pengeluaran',
-                'expense',
-                '/user/transactions/expenses',
-                ['user/transactions/expenses*']
-            ),
+            // self::item(
+            //     'Penerimaan',
+            //     'income',
+            //     '/user/transactions/incomes',
+            //     ['user/transactions/incomes*']
+            // ),
+            // self::item(
+            //     'Pengeluaran',
+            //     'expense',
+            //     '/user/transactions/expenses',
+            //     ['user/transactions/expenses*']
+            // ),
             self::item(
                 'Riwayat Transaksi',
                 'cash',
