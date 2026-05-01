@@ -25,7 +25,7 @@
                 text-sm
                 {{ $hasChildren ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300' }}
             ">
-            {{ $coa->code }} — {{ $coa->name }}
+            {{ $coa->code }} — {{ $coa->name }} - {{ $coa->normal_balance }}
         </span>
     </label>
 

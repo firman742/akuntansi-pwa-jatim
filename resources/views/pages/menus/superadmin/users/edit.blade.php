@@ -7,7 +7,7 @@
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" :dismissible="false">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

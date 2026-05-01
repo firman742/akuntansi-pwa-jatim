@@ -75,10 +75,15 @@ class ChartOfAccount extends Model
         return $this->hasMany(OpeningBalance::class, 'chart_of_account_id');
     }
 
-    public function journal_details() : HasMany
+    public function journalDetails() : HasMany
     {
-        return $this->hasMany(JournalDetail::class, 'coa_id');
+        return $this->hasMany(JournalDetail::class, 'chart_of_account_id');
         
+    }
+
+    public function transactionLines() : HasMany
+    {
+        return $this->hasMany(TransactionLine::class, 'chart_of_account_id');
     }
 
 }

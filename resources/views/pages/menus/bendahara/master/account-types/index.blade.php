@@ -11,6 +11,18 @@
         </div>
     @endif
 
+    @if ($errors->any())
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        </div>
+    @endif
+
     <div class="space-y-6">
         <x-core.basic-tables.core-table title="Daftar Tipe Akun" description="Berikut adalah daftar tipe akun yang tersedia.">
             <x-slot name="actions">

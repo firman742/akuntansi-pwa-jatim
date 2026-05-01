@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers\Bendahara\Master;
 
-use App\Models\User;
-use App\Models\UserAccount;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Models\ChartOfAccount;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bendahara\UserAccounts\SyncUserAccountRequest;
+use App\Models\ChartOfAccount;
+use App\Models\User;
+use App\Services\Bendahara\UserAccountService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+use Throwable;
 
 class UserAccountController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * 
+     * @return View
      */
-    public function index()
+    public function index(): View
     {
         $users = User::role('ACCOUNTING USER')
             ->withCount('coas')
@@ -27,8 +30,11 @@ class UserAccountController extends Controller
 
     /**
      * Show the form for editing the specified resource.
+     * 
+     * @param string $id
+     * @return View
      */
-    public function edit(string $id)
+    public function edit(string $id): View
     {
         $user = User::with('coas')->findOrFail($id);
 
@@ -42,35 +48,28 @@ class UserAccountController extends Controller
         return view('pages.menus.bendahara.master.user_accounts.edit', compact('user', 'coas', 'assignedCoaIds'));
     }
 
-    public function sync(Request $request, string $id)
+
+    /**
+     * Sync the specified resource in storage.
+     * 
+     * @param string $id
+     * @param UserAccountService $service
+     * @param SyncUserAccountRequest $request
+     * @return RedirectResponse
+     * @throws Throwable
+     */
+    public function sync(string $id, UserAccountService $service, SyncUserAccountRequest $request): RedirectResponse
     {
-        $request->validate([
-            'coa_ids' => ['nullable', 'array'],
-            'coa_ids.*' => ['exists:chart_of_accounts,id'],
-        ]);
+        try {
+            $service->sync($id, $request->validated());
 
-        $user = User::findOrFail($id);
+            return redirect()->route('bendahara.master.account-users.index')
+                ->with('success', 'Akun pengguna berhasil disinkronkan.');
 
-        DB::transaction(function () use ($user, $request) {
-            // Hapus relasi lama
-            UserAccount::where('user_id', $user->id)->delete();
-
-            // Insert baru
-            if ($request->filled('coa_ids')) {
-                $data = collect($request->coa_ids)->map(fn($coaId) => [
-                    'id' => Str::uuid(),
-                    'user_id' => $user->id,
-                    'coa_id' => $coaId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ])->toArray();
-
-                UserAccount::insert($data);
-            }
-        });
-
-        return redirect()
-            ->route('bendahara.master.account-users.index')
-            ->with('success', 'Akun COA berhasil diperbarui.');
+        } catch (Throwable $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal menyinkronkan akun pengguna: ' . $e->getMessage());
+        }
     }
 }

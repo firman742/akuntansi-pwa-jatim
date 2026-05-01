@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('interests', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
-            $table->decimal('rate', 8, 4);
+            $table->decimal('rate', 8, 2); // misal: 5.00 untuk 5%
             $table->enum('type', ['PERCENTAGE', 'FIXED'])->default('PERCENTAGE');
 
              // 🔥 relasi ke COA (bukan string lagi)

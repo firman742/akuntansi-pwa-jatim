@@ -7,7 +7,7 @@
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" :dismissible="false">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
                 <ul class="list-disc list-inside">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -67,10 +67,38 @@
                 </div>
 
                 <div class="col-span-1 md:col-span-2">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="is_active" value="1">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Aktifkan Sub Periode
                     </label>
+
+                    <div x-data="{ switcherToggle: true }">
+                        {{-- hidden input agar selalu terkirim --}}
+                        <input type="hidden" name="is_active" value="0">
+
+                        <label
+                            class="flex cursor-pointer items-center gap-3 text-sm font-medium
+                                   text-gray-700 select-none dark:text-gray-400">
+
+                            <div class="relative">
+                                <input type="checkbox" name="is_active" value="1" class="sr-only"
+                                    x-model="switcherToggle" />
+
+                                <div class="block h-6 w-11 rounded-full transition"
+                                    :class="switcherToggle
+                                        ?
+                                        'bg-brand-500 dark:bg-brand-500' :
+                                        'bg-gray-200 dark:bg-white/10'">
+                                </div>
+
+                                <div class="shadow-theme-sm absolute top-0.5 left-0.5 h-5 w-5
+                                           rounded-full bg-white transition-transform duration-300"
+                                    :class="switcherToggle ? 'translate-x-full' : 'translate-x-0'">
+                                </div>
+                            </div>
+
+                            <span x-text="switcherToggle ? 'Aktif' : 'Nonaktif'"></span>
+                        </label>
+                    </div>
                 </div>
 
             </div>

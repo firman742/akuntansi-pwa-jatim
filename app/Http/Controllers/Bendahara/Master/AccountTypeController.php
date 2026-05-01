@@ -2,15 +2,23 @@
 
 namespace App\Http\Controllers\Bendahara\Master;
 
-use App\Models\AccountType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bendahara\AccountTypes\StoreAccountTypeRequest;
+use App\Http\Requests\Bendahara\AccountTypes\UpdateAccountTypeRequest;
+use App\Models\AccountType;
+use App\Services\Bendahara\AccountTypeService;
+use Exception;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class AccountTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * 
+     * @return View
      */
-    public function index()
+    public function index(): View
     {
         $accountTypes = AccountType::all();
         return view('pages.menus.bendahara.master.account-types.index', compact('accountTypes'));
@@ -18,32 +26,43 @@ class AccountTypeController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     * 
+     * @return View
      */
-    public function create()
+    public function create(): View
     {
         return view('pages.menus.bendahara.master.account-types.create');
     }
 
     /**
      * Store a newly created resource in storage.
+     * 
+     * @param AccountTypeService $service
+     * @param StoreAccountTypeRequest $request
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function store()
+    public function store(AccountTypeService $service, StoreAccountTypeRequest $request): RedirectResponse
     {
-        $validated = request()->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'required|boolean',
-        ]);
+        try {
+            $service->store($request->validated());
 
-        AccountType::create($validated);
-
-        return redirect()->route('bendahara.master.account-types.index')->with('success', 'Account Type created successfully.');
+            return redirect()->route('bendahara.master.account-types.index')
+                ->with('success', 'Tipe akun berhasil ditambahkan.');
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'error' => 'Gagal membuat Tipe akun: ' . $e->getMessage()
+            ])->withInput();
+        }
     }
 
     /**
      * Show the form for editing the specified resource.
+     * 
+     * @param string $id
+     * @return View
      */
-    public function edit(string $id)
+    public function edit(string $id): View
     {
         $accountType = AccountType::findOrFail($id);
 
@@ -52,31 +71,48 @@ class AccountTypeController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * 
+     * @param string $id
+     * @param AccountTypeService $service
+     * @param UpdateAccountTypeRequest $request
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function update(string $id)
+    public function update(string $id, AccountTypeService $service, UpdateAccountTypeRequest $request): RedirectResponse
     {
-        $accountType = AccountType::findOrFail($id);
+        try {
+            $service->update($id, $request->validated());
 
-        $validated = request()->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'required|boolean',
-        ]);
+            return redirect()->route('bendahara.master.account-types.index')
+                ->with('success', 'Tipe akun berhasil diperbarui.');
 
-        $accountType->update($validated);
-
-        return redirect()->route('bendahara.master.account-types.index')->with('success', 'Account Type updated successfully.');
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'error' => 'Gagal memperbarui Tipe akun: ' . $e->getMessage()
+            ])->withInput();
+        }
     }
 
     /**
      * Remove the specified resource from storage.
-     * TODO: Add check to prevent deletion if Account Type is in use on COA.
+     * 
+     * @param string $id
+     * @param AccountTypeService $service
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function destroy(string $id)
+    public function destroy(string $id, AccountTypeService $service): RedirectResponse
     {
-        $accountType = AccountType::findOrFail($id);
-        $accountType->delete();
+        try {
+            $service->delete($id);
 
-        return redirect()->route('bendahara.master.account-types.index')->with('success', 'Account Type deleted successfully.');
+            return redirect()->route('bendahara.master.account-types.index')
+                ->with('success', 'Tipe akun berhasil dihapus.');
+
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'error' => 'Gagal menghapus Tipe akun: ' . $e->getMessage()
+            ]);
+        }
     }
 }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('taxes', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
-            $table->decimal('rate', 8, 4)->default(0); // misal 11% = 0.1100
+            $table->decimal('rate', 8, 2)->default(0); // misal 10.00 untuk 10%
             $table->enum('type', ['PERCENTAGE', 'FIXED'])->default('PERCENTAGE');
 
             // 🔥 relasi ke COA (bukan string lagi)

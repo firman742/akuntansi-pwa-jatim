@@ -12,7 +12,7 @@ class JournalDetail extends Model
     protected $table = 'journal_details';
     protected $fillable = [
         'journal_id',
-        'coa_id',
+        'chart_of_account_id',
         'debit',
         'credit',
         'description',
@@ -23,8 +23,8 @@ class JournalDetail extends Model
         return $this->belongsTo(Journal::class);
     }
 
-    public function coa()
+    public function chartOfAccount()
     {
-        return $this->belongsTo(ChartOfAccount::class);
+        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
     }
 }

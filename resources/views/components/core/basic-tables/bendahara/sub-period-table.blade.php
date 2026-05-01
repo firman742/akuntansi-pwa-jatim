@@ -20,7 +20,7 @@
         return this.tableRowData.slice(start, start + this.itemsPerPage);
     },
 
-    
+
     get displayedPages() {
         const total = this.totalPages;
         const current = this.currentPage;
@@ -68,7 +68,7 @@
     getStatusLabel(status) {
         return status ? 'Aktif' : 'Non Aktif';
     },
-    
+
     formatDate(date) {
         if (!date) return '-';
 
@@ -106,93 +106,94 @@
 
                     {{-- Jika data ada --}}
                     <template x-if="paginatedData.length > 0">
-                    <template x-for="(row, index) in paginatedData" :key="row.id">
+                        <template x-for="(row, index) in paginatedData" :key="row.id">
 
-                        <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+                            <tr class="border-b border-gray-100 dark:border-white/[0.05]">
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
-                            </td>
+                                <td class="px-4 sm:px-6 py-3.5"
+                                    x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
+                                </td>
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.period?.name"></td>
+                                <td class="px-4 sm:px-6 py-3.5" x-text="row.period?.name"></td>
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.name"></td>
+                                <td class="px-4 sm:px-6 py-3.5" x-text="row.name"></td>
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
+                                <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.start_date)">
-                            </td>
+                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.start_date)">
+                                </td>
 
-                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.end_date)">
-                            </td>
+                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.end_date)">
+                                </td>
 
-                            <td class="px-4 sm:px-6 py-3.5">
+                                <td class="px-4 sm:px-6 py-3.5">
 
-                                <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
-                                    :class="getStatusClass(row.is_active)" x-text="getStatusLabel(row.is_active)">
-                                </span>
+                                    <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                                        :class="getStatusClass(row.is_active)" x-text="getStatusLabel(row.is_active)">
+                                    </span>
 
-                            </td>
+                                </td>
 
-                            <!-- Action -->
-                            <td class="px-4 sm:px-3 py-2.5">
-                                <div class="flex items-center gap-2">
-                                    <!-- Edit SELALU tampil -->
-                                    <a :href="editUrl.replace(':id', row.id)"
-                                        class="flex h-8 w-8 items-center justify-center rounded-md
+                                <!-- Action -->
+                                <td class="px-4 sm:px-3 py-2.5">
+                                    <div class="flex items-center gap-2">
+                                        <!-- Edit SELALU tampil -->
+                                        <a :href="editUrl.replace(':id', row.id)"
+                                            class="flex h-8 w-8 items-center justify-center rounded-md
                                             text-blue-600 hover:bg-blue-50
                                             dark:text-blue-400 dark:hover:bg-blue-500/10"
-                                        title="Edit Sub Periode">
-                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </a>
-
-                                    <!-- Delete SELALU tampil -->
-                                    <form :action="destroyUrl.replace(':id', row.id)" method="POST"
-                                        onsubmit="return confirm('Yakin hapus sub periode ini?')">
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button type="submit"
-                                            class="flex h-8 w-8 items-center justify-center rounded-md
-                                                text-red-600 hover:bg-red-50
-                                                dark:text-red-400 dark:hover:bg-red-500/10"
-                                            title="Hapus Sub Periode">
+                                            title="Edit Sub Periode">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </a>
+
+                                        <!-- Delete SELALU tampil -->
+                                        <form :action="destroyUrl.replace(':id', row.id)" method="POST"
+                                            onsubmit="return confirm('Yakin hapus sub periode ini?')">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit"
+                                                class="flex h-8 w-8 items-center justify-center rounded-md
+                                                text-red-600 hover:bg-red-50
+                                                dark:text-red-400 dark:hover:bg-red-500/10"
+                                                title="Hapus Sub Periode">
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
                                                     a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
                                                     m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </form>
+                                                </svg>
+                                            </button>
+                                        </form>
 
-                                    <!-- Badge jika sudah ditutup -->
-                                    <template x-if="row.is_closed">
-                                        <span
-                                            class="ml-2 inline-flex items-center rounded-full px-2.5 py-1
+                                        <!-- Badge jika sudah ditutup -->
+                                        <template x-if="row.is_closed">
+                                            <span
+                                                class="ml-2 inline-flex items-center rounded-full px-2.5 py-1
                                                 text-xs font-medium
                                                 bg-gray-100 text-gray-600
                                                 dark:bg-gray-500/15 dark:text-gray-400">
-                                            Ditutup
-                                        </span>
-                                    </template>
+                                                Ditutup
+                                            </span>
+                                        </template>
 
-                                </div>
-                            </td>
+                                    </div>
+                                </td>
 
-                        </tr>
+                            </tr>
 
-                    </template>
+                        </template>
                     </template>
 
                     {{-- Jika data kosong --}}
                     <template x-if="paginatedData.length === 0">
                         <tr>
-                            <td colspan="9"
-                                class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="9" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                 Tidak ada data sub periode.
                             </td>
                         </tr>

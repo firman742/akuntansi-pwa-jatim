@@ -2,21 +2,27 @@
 
 namespace App\Http\Controllers\Bendahara\Master;
 
-use App\Models\Period;
-use App\Models\AccountType;
-use Illuminate\Http\Request;
-use App\Models\ChartOfAccount;
+use App\Enums\NormalBalanceEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\StorePeriodRequest;
-use App\Http\Requests\UpdatePeriodRequest;
+use App\Http\Requests\Bendahara\Coas\StoreCOARequest;
+use App\Http\Requests\Bendahara\Coas\UpdateCOARequest;
+use App\Models\AccountType;
+use App\Models\ChartOfAccount;
+use App\Services\Bendahara\CoaService;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class COAController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * 
+     * @return View
      */
-    public function index()
+    public function index(): View
     {
         $chartOfAccounts = ChartOfAccount::with(['accountType', 'creator', 'parent'])
             ->orderBy('code')
@@ -27,167 +33,133 @@ class COAController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     * 
+     * @return View
      */
-    public function create()
+    public function create(): View
     {
         $accountTypes = AccountType::orderBy('name')->get();
 
         $parents = ChartOfAccount::orderBy('code')->get();
+        $normalBalances = NormalBalanceEnum::values();
 
         return view('pages.menus.bendahara.master.coa.create', compact(
             'accountTypes',
-            'parents'
+            'parents',
+            'normalBalances'
         ));
     }
 
-    public function generateCode(?string $parentId = null): array
-    {
-        if ($parentId) {
-            // Parent ada → level > 1
-            $parent = ChartOfAccount::findOrFail($parentId);
-            $level = $parent->level + 1;
-
-            // Ambil semua child parent
-            $children = ChartOfAccount::where('parent_id', $parent->id)
-                ->orderBy('code')
-                ->get();
-
-            // Tentukan posisi digit sesuai level (level 2 → index 2, dsb)
-            $codeStr = str_pad($parent->code, 5, '0', STR_PAD_LEFT);
-            $codeArr = str_split($codeStr);
-            $position = min($level + 1, 5) - 1; // index 0-based
-
-            if ($children->isEmpty()) {
-                // Belum ada child → set digit level ke 1
-                $codeArr[$position] = '1';
-            } else {
-                $lastChild = $children->last();
-                $grandChildren = ChartOfAccount::where('parent_id', $lastChild->id)
-                    ->orderBy('code')
-                    ->get();
-
-                if ($grandChildren->isNotEmpty()) {
-                    // Rekursif ke child terakhir
-                    return $this->generateCode($lastChild->id);
-                }
-
-                // Last child tidak punya anak → increment digit
-                $lastCodeArr = str_split(str_pad($lastChild->code, 5, '0', STR_PAD_LEFT));
-                $currentDigit = (int)$lastCodeArr[$position];
-                $codeArr[$position] = (string)($currentDigit + 1);
-            }
-
-            $code = implode('', $codeArr);
-            $order = $children->max('order') ? $children->max('order') + 1 : 1;
-        } else {
-            // Root (parent_id null / level 1)
-            $level = 1;
-
-            $children = ChartOfAccount::whereNull('parent_id')
-                ->orderBy('code')
-                ->get();
-
-            if ($children->isEmpty()) {
-                $code = '10000';
-                $order = 1;
-            } else {
-                $lastRoot = $children->last();
-                $lastCode = str_pad($lastRoot->code, 5, '0', STR_PAD_LEFT);
-                $firstDigit = (int)substr($lastCode, 0, 1) + 1;
-
-                $code = $firstDigit . '0000'; // level 1 root baru
-                $order = $lastRoot->order + 1;
-            }
-        }
-
-        return [
-            'code'  => $code,
-            'level' => $level,
-            'order' => $order,
-        ];
-    }
-
-
     /**
      * Generate kode COA otomatis untuk frontend (JSON)
+     * 
+     * @param CoaService $service
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function generateCodeApi(Request $request)
+    public function generateCodeApi(CoaService $service, Request $request): JsonResponse
     {
-        $parentId = $request->query('parent_id'); // ambil dari query ?parent_id=
+        $parentId = $request->query('parent_id'); // ambil dari query header ?parent_id=
 
-        $result = $this->generateCode($parentId);
-
-        return response()->json([
-            'code' => $result['code'],
-            'level' => $result['level'],
-            'order' => $result['order'],
-        ]);
+        return response()->json(
+            $service->generateCodeForAPI($parentId)
+        );
     }
 
     /**
      * Store a newly created resource in storage.
+     * 
+     * @param CoaService $service
+     * @param StoreCOARequest $request
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function store(Request $request)
+    public function store(CoaService $service, StoreCOARequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'account_type_id' => 'required|exists:account_types,id',
-            'parent_id' => 'nullable|exists:chart_of_accounts,id',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'normal_balance' => 'required|in:debit,credit',
-        ]);
+        try {
+            $service->store($request->validated());
 
-        // Gunakan generateCode untuk otomatis kode, level, dan order
-        $result = $this->generateCode($validated['parent_id'] ?? null);
-
-        ChartOfAccount::create([
-            'code' => $result['code'],
-            'name' => $validated['name'],
-            'account_type_id' => $validated['account_type_id'],
-            'parent_id' => $validated['parent_id'] ?? null,
-            'level' => $result['level'],
-            'order' => $result['order'],
-            'normal_balance' => $validated['normal_balance'],
-            'description' => $validated['description'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
-            'created_by' => Auth::id(),
-        ]);
-
-        return redirect()->route('bendahara.master.coas.index')
-            ->with('success', 'Akun COA berhasil dibuat dengan kode: ' . $result['code']);
-    }
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Period $period)
-    {
-        //
+            return redirect()->route('bendahara.master.coas.index')
+                ->with('success', 'Chart of Account berhasil dibuat.');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal membuat Chart of Account: ' . $e->getMessage());
+        }
     }
 
     /**
      * Show the form for editing the specified resource.
+     * 
+     * @param string $id
+     * @return View
      */
-    public function edit(Period $period)
+    public function edit(string $id): View
     {
-        //
+        $coa = ChartOfAccount::findOrFail($id);
+
+        $accountTypes = AccountType::orderBy('name')->get();
+
+        $parents = ChartOfAccount::where('id', '!=', $id)
+            ->orderBy('code')
+            ->get();
+
+        $normalBalances = NormalBalanceEnum::cases();
+
+        $isLocked = $coa->transactionLines()->exists() || $coa->journalDetails()->exists();
+
+        return view('pages.menus.bendahara.master.coa.edit',
+            compact(
+                'coa',
+                'accountTypes',
+                'parents',
+                'normalBalances',
+                'isLocked'
+            )
+        );
     }
 
     /**
      * Update the specified resource in storage.
+     * 
+     * @param string $id
+     * @param CoaService $service
+     * @param UpdateCOARequest $request
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function update(UpdatePeriodRequest $request, Period $period)
+    public function update(string $id, CoaService $service, UpdateCOARequest $request): RedirectResponse
     {
-        //
+        try {
+            $service->update($id, $request->validated());
+
+            return redirect()->route('bendahara.master.coas.index')
+                ->with('success', 'Chart of Account berhasil diperbarui.');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal memperbarui Chart of Account: ' . $e->getMessage());
+        }
     }
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * @param string $id
+     * @param CoaService $service
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function destroy(Period $period)
+    public function destroy(string $id, CoaService $service): RedirectResponse
     {
-        //
+        try {
+            $service->delete($id);
+
+            return redirect()->route('bendahara.master.coas.index')
+                ->with('success', 'Chart of Account berhasil dihapus.');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus Chart of Account: ' . $e->getMessage());
+        }
     }
 }

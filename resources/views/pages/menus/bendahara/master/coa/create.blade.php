@@ -7,7 +7,7 @@
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" :dismissible="false">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -26,46 +26,44 @@
     <x-common.component-card title="Tambah Akun COA">
         <form method="POST" action="{{ route('bendahara.master.coas.store') }}">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4" 
-                x-data="{
-                    parentId: '{{ old('parent_id') }}',
-                    code: '-', // kode otomatis
-                    level: 1, // level otomatis
-                    order: 1, // order otomatis
-                    oldParentId: null,
-                
-                    async fetchCode() {
-                        try {
-                            let url = '{{ route('bendahara.master.coas.generate-code') }}';
-                            if (this.parentId) url += '?parent_id=' + this.parentId;
-                
-                            const response = await fetch(url);
-                            if (!response.ok) throw new Error('Gagal mengambil kode');
-                
-                            const data = await response.json();
-                            this.code = data.code;
-                            this.level = data.level;
-                            this.order = data.order;
-                        } catch (error) {
-                            console.error(error);
-                            this.code = 'Error';
-                            this.level = 1;
-                            this.order = 1;
-                        }
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4" x-data="{
+                parentId: '{{ old('parent_id') }}',
+                code: '-', // kode otomatis
+                level: 1, // level otomatis
+                order: 1, // order otomatis
+                oldParentId: null,
+            
+                async fetchCode() {
+                    try {
+                        let url = '{{ route('bendahara.master.coas.generate-code') }}';
+                        if (this.parentId) url += '?parent_id=' + this.parentId;
+            
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error('Gagal mengambil kode');
+            
+                        const data = await response.json();
+                        this.code = data.code;
+                        this.level = data.level;
+                        this.order = data.order;
+                    } catch (error) {
+                        console.error(error);
+                        this.code = 'Error';
+                        this.level = 1;
+                        this.order = 1;
                     }
-                }" 
-                x-init="fetchCode();
-                oldParentId = parentId;"
+                }
+            }" x-init="fetchCode();
+            oldParentId = parentId;"
                 x-effect="if (parentId !== oldParentId) { fetchCode(); oldParentId = parentId; }">
 
                 {{-- Parent Akun --}}
                 <div class="col-span-1 md:col-span-2">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Parent Akun (Opsional)
+                        Akun Induk (Opsional)
                     </label>
                     <select name="parent_id" x-model="parentId"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                        <option value="">-- Tidak Ada --</option>
+                        <option value="">-- Pilih Akun Induk --</option>
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(old('parent_id') == $parent->id)>
                                 {{ $parent->code }} - {{ $parent->name }}
@@ -130,11 +128,15 @@
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Normal Balance
                     </label>
-                    <select name="normal_balance"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('normal_balance') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                        <option value="debit" @selected(old('normal_balance') === 'debit')>Debit</option>
-                        <option value="credit" @selected(old('normal_balance') === 'credit')>Credit</option>
+                    <select name="normal_balance" x-model="normal_balance"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        @foreach ($normalBalances as $balance)
+                            <option value="{{ $balance }}" @selected(old('normal_balance') == $balance)>
+                                {{ $balance }}
+                            </option>
+                        @endforeach
                     </select>
+
                     @error('normal_balance')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -143,7 +145,7 @@
                 {{-- Aktif --}}
                 <div class="col-span-1 md:col-span-2">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Aktifkan Tipe Akun
+                        Aktifkan Akun COA
                     </label>
                     <div x-data="{ switcherToggle: true }">
                         <input type="hidden" name="is_active" value="0">

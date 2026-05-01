@@ -12,12 +12,14 @@
     @endif
 
     @if ($errors->any())
-        <div class="mb-4 rounded bg-red-100 p-4 text-red-700">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
         </div>
     @endif
 
