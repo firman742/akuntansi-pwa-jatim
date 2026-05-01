@@ -60,6 +60,8 @@ class HistoryController extends Controller
                 ->get();
         }
 
+
+        // dd($transactions);
         return view('pages.menus.user.histories.index', compact(
             'transactions',
             'periods',

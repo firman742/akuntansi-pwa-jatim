@@ -51,6 +51,7 @@
         return {
             'INCOME': 'Penerimaan',
             'EXPENSE': 'Pengeluaran',
+            'TRANSFER': 'Transfer',
         } [type] ?? '-';
     },
 
@@ -58,6 +59,7 @@
         return {
             'INCOME': 'bg-blue-100 text-blue-700 border border-blue-200',
             'EXPENSE': 'bg-red-100 text-red-700 border border-red-200',
+            'TRANSFER': 'bg-yellow-100 text-yellow-700 border border-yellow-200',
         } [type] ?? 'bg-gray-100 text-gray-700';
     }
 }" class="relative">
@@ -111,7 +113,7 @@
                                 'text-blue-700': row.transaction_type === 'INCOME',
                                 'text-red-700': row.transaction_type === 'EXPENSE'
                             }"
-                            x-text="currency(row.total_amount)">
+                            x-text="currency(row.net_amount)">
                         </td>
 
                         {{-- CREATOR --}}

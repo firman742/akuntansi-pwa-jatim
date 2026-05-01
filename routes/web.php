@@ -105,6 +105,8 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         Route::get('/', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'update'])->name('update');
         Route::delete('/{id}', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'destroy'])->name('destroy');
     });
 

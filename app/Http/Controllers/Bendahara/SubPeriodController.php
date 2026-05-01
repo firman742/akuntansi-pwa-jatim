@@ -47,8 +47,7 @@ class SubPeriodController extends Controller
     {
         $periods = Period::where('is_closed', false)->get();
 
-        return view(
-            'pages.menus.bendahara.sub_periods.create',
+        return view('pages.menus.bendahara.sub_periods.create',
             compact('periods')
         );
     }
@@ -94,6 +93,62 @@ class SubPeriodController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $subPeriod = SubPeriod::findOrFail($id);
+        $periods = Period::where('is_closed', false)->get();
+
+        return view('pages.menus.bendahara.sub_periods.edit',
+            compact('subPeriod', 'periods')
+        );
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(string $id, Request $request)
+    {
+        $validated = $request->validate([
+            'period_id' => 'required|exists:periods,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $subPeriod = SubPeriod::findOrFail($id);
+
+        // validation check sub period in range of period
+        $period = Period::findOrFail($validated['period_id']);
+
+        if (
+            $validated['start_date'] < $period->start_date ||
+            $validated['end_date'] > $period->end_date
+        ) {
+            return back()->withErrors([
+                'start_date' => 'Sub periode harus berada dalam rentang periode utama.'
+            ]);
+        }
+
+        $subPeriod->update([
+            'period_id' => $validated['period_id'],
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'is_active' => $request->boolean('is_active'),
+        ]);
+
+        return redirect()
+            ->route('bendahara.sub-periods.index')
+            ->with('success', 'Sub Periode berhasil diperbarui');
+    }
+
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
@@ -105,4 +160,5 @@ class SubPeriodController extends Controller
             ->route('bendahara.sub-periods.index')
             ->with('success', 'Sub Periode berhasil dihapus');
     }
+    
 }
