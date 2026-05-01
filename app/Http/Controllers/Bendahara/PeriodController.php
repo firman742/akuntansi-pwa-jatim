@@ -3,19 +3,23 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bendahara\Periods\StorePeriodRequest;
+use App\Http\Requests\Bendahara\Periods\UpdatePeriodRequest;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Services\Bendahara\PeriodService;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class PeriodController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * 
+     * @return View
      */
-    public function index()
+    public function index(): View
     {
         $periods = Period::orderBy('is_closed', 'desc')->get();
 
@@ -24,42 +28,44 @@ class PeriodController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     * 
+     * @return View
      */
-    public function create()
+    public function create(): View
     {
         return view('pages.menus.bendahara.periods.create');
     }
 
     /**
      * Store a newly created resource in storage.
+     * 
+     * @param PeriodService $service
+     * @param StorePeriodRequest $request
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function store()
+    public function store(PeriodService $service, StorePeriodRequest $request): RedirectResponse
     {
-        $validated = request()->validate([
-            'name' => 'required',
-            'description'   => 'required',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-        ]);
+        try {
+            $service->store($request->validated());
 
-        Period::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'start_date' => Carbon::parse($validated['start_date']),
-            'end_date' => Carbon::parse($validated['end_date']),
-            'is_closed' => false,
-        ]);
-
-
-        return redirect()
-            ->route('bendahara.periods.index')
-            ->with('success', 'Periode berhasil ditambahkan');
+            return redirect()
+                ->route('bendahara.periods.index')
+                ->with('success', 'Periode berhasil ditambahkan');
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'period' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
      * Show the form for editing the specified resource.
+     * 
+     * @param string $id
+     * @return View
      */
-    public function edit(string $id)
+    public function edit(string $id): View
     {
         $period = Period::findOrFail($id);
 
@@ -69,22 +75,20 @@ class PeriodController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(string $id)
+    public function update(string $id, PeriodService $service, UpdatePeriodRequest $request): RedirectResponse
     {
-        $period = Period::findOrFail($id);
+        try {
+            $service->update($id, $request->validated());
 
-        $validated = request()->validate([
-            'name'       => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date'   => 'required|date|after_or_equal:start_date',
-        ]);
+            return redirect()
+                ->route('bendahara.periods.index')
+                ->with('success', 'Periode - ' . ($request->name ?? '-') . ' berhasil diubah');
 
-        $period->update($validated);
-
-        return redirect()
-            ->route('bendahara.periods.index')
-            ->with('success', 'Periode berhasil diperbarui');
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'period' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -114,14 +118,21 @@ class PeriodController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id, PeriodService $service): RedirectResponse
     {
         $period = Period::findOrFail($id);
-        $period->delete();
 
-        return redirect()
-            ->route('bendahara.periods.index')
-            ->with('success', 'Periode berhasil dihapus');
+        try {
+            $service->delete($period);
+
+            return redirect()
+                ->route('bendahara.periods.index')
+                ->with('success', 'Periode - ' . ($period->name ?? '-') . ' berhasil dihapus');
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'period' => $e->getMessage()
+            ]);
+        }
     }
 
     public function getSubPeriods($periodId)

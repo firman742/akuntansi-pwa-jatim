@@ -7,7 +7,7 @@
     itemsPerPage: 10,
     currentPage: 1,
     editUrl: '{{ route('bendahara.periods.edit', ':id') }}',
-    destroyUrl: '{{ route('bendahara.periods.destroy', ':id') }}',
+    {{-- destroyUrl: '{{ route('bendahara.periods.destroy', ':id') }}', --}}
     closeUrl: '{{ route('bendahara.periods.close', ':id') }}',
 
     get totalPages() {
@@ -139,89 +139,91 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="(row, index) in paginatedData" :key="row.id">
-                        <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+                    <!-- Jika data ada -->
+                    <template x-if="paginatedData.length > 0">
+                        <template x-for="(row, index) in paginatedData" :key="row.id">
+                            <tr class="border-b border-gray-100 dark:border-white/[0.05]">
 
-                            <!-- No Urut -->
-                            <td class="px-4 sm:px-6 py-3.5">
-                                <div class="flex items-center gap-3">
-                                    <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
-                                        x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
-                                </div>
-                            </td>
+                                <!-- No Urut -->
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
+                                            x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
+                                    </div>
+                                </td>
 
-                            <!-- Nama -->
-                            <td class="px-4 sm:px-6 py-3.5">
-                                <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.name"></span>
-                            </td>
+                                <!-- Nama -->
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.name"></span>
+                                </td>
 
-                            <!-- Deskripsi -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
+                                <!-- Deskripsi -->
+                                <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
 
-                            <!-- Tanggal Mulai -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.start_date)"></td>
+                                <!-- Tanggal Mulai -->
+                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.start_date)"></td>
 
-                            <!-- Tanggal Berakhir -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.end_date)"></td>
+                                <!-- Tanggal Berakhir -->
+                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.end_date)"></td>
 
-                            <!-- Apakah ditutup -->
-                            <td class="px-4 sm:px-6 py-3.5">
-                                <span class="inline-block rounded-full px-2 py-0.5 text-theme-xs font-medium"
-                                    :class="getStatusClass(row.is_closed)" x-text="getStatusLabel(row.is_closed)">
-                                </span>
-                            </td>
+                                <!-- Apakah ditutup -->
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="inline-block rounded-full px-2 py-0.5 text-theme-xs font-medium"
+                                        :class="getStatusClass(row.is_closed)" x-text="getStatusLabel(row.is_closed)">
+                                    </span>
+                                </td>
 
-                            <!-- Ditutup pada -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.closed_at)"></td>
+                                <!-- Ditutup pada -->
+                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.closed_at)"></td>
 
-                            <!-- Action -->
-                            <td class="px-4 sm:px-3 py-2.5">
-                                <div class="flex items-center gap-2">
+                                <!-- Action -->
+                                <td class="px-4 sm:px-3 py-2.5">
+                                    <div class="flex items-center gap-2">
 
-                                    <!-- Close & Edit hanya jika BELUM ditutup -->
-                                    <template x-if="!row.is_closed">
-                                        <div class="flex items-center gap-2">
+                                        <!-- Close & Edit hanya jika BELUM ditutup -->
+                                        <template x-if="!row.is_closed">
+                                            <div class="flex items-center gap-2">
 
-                                            <!-- Close -->
-                                            <form :action="closeUrl.replace(':id', row.id)" method="POST"
-                                                onsubmit="return confirm('Apakah anda yakin MENUTUP periode ini?')">
-                                                @csrf
-                                                @method('PATCH')
+                                                <!-- Close -->
+                                                <form :action="closeUrl.replace(':id', row.id)" method="POST"
+                                                    onsubmit="return confirm('Apakah anda yakin MENUTUP periode ini?')">
+                                                    @csrf
+                                                    @method('PATCH')
 
-                                                <button type="submit"
-                                                    class="flex h-8 w-8 items-center justify-center rounded-md
+                                                    <button type="submit"
+                                                        class="flex h-8 w-8 items-center justify-center rounded-md
                                                            text-yellow-600 hover:bg-yellow-50
                                                            dark:text-yellow-400 dark:hover:bg-yellow-500/10"
-                                                    title="Tutup Periode">
+                                                        title="Tutup Periode">
+                                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                            stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+
+                                                <!-- Edit -->
+                                                <a :href="editUrl.replace(':id', row.id)"
+                                                    class="flex h-8 w-8 items-center justify-center rounded-md
+                                                       text-green-600 hover:bg-green-50
+                                                       dark:text-green-400 dark:hover:bg-green-500/10"
+                                                    title="Edit Periode">
                                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                         stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                                    </svg>
-                                                </button>
-                                            </form>
-
-                                            <!-- Edit -->
-                                            <a :href="editUrl.replace(':id', row.id)"
-                                                class="flex h-8 w-8 items-center justify-center rounded-md
-                                                       text-green-600 hover:bg-green-50
-                                                       dark:text-green-400 dark:hover:bg-green-500/10"
-                                                title="Edit Periode">
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279
+                                                            stroke-width="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279
                                                            8.364-8.643a3.027 3.027 0 0 0-2.14-5.165
                                                            3.03 3.03 0 0 0-2.14.886L6.5 13.5" />
-                                                </svg>
-                                            </a>
+                                                    </svg>
+                                                </a>
 
-                                        </div>
-                                    </template>
+                                            </div>
+                                        </template>
 
-                                    <!-- Delete SELALU tampil -->
-                                    <form :action="destroyUrl.replace(':id', row.id)" method="POST"
+                                        <!-- Delete SELALU tampil -->
+                                        {{-- <form :action="destroyUrl.replace(':id', row.id)" method="POST"
                                         onsubmit="return confirm('Yakin hapus periode ini?')">
                                         @csrf
                                         @method('DELETE')
@@ -238,22 +240,45 @@
                                                        m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
                                             </svg>
                                         </button>
-                                    </form>
+                                    </form> --}}
 
-                                    <!-- Badge jika sudah ditutup -->
-                                    <template x-if="row.is_closed">
-                                        <span
-                                            class="ml-2 inline-flex items-center rounded-full px-2.5 py-1
+                                        <!-- Badge jika sudah ditutup -->
+                                        <template x-if="row.is_closed">
+                                            <span
+                                                class="ml-2 inline-flex items-center rounded-full px-2.5 py-1
                                                    text-xs font-medium
                                                    bg-gray-100 text-gray-600
                                                    dark:bg-gray-500/15 dark:text-gray-400">
-                                            Ditutup
-                                        </span>
-                                    </template>
+                                                Ditutup
+                                            </span>
+                                        </template>
 
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </template>
+                    </template>
+                    <!-- Jika data kosong -->
+                    <template x-if="paginatedData.length === 0">
+                        <tr>
+                            <td colspan="8" class="px-6 py-10 text-center">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                                    </svg>
+
+                                    <p class="text-sm font-medium text-gray-500">
+                                        Belum ada data periode
+                                    </p>
+
+                                    <p class="text-xs text-gray-400">
+                                        Data yang tersedia akan tampil di tabel ini
+                                    </p>
                                 </div>
                             </td>
-
                         </tr>
                     </template>
                 </tbody>

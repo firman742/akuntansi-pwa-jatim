@@ -25,9 +25,9 @@ return new class extends Migration
             $table->uuid('transaction_id')->nullable();
 
             $table->foreign('posted_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('period_id')->references('id')->on('periods')->onDelete('cascade');
-            $table->foreign('sub_period_id')->references('id')->on('sub_periods')->onDelete('set null');
-            $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('set null');
+            $table->foreign('period_id')->references('id')->on('periods')->restrictOnDelete();
+            $table->foreign('sub_period_id')->references('id')->on('sub_periods')->restrictOnDelete();
+            $table->foreign('transaction_id')->references('id')->on('transactions')->restrictOnDelete();
             $table->timestamps();
         });
     }

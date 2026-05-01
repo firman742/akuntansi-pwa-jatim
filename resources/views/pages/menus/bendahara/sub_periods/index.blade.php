@@ -4,6 +4,23 @@
 
 @section('content')
     <x-common.page-breadcrumb pageTitle="Sub Periode" />
+    
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mb-4 rounded bg-red-100 p-4 text-red-700">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
 
     {{-- FILTER & ACTION CARD --}}
     <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -47,7 +64,8 @@
     </div>
 
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Daftar Sub Periode" description="Berikut adalah daftar sub periode yang tersedia.">
+        <x-core.basic-tables.core-table title="Daftar Sub Periode"
+            description="Berikut adalah daftar sub periode yang tersedia.">
             <x-slot name="actions">
                 <a href="{{ route('bendahara.sub-periods.create') }}">
                     <x-ui.button variant="primary" class="rounded-xl px-4 py-2">

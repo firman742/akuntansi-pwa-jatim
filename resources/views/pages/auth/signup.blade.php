@@ -13,16 +13,16 @@
                             <path d="M12.7083 5L7.5 10.2083L12.7083 15.4167" stroke="" stroke-width="1.5"
                                 stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        Back to dashboard
+                        Kembali ke beranda
                     </a>
                 </div>
                 <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
                     <div class="mb-5 sm:mb-8">
                         <h1 class="text-title-sm sm:text-title-md mb-2 font-semibold text-gray-800 dark:text-white/90">
-                            Sign Up
+                            Daftar Akun Baru
                         </h1>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Enter your email and password to sign up!
+                            Masuk ke akun Anda dengan email dan kata sandi yang telah Anda daftarkan.
                         </p>
                     </div>
                     <div>
@@ -60,9 +60,9 @@
                                 <div>
                                     <!-- Name -->
                                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                        Name<span class="text-error-500">*</span>
+                                        Nama<span class="text-error-500">*</span>
                                     </label>
-                                    <input type="text" id="name" name="name" placeholder="Enter your name"
+                                    <input type="text" id="name" name="name" placeholder="Masukkan nama lengkap Anda"
                                         class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                                 </div>
                                 <!-- Email -->
@@ -70,7 +70,7 @@
                                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                         Email<span class="text-error-500">*</span>
                                     </label>
-                                    <input type="email" id="email" name="email" placeholder="Enter your email"
+                                    <input type="email" id="email" name="email" placeholder="Masukkan email Anda"
                                         class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                                 </div>
                                 <!-- Password -->
@@ -79,7 +79,7 @@
                                         Password<span class="text-error-500">*</span>
                                     </label>
                                     <div x-data="{ showPassword: false }" class="relative">
-                                        <input :type="showPassword ? 'text' : 'password'" placeholder="Enter your password"
+                                        <input :type="showPassword ? 'text' : 'password'" placeholder="Masukkan password Anda"
                                             id="password" name="password"
                                             class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" required />
                                         <span @click="showPassword = !showPassword"
@@ -102,10 +102,10 @@
                                 <!-- Confirm Password -->
                                 <div>
                                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                        Confirm Password<span class="text-error-500">*</span>
+                                        Konfirmasi Password<span class="text-error-500">*</span>
                                     </label>
                                     <div x-data="{ showPassword: false }" class="relative">
-                                        <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" placeholder="Confirm your password"
+                                        <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" placeholder="Masukkan kembali password Anda"
                                             class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" required />
                                         <span @click="showPassword = !showPassword"
                                             class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
@@ -146,13 +146,13 @@
                                                 </div>
                                             </div>
                                             <p class="inline-block font-normal text-gray-500 dark:text-gray-400">
-                                                By creating an account means you agree to the
+                                                Dengan mendaftar, Anda menyetujui
                                                 <span class="text-gray-800 dark:text-white/90">
-                                                    Terms and Conditions,
+                                                    Syarat dan Ketentuan,
                                                 </span>
-                                                and our
+                                                dan
                                                 <span class="text-gray-800 dark:text-white">
-                                                    Privacy Policy
+                                                    Kebijakan Privasi Kami
                                                 </span>
                                             </p>
                                         </label>
@@ -162,16 +162,15 @@
                                 <div>
                                     <button
                                         class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
-                                        Sign Up
+                                        Daftar
                                     </button>
                                 </div>
                             </div>
                         </form>
                         <div class="mt-5">
                             <p class="text-center text-sm font-normal text-gray-700 sm:text-start dark:text-gray-400">
-                                Already have an account?
-                                <a href="{{ route('login') }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">Sign
-                                    In</a>
+                                Sudah memiliki akun?
+                                <a href="{{ route('login') }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">Masuk</a>
                             </p>
                         </div>
                     </div>

@@ -31,11 +31,11 @@ return new class extends Migration
             $table->foreign('period_id')
                 ->references('id')
                 ->on('periods')
-                ->onDelete('cascade');
+                ->restrictOnDelete();
             $table->foreign('sub_period_id')
                 ->references('id')
                 ->on('sub_periods')
-                ->onDelete('set null');
+                ->restrictOnDelete();
             $table->foreign('created_by')
                 ->references('id')->on('users')
                 ->onDelete('set null');

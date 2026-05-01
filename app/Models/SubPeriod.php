@@ -45,4 +45,22 @@ class SubPeriod extends Model
     {
         return $query->where('is_active', true);
     }
+
+    /**
+     * Get all transactions associated with the sub-period.
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'sub_period_id');
+    }
+
+    /**
+    * Get all journals associated with the sub-period.
+    * @return \Illuminate\Database\Eloquent\Relations\HasMany
+    */
+    public function journals()
+    {
+        return $this->hasMany(Journal::class, 'sub_period_id');
+    }
 }

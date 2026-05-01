@@ -11,17 +11,17 @@
                         <svg class="stroke-current" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                             <path d="M12.7083 5L7.5 10.2083L12.7083 15.4167" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        Back to dashboard
+                        Kembali Ke Beranda
                     </a>
                 </div>
                 <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
                     <div>
                         <div class="mb-5 sm:mb-8">
                             <h1 class="text-title-sm sm:text-title-md mb-2 font-semibold text-gray-800 dark:text-white/90">
-                                Sign In
+                                Masuk
                             </h1>
                             <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Enter your email and password to sign in!
+                                Masukkan email dan password Anda untuk bisa masuk ke sistem!
                             </p>
                         </div>
                         <div>
@@ -98,7 +98,7 @@
                                         </div>
                                     </div>
                                     <!-- Checkbox -->
-                                    <div class="flex items-center justify-between">
+                                    {{-- <div class="flex items-center justify-between">
                                         <div x-data="{ checkboxToggle: false }">
                                             <label for="checkboxLabelOne"
                                                 class="flex cursor-pointer items-center text-sm font-normal text-gray-700 select-none dark:text-gray-400">
@@ -116,26 +116,27 @@
                                                 </div>
                                                 Keep me logged in
                                             </label>
-                                        </div>
+                                        </div> --}}
                                         <a href="/reset-password" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 text-sm">
-                                            Forgot password?
+                                            Lupa Password?
                                         </a>
                                     </div>
                                     <!-- Button -->
                                     <div>
                                         <button
                                             class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
-                                            Sign In
+                                            Masuk
                                         </button>
                                     </div>
                                 </div>
                             </form>
-                            <div class="mt-5">
+                            {{-- Ini dihide karna belum difungsikan --}}
+                            {{-- <div class="mt-5">
                                 <p class="text-center text-sm font-normal text-gray-700 sm:text-start dark:text-gray-400">
-                                    Don't have an account?
-                                    <a href="{{ route('register') }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">Sign Up</a>
+                                    Belum memiliki akun?
+                                    <a href="{{ route('register') }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">Daftar</a>
                                 </p>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>

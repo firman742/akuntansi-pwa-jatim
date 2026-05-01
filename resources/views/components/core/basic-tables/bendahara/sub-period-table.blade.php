@@ -104,6 +104,8 @@
 
                 <tbody>
 
+                    {{-- Jika data ada --}}
+                    <template x-if="paginatedData.length > 0">
                     <template x-for="(row, index) in paginatedData" :key="row.id">
 
                         <tr class="border-b border-gray-100 dark:border-white/[0.05]">
@@ -184,7 +186,17 @@
                         </tr>
 
                     </template>
+                    </template>
 
+                    {{-- Jika data kosong --}}
+                    <template x-if="paginatedData.length === 0">
+                        <tr>
+                            <td colspan="9"
+                                class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                Tidak ada data sub periode.
+                            </td>
+                        </tr>
+                    </template>
                 </tbody>
 
             </table>

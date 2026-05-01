@@ -11,11 +11,104 @@ use App\Models\Period;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PeriodService
 {
+    /**
+     * Create a new period.
+     *
+     * @param  array  $data
+     * @return Period
+     * @throws Exception
+     */
+    public function store(array $data): Period
+    {
+        $existing = Period::query()
+            ->where('is_closed', false)
+            ->where(function ($query) use ($data) {
+                $query
+                    ->where('start_date', '<=', $data['end_date'])
+                    ->where('end_date', '>=', $data['start_date']);
+            })
+            ->first();
+
+        if ($existing) {
+            throw new Exception(
+                'Periode tidak dapat dibuat karena rentang tanggal bertabrakan dengan periode aktif yang sudah ada.'
+            );
+        }
+
+        $period = Period::create([
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+            'created_by' => Auth::id(),
+        ]);
+
+        return $period;
+    }
+
+
+    /**
+     * Update an existing period.
+     *
+     * @param  string  $id
+     * @param  array  $data
+     * @return Period
+     * @throws Exception
+     */
+    public function update(string $id, array $data): Period
+    {
+        $period = Period::findOrFail($id);
+
+        if ($period->is_closed) {
+            throw new Exception('Periode sudah ditutup dan tidak dapat diubah.');
+        }
+
+        $existing = Period::query()
+            ->where('id', '!=', $period->id)
+            ->where('is_closed', false)
+            ->where(function ($query) use ($data) {
+                $query
+                    ->where('start_date', '<=', $data['end_date'])
+                    ->where('end_date', '>=', $data['start_date']);
+            })
+            ->first();
+
+        if ($existing) {
+            throw new Exception(
+                'Periode tidak dapat diubah karena rentang tanggal bertabrakan dengan periode aktif yang sudah ada.'
+            );
+        }
+
+        $period->update([
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+        ]);
+
+        return $period;
+    }
+
+    /**
+     * Delete the specified period.
+     *
+     * @param  Period  $period
+     * @return void
+     * @throws Exception
+     */
+    public function delete(Period $period): void
+    {
+        if ($period->is_closed) {
+            throw new Exception('Periode sudah ditutup dan tidak dapat dihapus.');
+        }
+
+        $period->delete();
+    }
+
     /**
      * Close the specified period.
      * TODO: Need to optimize for large data sets (e.g. chunking, indexing) and add more detailed logging for debugging.
@@ -26,16 +119,7 @@ class PeriodService
      */
     public function close($period)
     {
-        Log::info('Closing period started', [
-            'period_id' => $period->id,
-            'period_name' => $period->name,
-            'user_id' => Auth::id(),
-        ]);
-
         if ($period->is_closed) {
-            Log::warning('Closing failed: period already closed', [
-                'period_id' => $period->id,
-            ]);
             throw new Exception('Periode sudah ditutup.');
         }
 
@@ -44,18 +128,12 @@ class PeriodService
             ->exists();
 
         if ($hasDraft) {
-            Log::warning('Closing failed: journal draft exists', [
-                'period_id' => $period->id,
-            ]);
             throw new Exception('Masih ada jurnal yang belum diposting.');
         }
 
         $alreadyClosed = ClosingBalance::where('period_id', $period->id)->exists();
 
         if ($alreadyClosed) {
-            Log::warning('Closing failed: closing balance already exists', [
-                'period_id' => $period->id,
-            ]);
             throw new Exception('Closing balance untuk periode ini sudah pernah dibuat.');
         }
 
@@ -81,27 +159,12 @@ class PeriodService
                 ->groupBy('coa_id')
                 ->pluck('total', 'coa_id');
 
-            Log::info('Computed balances', [
-                'period_id' => $period->id,
-                'total_coa' => $coas->count(),
-                'opening_count' => count($openings),
-                'mutation_count' => count($mutations),
-            ]);
-
             $dataInsert = [];
 
             foreach ($coas as $coaId) {
                 $opening  = $openings[$coaId] ?? 0;
                 $mutation = $mutations[$coaId] ?? 0;
                 $ending   = $opening + $mutation;
-
-                // 🔥 Optional detail log (hati-hati kalau data besar)
-                Log::debug('Closing detail per COA', [
-                    'coa_id' => $coaId,
-                    'opening' => $opening,
-                    'mutation' => $mutation,
-                    'ending' => $ending,
-                ]);
 
                 $dataInsert[] = [
                     'id' => (string) Str::uuid(),
@@ -121,11 +184,6 @@ class PeriodService
                 'is_closed' => true,
                 'closed_at' => now(),
                 'closed_by' => Auth::id(),
-            ]);
-
-            Log::info('Closing period success', [
-                'period_id' => $period->id,
-                'inserted_rows' => count($dataInsert),
             ]);
         });
     }

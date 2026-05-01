@@ -3,16 +3,23 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bendahara\SubPeriods\StoreSubPeriodRequest;
+use App\Http\Requests\Bendahara\SubPeriods\UpdateSubPeriodRequest;
 use App\Models\Period;
 use App\Models\SubPeriod;
-use Illuminate\Http\Request;
+use App\Services\Bendahara\SubPeriodService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+use Exception;
 
 class SubPeriodController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * 
+     * @return View
      */
-    public function index()
+    public function index(): View
     {
         // Ambil periode aktif (1 saja)
         $activePeriod = Period::where('is_closed', false)
@@ -42,123 +49,109 @@ class SubPeriodController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     * 
+     * @return View
      */
-    public function create()
+    public function create(): View
     {
         $periods = Period::where('is_closed', false)->get();
 
-        return view('pages.menus.bendahara.sub_periods.create',
+        return view(
+            'pages.menus.bendahara.sub_periods.create',
             compact('periods')
         );
     }
 
     /**
      * Store a newly created resource in storage.
+     * @param SubPeriodService $service
+     * @param StoreSubPeriodRequest $request
+     * @return RedirectResponse
+     * @throws Exception if the sub-period dates are outside the parent period's date range.
      */
-    public function store(Request $request)
+    public function store(SubPeriodService $service, StoreSubPeriodRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'period_id' => 'required|exists:periods,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'is_active' => 'nullable|boolean',
-        ]);
+        try {
+            $service->store($request->validated());
 
-        // validation check sub period in range of period
-        $period = Period::findOrFail($validated['period_id']);
+            return redirect()
+                ->route('bendahara.sub-periods.index')
+                ->with('success', 'Sub Periode berhasil ditambahkan');
 
-        if (
-            $validated['start_date'] < $period->start_date ||
-            $validated['end_date'] > $period->end_date
-        ) {
-            return back()->withErrors([
-                'start_date' => 'Sub periode harus berada dalam rentang periode utama.'
-            ]);
+        } catch (Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'start_date' => $e->getMessage()
+                ]);
         }
-
-        SubPeriod::create([
-            'period_id' => $validated['period_id'],
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'is_active' => $request->boolean('is_active'),
-        ]);
-
-        return redirect()
-            ->route('bendahara.sub-periods.index')
-            ->with('success', 'Sub Periode berhasil ditambahkan');
     }
 
     /**
      * Show the form for editing the specified resource.
+     * 
+     * @param string $id
+     * @return View
      */
-    public function edit(string $id)
+    public function edit(string $id): View
     {
         $subPeriod = SubPeriod::findOrFail($id);
         $periods = Period::where('is_closed', false)->get();
 
-        return view('pages.menus.bendahara.sub_periods.edit',
+        return view(
+            'pages.menus.bendahara.sub_periods.edit',
             compact('subPeriod', 'periods')
         );
     }
 
     /**
      * Update the specified resource in storage.
+     * @param string $id
+     * @param SubPeriodService $service
+     * @param UpdateSubPeriodRequest $request
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function update(string $id, Request $request)
+    public function update(string $id, SubPeriodService $service, UpdateSubPeriodRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'period_id' => 'required|exists:periods,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'is_active' => 'nullable|boolean',
-        ]);
+        try {
+            $service->update($id, $request->validated());
 
-        $subPeriod = SubPeriod::findOrFail($id);
+            return redirect()
+                ->route('bendahara.sub-periods.index')
+                ->with('success', 'Sub Periode berhasil diperbarui');
 
-        // validation check sub period in range of period
-        $period = Period::findOrFail($validated['period_id']);
-
-        if (
-            $validated['start_date'] < $period->start_date ||
-            $validated['end_date'] > $period->end_date
-        ) {
-            return back()->withErrors([
-                'start_date' => 'Sub periode harus berada dalam rentang periode utama.'
-            ]);
+        } catch (Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'start_date' => $e->getMessage()
+                ]);
         }
-
-        $subPeriod->update([
-            'period_id' => $validated['period_id'],
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'is_active' => $request->boolean('is_active'),
-        ]);
-
-        return redirect()
-            ->route('bendahara.sub-periods.index')
-            ->with('success', 'Sub Periode berhasil diperbarui');
     }
-
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * @param string $id
+     * @param SubPeriodService $service
+     * @return RedirectResponse
+     * @throws Exception if the sub-period has related transactions or journals.
      */
-    public function destroy(string $id)
+    public function destroy(string $id, SubPeriodService $service): RedirectResponse
     {
-        $subPeriod = SubPeriod::findOrFail($id);
-        $subPeriod->delete();
+        try {
+            $service->delete($id);
 
-        return redirect()
-            ->route('bendahara.sub-periods.index')
-            ->with('success', 'Sub Periode berhasil dihapus');
+            return redirect()
+                ->route('bendahara.sub-periods.index')
+                ->with('success', 'Sub Periode berhasil dihapus');
+
+        } catch (Exception $e) {
+            return back()
+                ->withErrors([
+                    'error' => $e->getMessage()
+                ]);
+        }
     }
-    
 }
