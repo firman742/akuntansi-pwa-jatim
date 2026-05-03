@@ -59,7 +59,7 @@
     {{-- MAIN REPORT CARD --}}
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {{-- HEADER STATUS --}}
-        <div class="flex flex-col justify-between border-b border-gray-100 bg-gray-50/50 p-6 sm:flex-row sm:items-center">
+        <div class="flex flex-col justify-between border-b border-gray-100 transition hover:bg-gray-50 bg-gray-50/50 p-6 sm:flex-row sm:items-center">
             <div class="flex items-center gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Laporan Aktivitas</h2>
@@ -96,13 +96,13 @@
                 <tbody class="text-sm">
                     {{-- SECTION PENDAPATAN --}}
                     <tr class="bg-blue-50/30">
-                        <td class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100">(40000)</td>
+                        <td class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100 transition hover:bg-gray-50">(40000)</td>
                         <td colspan="3"
-                            class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100 uppercase tracking-wide">
+                            class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100 transition hover:bg-gray-50 uppercase tracking-wide">
                             Pendapatan</td>
                     </tr>
                     @foreach ($revenueData as $item)
-                        <tr class="group border-b border-gray-100 transition hover:bg-gray-50/80">
+                        <tr class="group border-b border-gray-100 transition hover:bg-gray-50 transition hover:bg-gray-50/80">
                             <td class="px-6 py-3 text-center text-gray-500 font-mono text-xs">{{ $item->code }}</td>
                             <td class="px-6 py-3 text-gray-700" style="padding-left: {{ $item->level * 1.5 + 1.5 }}rem">
                                 {{ $item->name }}
@@ -130,13 +130,13 @@
 
                     {{-- SECTION BIAYA --}}
                     <tr class="bg-red-50/30">
-                        <td class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100">(50000)</td>
+                        <td class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100 transition hover:bg-gray-50">(50000)</td>
                         <td colspan="3"
-                            class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100 uppercase tracking-wide">
+                            class="px-6 py-3 font-bold text-gray-800 border-b border-gray-100 transition hover:bg-gray-50 uppercase tracking-wide">
                             Biaya-Biaya</td>
                     </tr>
                     @foreach ($expenseData as $item)
-                        <tr class="group border-b border-gray-100 transition hover:bg-gray-50/80">
+                        <tr class="group border-b border-gray-100 transition hover:bg-gray-50 transition hover:bg-gray-50/80">
                             <td class="px-6 py-3 text-center text-gray-500 font-mono text-xs">{{ $item->code }}</td>
                             <td class="px-6 py-3 text-gray-700" style="padding-left: {{ $item->level * 1.5 + 1.5 }}rem">
                                 {{ $item->name }}

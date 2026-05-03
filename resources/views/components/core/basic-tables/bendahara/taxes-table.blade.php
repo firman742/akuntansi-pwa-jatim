@@ -82,7 +82,7 @@
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
                 <thead
-                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-50 dark:border-white/[0.05] dark:bg-gray-900">
+                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
                     <tr>
                         <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs text-start">
                             No
@@ -122,7 +122,8 @@
 
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
-                            <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+                            <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
+    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                                 <!-- No -->
                                 <td
@@ -176,8 +177,8 @@
                                         <!-- Edit -->
                                         <a :href="editUrl.replace(':id', row.id)"
                                             class="flex h-8 w-8 items-center justify-center rounded-md
-                                            text-blue-600 hover:bg-blue-50
-                                            dark:text-blue-400 dark:hover:bg-blue-500/10"
+                                            text-blue-500 hover:bg-green-50
+                                            dark:text-blue-400 dark:hover:bg-green-500/10"
                                             title="Edit Pajak">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
@@ -237,7 +238,7 @@
                         <button @click="goToPage(page)"
                             :class="currentPage === page ?
                                 'bg-blue-500 text-white' :
-                                'text-gray-700 hover:bg-blue-500/[0.08] hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500'"
+                                'text-gray-700 hover:bg-green-500/[0.08] hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500'"
                             class="flex h-10 w-10 items-center justify-center rounded-lg text-theme-sm font-medium"
                             x-text="page">
                         </button>

@@ -111,7 +111,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {{-- SALDO SISA (DARI PERIODE LALU) --}}
                     <div>
-                        <label class="block text-sm font-medium mb-2 text-blue-600 dark:text-blue-400">
+                        <label class="block text-sm font-medium mb-2 text-blue-500 dark:text-blue-400">
                             Saldo Sisa (Periode Sebelumnya)
                         </label>
                         <div class="relative">

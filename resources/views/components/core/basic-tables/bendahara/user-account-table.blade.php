@@ -121,7 +121,7 @@
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
                             <tr
-                                class="border-b border-gray-100 transition hover:bg-gray-50
+                                class="border-b border-gray-100 transition hover:bg-gray-50 transition hover:bg-gray-50
                                        dark:border-white/[0.05] dark:hover:bg-white/[0.02]">
 
                                 {{-- Number --}}
@@ -167,7 +167,7 @@
                                 <td class="px-3 py-4 sm:px-6">
                                     <a :href="editUrl.replace(':id', row.id)"
                                         class="inline-flex items-center rounded-lg
-                                               border border-brand-300 px-3 py-2 text-sm font-medium bg-blue-600
+                                               border border-brand-300 px-3 py-2 text-sm font-medium bg-blue-500
                                                text-white transition hover:bg-blue-100
                                                dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
                                         Hubungkan COA
@@ -212,7 +212,7 @@
                         <button @click="goToPage(page)"
                             :class="currentPage === page ?
                                 'bg-blue-500 text-white' :
-                                'text-gray-700 hover:bg-blue-500/[0.08] hover:text-blue-500 dark:text-gray-400'"
+                                'text-gray-700 hover:bg-green-500/[0.08] hover:text-blue-500 dark:text-gray-400'"
                             class="flex h-10 w-10 items-center justify-center rounded-lg text-theme-sm font-medium"
                             x-text="page">
                         </button>

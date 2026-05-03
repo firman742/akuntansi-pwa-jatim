@@ -130,7 +130,7 @@
 
             {{-- HEADER --}}
             <div
-                class="flex flex-col justify-between border-b border-gray-100 bg-gray-50/50 p-6 sm:flex-row sm:items-center">
+                class="flex flex-col justify-between border-b border-gray-100 transition hover:bg-gray-50 bg-gray-50/50 p-6 sm:flex-row sm:items-center">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">{{ $coa->name }}</h2>
                     <p class="text-sm font-medium text-gray-500">
@@ -191,7 +191,7 @@
                                 <td class="px-4 py-4">
                                     {{ $row['description'] }}
                                 </td>
-                                <td class="px-4 py-4 text-center font-mono text-xs text-blue-600">
+                                <td class="px-4 py-4 text-center font-mono text-xs text-blue-500">
                                     {{ $row['ref_code'] }}
                                 </td>
                                 <td class="px-4 py-4 text-right">

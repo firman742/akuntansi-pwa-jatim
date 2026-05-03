@@ -47,7 +47,7 @@
 
                 <div
                     class="inline-flex items-center rounded-full
-                           border border-brand-200 bg-blue-600 text-white px-4 py-2
+                           border border-brand-200 bg-blue-500 text-white px-4 py-2
                            text-sm font-medium
                            dark:border-brand-800 dark:bg-brand-500/10 dark:text-brand-400">
 

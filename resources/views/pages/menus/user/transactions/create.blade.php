@@ -263,7 +263,7 @@
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
                                     <div class="space-y-1">
-                                        <label class="text-xs font-bold text-blue-600 uppercase tracking-tighter">Dari Rekening
+                                        <label class="text-xs font-bold text-blue-500 uppercase tracking-tighter">Dari Rekening
                                             (Asal)</label>
                                         <select name="from_coa_id"
                                             class="w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
@@ -274,7 +274,7 @@
                                         </select>
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-xs font-bold text-blue-600 uppercase tracking-tighter">Ke Rekening
+                                        <label class="text-xs font-bold text-blue-500 uppercase tracking-tighter">Ke Rekening
                                             (Tujuan)</label>
                                         <select name="to_coa_id"
                                             class="w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
@@ -288,7 +288,7 @@
                                         <label class="block text-center text-xs font-bold text-gray-400 uppercase mb-2">Jumlah
                                             yang Ditransfer</label>
                                         <input type="text" @input="onTransferInput($event)"
-                                            class="w-full rounded-xl border-2 border-blue-200 px-4 py-4 text-2xl font-black text-center text-blue-600 focus:ring-blue-500 focus:border-blue-500 shadow-inner"
+                                            class="w-full rounded-xl border-2 border-blue-200 px-4 py-4 text-2xl font-black text-center text-blue-500 focus:ring-blue-500 focus:border-blue-500 shadow-inner"
                                             placeholder="Rp 0">
                                         <input type="hidden" name="amount" x-model="transferAmount">
                                     </div>

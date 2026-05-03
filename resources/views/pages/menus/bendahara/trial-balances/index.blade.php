@@ -130,7 +130,7 @@
             </table>
 
             {{-- TOTAL KESELURUHAN ASET --}}
-            <div class="mt-auto border-t-2 border-double border-gray-200 bg-blue-600 px-6 py-5 text-dark shadow-inner">
+            <div class="mt-auto border-t-2 border-double border-gray-200 bg-blue-500 px-6 py-5 text-dark shadow-inner">
                 <div class="flex justify-between items-center">
                     <div>
                         <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200">Total

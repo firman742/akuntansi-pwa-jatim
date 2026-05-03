@@ -46,7 +46,7 @@
 
             <div class="bg-white p-5 rounded-xl shadow-sm border">
                 <p class="text-gray-500">Saldo Bersih</p>
-                <h2 class="text-2xl font-bold text-blue-600">Rp 3.500.000</h2>
+                <h2 class="text-2xl font-bold text-blue-500">Rp 3.500.000</h2>
             </div>
         </div>
 
@@ -66,7 +66,7 @@
 
                 {{-- Step 1 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-blue-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         1
                     </div>
                     <div>
@@ -81,7 +81,7 @@
 
                 {{-- Step 2 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-green-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         2
                     </div>
                     <div>
@@ -95,7 +95,7 @@
 
                 {{-- Step 3 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-yellow-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         3
                     </div>
                     <div>
@@ -109,7 +109,7 @@
 
                 {{-- Step 4 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-purple-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         4
                     </div>
                     <div>
@@ -124,7 +124,7 @@
 
                 {{-- Step 5 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-indigo-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         5
                     </div>
                     <div>
@@ -138,7 +138,7 @@
 
                 {{-- Step 6 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-pink-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         6
                     </div>
                     <div>
@@ -152,7 +152,7 @@
 
                 {{-- Step 7 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-orange-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         7
                     </div>
                     <div>
@@ -166,7 +166,7 @@
 
                 {{-- Step 8 --}}
                 <div class="flex items-start gap-4 p-4 rounded-xl border bg-red-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         8
                     </div>
                     <div>
@@ -191,7 +191,7 @@
                         Transaksi Terbaru
                     </h2>
 
-                    <a href="" class="text-sm text-blue-600 hover:underline">
+                    <a href="" class="text-sm text-blue-500 hover:underline">
                         Lihat Semua
                     </a>
                 </div>
@@ -243,7 +243,7 @@
                         Jurnal Terbaru
                     </h2>
 
-                    <a href="{{ route('bendahara.reports.journal.index') }}" class="text-sm text-blue-600 hover:underline">
+                    <a href="{{ route('bendahara.reports.journal.index') }}" class="text-sm text-blue-500 hover:underline">
                         Lihat Semua
                     </a>
                 </div>

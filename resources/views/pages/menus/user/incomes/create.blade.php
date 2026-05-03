@@ -289,7 +289,7 @@
 
                     <hr>
 
-                    <div class="flex justify-between font-bold text-blue-600">
+                    <div class="flex justify-between font-bold text-blue-500">
                         <span>Net</span>
                         <span>Rp <span x-text="formatRupiah(netAmount)"></span></span>
                     </div>

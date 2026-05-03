@@ -54,7 +54,7 @@
                                 </td>
 
                                 {{-- REF --}}
-                                <td class="px-6 py-4 text-center font-mono text-xs font-bold text-blue-600 border-r border-gray-100">
+                                <td class="px-6 py-4 text-center font-mono text-xs font-bold text-blue-500 border-r border-gray-100">
                                     {{ $detail->coa?->code }}
                                 </td>
 

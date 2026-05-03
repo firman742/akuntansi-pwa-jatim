@@ -101,7 +101,7 @@
         <div class="max-w-full overflow-x-auto custom-scrollbar">
             <table class="w-full min-w-[1102px]">
                 <thead>
-                    <tr class="border-b border-gray-100 dark:border-gray-800">
+                    <tr class="border-b border-gray-100 transition hover:bg-gray-50 dark:border-gray-800">
                         <th class="px-5 py-3 text-left sm:px-6">
                             <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
                                 User
@@ -131,7 +131,7 @@
                 </thead>
                 <tbody>
                     <template x-for="order in orders" :key="order.id">
-                        <tr class="border-b border-gray-100 dark:border-gray-800">
+                        <tr class="border-b border-gray-100 transition hover:bg-gray-50 dark:border-gray-800">
                             <td class="px-5 py-4 sm:px-6" colspan="1">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 overflow-hidden rounded-full">

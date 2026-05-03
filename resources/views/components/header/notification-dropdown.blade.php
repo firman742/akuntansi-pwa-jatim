@@ -65,7 +65,7 @@
         style="display: none;"
     >
         <!-- Dropdown Header -->
-        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 transition hover:bg-gray-50 dark:border-gray-800">
             <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">Notification</h5>
 
             <button @click="closeDropdown()" class="text-gray-500 dark:text-gray-400" type="button">
@@ -177,7 +177,7 @@
             @foreach ($notifications as $notification)
                 <li @click="handleItemClick()">
                     <a
-                        class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                        class="flex gap-3 rounded-lg border-b border-gray-100 transition hover:bg-gray-50 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
                         href="#"
                     >
                         <span class="relative block w-full h-10 rounded-full z-1 max-w-10">

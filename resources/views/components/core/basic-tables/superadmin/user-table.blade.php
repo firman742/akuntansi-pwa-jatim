@@ -79,7 +79,7 @@
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
                 <thead
-                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-50 dark:border-white/[0.05] dark:bg-gray-900">
+                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
                     <tr>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
@@ -104,7 +104,8 @@
                 </thead>
                 <tbody>
                     <template x-for="(row, index) in paginatedData" :key="row.id">
-                        <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+                        <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
+    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                             <!-- No Urut -->
                             <td class="px-4 sm:px-6 py-3.5">
@@ -215,7 +216,7 @@
                     <li>
                         <button x-show="page !== '...'" @click="goToPage(page)"
                             :class="currentPage === page ? 'bg-blue-500 text-white' :
-                                'text-gray-700 hover:bg-blue-500/[0.08] hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500'"
+                                'text-gray-700 hover:bg-green-500/[0.08] hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500'"
                             class="flex h-10 w-10 items-center justify-center rounded-lg text-theme-sm font-medium"
                             x-text="page"></button>
                         <span x-show="page === '...'"

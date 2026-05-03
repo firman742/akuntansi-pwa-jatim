@@ -41,9 +41,9 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     @foreach ($periods as $period)
                         <label
-                            class="group relative flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-white/5 transition-colors">
+                            class="group relative flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:bg-green-50 dark:hover:bg-white/5 transition-colors">
                             <input type="checkbox" name="period_ids[]" value="{{ $period->id }}"
-                                class="w-4 h-4 text-blue-600 rounded">
+                                class="w-4 h-4 text-blue-500 rounded">
                             <span class="text-sm font-medium">{{ $period->name }}</span>
                         </label>
                     @endforeach
