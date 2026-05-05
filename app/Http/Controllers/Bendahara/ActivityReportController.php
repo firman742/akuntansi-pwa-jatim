@@ -12,6 +12,12 @@ use Illuminate\Http\Request;
 
 class ActivityReportController extends Controller
 {
+    /**
+     * Get data untuk laporan aktivitas keuangan (Laporan Laba Rugi) berdasarkan periode dan sub periode yang dipilih.
+     *
+     * @param Request $request
+     * @return void
+     */
     public function index(Request $request)
     {
         $periods = Period::orderBy('created_at', 'desc')->get();
@@ -30,22 +36,24 @@ class ActivityReportController extends Controller
 
         // Ambil semua COA Pendapatan & Biaya dengan sum mutasi
         $query = ChartOfAccount::query()
-            ->withSum(['journal_details as total_debit' => function ($q) use ($periodId, $subPeriodId) {
-                $q->whereHas('journal', function ($j) use ($periodId, $subPeriodId) {
-                    $j->where('period_id', $periodId);
-                    if ($subPeriodId) {
-                       $j->where('sub_period_id', $subPeriodId);
-                    }
-                });
-            }], 'debit')
-            ->withSum(['journal_details as total_credit' => function ($q) use ($periodId, $subPeriodId) {
-                $q->whereHas('journal', function ($j) use ($periodId, $subPeriodId) {
-                    $j->where('period_id', $periodId);
-                    if ($subPeriodId) {
-                       $j->where('sub_period_id', $subPeriodId);
-                    }
-                });
-            }], 'credit')
+            ->withSum(['journalDetails as total_debit' => function ($q) use ($periodId, $subPeriodId) {
+                    $q->whereHas('journal', function ($j) use ($periodId, $subPeriodId) {
+                        $j->where('period_id', $periodId)
+                            ->when($subPeriodId, function ($q) use ($subPeriodId) {
+                                $q->where('sub_period_id', $subPeriodId);
+                            });
+                    });
+                }
+            ], 'debit')
+            ->withSum(['journalDetails as total_credit' => function ($q) use ($periodId, $subPeriodId) {
+                    $q->whereHas('journal', function ($j) use ($periodId, $subPeriodId) {
+                        $j->where('period_id', $periodId)
+                            ->when($subPeriodId, function ($q) use ($subPeriodId) {
+                                $q->where('sub_period_id', $subPeriodId);
+                            });
+                    });
+                }
+            ], 'credit')
             ->orderBy('code');
 
         $revenueData = (clone $query)->where('code', 'like', '4%')->get();

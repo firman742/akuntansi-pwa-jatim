@@ -105,55 +105,62 @@
     <div class="overflow-hidden border border-gray-200 bg-white shadow-sm">
         <div class="max-w-full overflow-x-auto">
             <table class="w-full border-collapse">
-                <thead>
-                    <tr
-                        class="bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-600 border-b border-gray-200">
-                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                <thead
+                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+                    <tr>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             No
                         </th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Sub Periode</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Akun</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Kode</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Debit</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Kredit</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Action</th>
                     </tr>
                 </thead>
                 <tbody class="text-center">
                     <template x-for="(row, index) in paginatedData" :key="row.id">
                         <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
+                            class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                             <!-- No Urut -->
-                            <td class="px-4 sm:px-6 py-3.5">
+                            <td class="px-3 py-4 sm:px-6">
                                 <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
                                     x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
                             </td>
 
                             <!-- Sub Periode -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.sub_period ?? '-'"></td>
+                            <td class="px-3 py-4 sm:px-6" x-text="row.sub_period ?? '-'"></td>
 
                             <!-- Nama -->
-                            <td class="px-4 sm:px-6 py-3.5">
+                            <td class="px-3 py-4 sm:px-6">
                                 <span class="font-medium text-gray-700 dark:text-gray-400"
                                     x-text="row.account_name"></span>
                             </td>
 
                             <!-- Kode -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.account_code"></td>
+                            <td class="px-3 py-4 sm:px-6" x-text="row.account_code"></td>
 
                             <!-- Debit -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.debit > 0 ? formatCurrency(row.debit) : '-'">
+                            <td class="px-3 py-4 sm:px-6" x-text="row.debit > 0 ? formatCurrency(row.debit) : '-'">
                             </td>
 
                             <!-- Kredit -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.credit > 0 ? formatCurrency(row.credit) : '-'">
+                            <td class="px-3 py-4 sm:px-6" x-text="row.credit > 0 ? formatCurrency(row.credit) : '-'">
                             </td>
 
                             <!-- Action -->
@@ -167,15 +174,14 @@
                                             <!-- Edit -->
                                             <a :href="editUrl.replace(':id', row.id)"
                                                 class="flex h-8 w-8 items-center justify-center rounded-md
-                                                       text-green-600 hover:bg-green-50
-                                                       dark:text-green-400 dark:hover:bg-green-500/10"
-                                                title="Edit Periode">
+                                            text-blue-500 hover:bg-green-50
+                                            dark:text-blue-400 dark:hover:bg-green-500/10"
+                                                title="Edit Neraca Salod">
                                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279
-                                                           8.364-8.643a3.027 3.027 0 0 0-2.14-5.165
-                                                           3.03 3.03 0 0 0-2.14.886L6.5 13.5" />
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </a>
 
@@ -190,14 +196,14 @@
 
                                         <button type="submit"
                                             class="flex h-8 w-8 items-center justify-center rounded-md
-                                                   text-red-600 hover:bg-red-50
-                                                   dark:text-red-400 dark:hover:bg-red-500/10"
-                                            title="Hapus Periode">
+                                                text-red-600 hover:bg-red-50
+                                                dark:text-red-400 dark:hover:bg-red-500/10"
+                                            title="Hapus Pajak">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
-                                                       a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
-                                                       m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862
+                                                        a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6
+                                                        m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </button>
                                     </form>
@@ -224,7 +230,7 @@
         </div>
     </div>
 
-    
+
     <!-- Pagination -->
     <div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
         <div class="flex items-center justify-between">

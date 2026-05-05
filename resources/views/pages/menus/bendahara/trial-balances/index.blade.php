@@ -58,194 +58,164 @@
     </div>
 
     {{-- MAIN REPORT CONTAINER --}}
-    <div class="grid grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:grid-cols-2">
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+        <div class="grid grid-cols-1 lg:grid-cols-2">
 
-        {{-- SISI KIRI: ASET --}}
-        <div class="border-r border-gray-200 flex flex-col">
-            <table class="w-full text-sm border-collapse">
-                <thead>
-                    <tr class="bg-gray-50/80 border-b border-gray-200">
-                        <th colspan="2" class="px-6 py-4 text-left font-bold uppercase tracking-widest text-gray-600">
-                            ASET (AKTIVA)</th>
-                        <th class="px-6 py-4 text-right text-gray-400 font-medium">Nilai</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{-- Sub-Header Aset Lancar --}}
-                    <tr class="bg-blue-50/30">
-                        <td colspan="3"
-                            class="px-6 py-2.5 text-[11px] font-black text-blue-800 uppercase italic tracking-wider">
-                            Aset Lancar</td>
-                    </tr>
-                    @php $totalAsetLancar = 0; @endphp
-                    @foreach ($data['aset_lancar'] as $item)
-                        @php $totalAsetLancar += $item['amount']; @endphp
-                        <tr class="group border-b border-gray-50 hover:bg-gray-50/50 transition">
-                            <td class="px-6 py-3 font-mono text-[11px] text-gray-400 w-24">{{ $item['code'] }}</td>
-                            <td class="px-2 py-3 text-gray-700 font-medium">{{ $item['name'] }}</td>
-                            <td class="px-6 py-3 text-right font-semibold text-gray-900">
-                                {{ $item['amount'] < 0 ? '(' . number_format(abs($item['amount']), 0, ',', '.') . ')' : number_format($item['amount'], 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    @endforeach
-                    {{-- BARIS TOTAL ASET LANCAR --}}
-                    <tr class="bg-gray-50/50 border-b border-gray-200">
-                        <td colspan="2" class="px-6 py-3 text-right">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Jumlah Aset
-                                Lancar</span>
-                        </td>
-                        <td class="px-6 py-3 text-right font-bold text-blue-700">
-                            Rp{{ number_format($totalAsetLancar, 0, ',', '.') }}
-                        </td>
-                    </tr>
+            {{-- SISI KIRI: ASET --}}
+            <div class="flex flex-col border-r border-gray-100">
+                <div class="bg-slate-50/80 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-700 tracking-tight uppercase">Aset (Aktiva)</h3>
+                    <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-bold">DEBIT</span>
+                </div>
 
-                    {{-- Sub-Header Aset Tidak Lancar --}}
-                    <tr class="bg-blue-50/30 border-t border-gray-100">
-                        <td colspan="3"
-                            class="px-6 py-2.5 text-[11px] font-black text-blue-800 uppercase italic tracking-wider">
-                            Aset Tidak Lancar</td>
-                    </tr>
-                    @php $totalAsetTidakLancar = 0; @endphp
-                    @foreach ($data['aset_tidak_lancar'] as $item)
-                        @php $totalAsetTidakLancar += $item['amount']; @endphp
-                        <tr class="group border-b border-gray-50 hover:bg-gray-50/50 transition">
-                            <td class="px-6 py-3 font-mono text-[11px] text-gray-400 w-24">{{ $item['code'] }}</td>
-                            <td class="px-2 py-3 text-gray-700 font-medium">{{ $item['name'] }}</td>
-                            <td class="px-6 py-3 text-right font-semibold text-gray-900">
-                                {{ $item['amount'] < 0 ? '(' . number_format(abs($item['amount']), 0, ',', '.') . ')' : number_format($item['amount'], 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    @endforeach
-                    {{-- BARIS TOTAL ASET TIDAK LANCAR --}}
-                    <tr class="bg-gray-50/50">
-                        <td colspan="2" class="px-6 py-3 text-right">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Jumlah Aset Tidak
-                                Lancar</span>
-                        </td>
-                        <td class="px-6 py-3 text-right font-bold text-blue-700">
-                            Rp{{ number_format($totalAsetTidakLancar, 0, ',', '.') }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                <div class="flex-grow">
+                    <table class="w-full text-sm">
+                        <tbody>
+                            {{-- Header Lancar --}}
+                            <tr class="bg-blue-50/40">
+                                <td colspan="3"
+                                    class="px-6 py-2 text-[11px] font-bold text-blue-600 uppercase tracking-widest italic border-b border-blue-100/50">
+                                    Aset Lancar
+                                </td>
+                            </tr>
+                            @php $totalAsetLancar = 0; @endphp
+                            @foreach ($data['aset_lancar'] as $index => $item)
+                                @php $totalAsetLancar += $item['amount']; @endphp
+                                <tr class="group {{ $index % 2 == 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]' }} transition hover:bg-gray-100">
+                                    <td class="px-6 py-3 font-mono text-[10px] text-gray-400 w-20">{{ $item['code'] }}</td>
+                                    <td class="px-2 py-3 text-gray-600 font-medium">{{ $item['name'] }}</td>
+                                    <td class="px-6 py-3 text-right font-semibold text-gray-900 tabular-nums">
+                                        {{ $item['amount'] < 0 ? '(' . number_format(abs($item['amount']), 0, ',', '.') . ')' : number_format($item['amount'], 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                            <tr class="bg-gray-50/30">
+                                <td colspan="2"
+                                    class="px-6 py-3 text-right text-[11px] font-bold text-gray-500 uppercase">Subtotal
+                                    Lancar</td>
+                                <td
+                                    class="px-6 py-3 text-right font-bold text-blue-600 tabular-nums border-b-2 border-blue-100">
+                                    {{ number_format($totalAsetLancar, 0, ',', '.') }}
+                                </td>
+                            </tr>
 
-            {{-- TOTAL KESELURUHAN ASET --}}
-            <div class="mt-auto border-t-2 border-double border-gray-200 bg-blue-500 px-6 py-5 text-dark shadow-inner">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200">Total
-                            Aktiva</span>
-                        <span class="text-sm font-extrabold uppercase italic tracking-tight">Jumlah Keseluruhan Aset</span>
+                            {{-- Header Tidak Lancar --}}
+                            <tr class="bg-blue-50/40">
+                                <td colspan="3"
+                                    class="px-6 py-2 text-[11px] font-bold text-blue-600 uppercase tracking-widest italic border-b border-blue-100/50">
+                                    Aset Tidak Lancar
+                                </td>
+                            </tr>
+                            @php $totalAsetTidakLancar = 0; @endphp
+                            @foreach ($data['aset_tidak_lancar'] as $index => $item)
+                                @php $totalAsetTidakLancar += $item['amount']; @endphp
+                                <tr class="group {{ $index % 2 == 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]' }} transition hover:bg-gray-100">
+                                    <td class="px-6 py-3 font-mono text-[10px] text-gray-400 w-20">{{ $item['code'] }}</td>
+                                    <td class="px-2 py-3 text-gray-600 font-medium">{{ $item['name'] }}</td>
+                                    <td class="px-6 py-3 text-right font-semibold text-gray-900 tabular-nums">
+                                        {{ $item['amount'] < 0 ? '(' . number_format(abs($item['amount']), 0, ',', '.') . ')' : number_format($item['amount'], 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-10 bg-blue-100 px-6 py-6 text-blue-600">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Total Aktiva</p>
+                            <h4 class="text-lg font-bold">Total Nilai Aset</h4>
+                        </div>
+                        <div class="text-2xl font-black tabular-nums tracking-tighter text-blue-400">
+                            Rp{{ number_format($totalAsetLancar + $totalAsetTidakLancar, 0, ',', '.') }}
+                        </div>
                     </div>
-                    <span class="text-2xl font-black tracking-tighter">
-                        Rp{{ number_format($totalAsetLancar + $totalAsetTidakLancar, 0, ',', '.') }}
-                    </span>
                 </div>
             </div>
-        </div>
 
-        {{-- SISI KANAN: PASIVA --}}
-        <div class="flex flex-col bg-white">
-            <table class="w-full text-sm border-collapse">
-                <thead>
-                    <tr class="bg-gray-50/80 border-b border-gray-200">
-                        <th colspan="2" class="px-6 py-4 text-left font-bold uppercase tracking-widest text-gray-600">
-                            PASIVA</th>
-                        <th class="px-6 py-4 text-right text-gray-400 font-medium">Nilai</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{-- Sub-Header Modal --}}
-                    <tr class="bg-emerald-50/30">
-                        <td colspan="3"
-                            class="px-6 py-2.5 text-[11px] font-black text-emerald-800 uppercase italic tracking-wider">
-                            Ekuitas (Modal)</td>
-                    </tr>
+            {{-- SISI KANAN: PASIVA --}}
+            <div class="flex flex-col bg-white">
+                <div class="bg-slate-50/80 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-700 tracking-tight uppercase">Pasiva</h3>
+                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold">KREDIT</span>
+                </div>
 
-                    {{-- Modal Tetap --}}
-                    <tr class="group border-b border-gray-50 hover:bg-gray-50/50 transition">
-                        <td class="px-6 py-3 font-mono text-[11px] text-gray-400 w-24">31000</td>
-                        <td class="px-2 py-3 text-gray-700 font-medium">Modal Tetap</td>
-                        <td class="px-6 py-3 text-right font-semibold text-gray-900">
-                            {{ number_format($modalTetap, 0, ',', '.') }}
-                        </td>
-                    </tr>
+                <div class="flex-grow">
+                    <table class="w-full text-sm">
+                        <tbody>
+                            {{-- Header Ekuitas --}}
+                            <tr class="bg-green-50/40">
+                                <td colspan="3"
+                                    class="px-6 py-2 text-[11px] font-bold text-green-700 uppercase tracking-widest italic border-b border-green-100/50">
+                                    Ekuitas (Modal)
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-50 bg-gray-50 dark:bg-white/[0.02] hover:bg-gray-50/80 transition-colors">
+                                <td class="px-6 py-3 font-mono text-[10px] text-gray-400 w-20">31000</td>
+                                <td class="px-2 py-3 text-gray-600 font-medium">Modal Tetap</td>
+                                <td class="px-6 py-3 text-right font-semibold text-gray-900 tabular-nums">
+                                    {{ number_format($modalTetap, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-50 bg-white dark:bg-white/[0.03] hover:bg-gray-50/80 transition-colors">
+                                <td class="px-6 py-3 font-mono text-[10px] text-gray-400 w-20">32000</td>
+                                <td class="px-2 py-3 text-gray-600 font-medium">Modal Lancar</td>
+                                <td class="px-6 py-3 text-right font-semibold text-gray-900 tabular-nums">
+                                    {{ number_format($modalLancar, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr class="bg-green-50/20">
+                                <td class="px-6 py-3 text-center text-gray-300 font-mono text-[10px]">-</td>
+                                <td class="px-2 py-3 text-green-800 font-bold italic">Surplus/Defisit Berjalan</td>
+                                <td class="px-6 py-3 text-right font-black text-green-700 tabular-nums">
+                                    {{ number_format($surplusDeficit, 0, ',', '.') }}</td>
+                            </tr>
 
-                    {{-- Modal Lancar --}}
-                    <tr class="group border-b border-gray-50 hover:bg-gray-50/50 transition">
-                        <td class="px-6 py-3 font-mono text-[11px] text-gray-400 w-24">32000</td>
-                        <td class="px-2 py-3 text-gray-700 font-medium">Modal Lancar</td>
-                        <td class="px-6 py-3 text-right font-semibold text-gray-900">
-                            {{ number_format($modalLancar, 0, ',', '.') }}
-                        </td>
-                    </tr>
+                            {{-- Header Kewajiban --}}
+                            <tr class="bg-green-50/40 border-t border-gray-100">
+                                <td colspan="3"
+                                    class="px-6 py-2 text-[11px] font-bold text-green-700 uppercase tracking-widest italic border-b border-green-100/50">
+                                    Kewajiban (Hutang)
+                                </td>
+                            </tr>
+                            @php $totalHutangVal = 0; @endphp
+                            @foreach ($data['hutang'] as $index => $item)
+                                @php $totalHutangVal += $item['amount']; @endphp
+                                <tr class="group {{ $index % 2 == 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]' }} transition hover:bg-gray-100">
+                                    <td class="px-6 py-3 font-mono text-[10px] text-gray-400 w-20">{{ $item['code'] }}</td>
+                                    <td class="px-2 py-3 text-gray-600 font-medium">{{ $item['name'] }}</td>
+                                    <td class="px-6 py-3 text-right font-semibold text-gray-900 tabular-nums">
+                                        {{ number_format($item['amount'], 0, ',', '.') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
-                    {{-- Baris Khusus Surplus/Defisit --}}
-                    <tr class="border-b border-gray-50 bg-emerald-50/10 transition">
-                        <td class="px-6 py-3 text-center text-gray-300 font-mono text-[11px]">-</td>
-                        <td class="px-2 py-3 text-emerald-700 font-bold italic">Selisih Pendapatan & Biaya (Tahun Berjalan)
-                        </td>
-                        <td class="px-6 py-3 text-right font-black text-emerald-700">
-                            {{ number_format($surplusDeficit, 0, ',', '.') }}
-                        </td>
-                    </tr>
-
-                    {{-- Sub-Header Hutang --}}
-                    <tr class="bg-emerald-50/30 border-t border-gray-100">
-                        <td colspan="3"
-                            class="px-6 py-2.5 text-[11px] font-black text-emerald-800 uppercase italic tracking-wider">
-                            Kewajiban (Hutang)</td>
-                    </tr>
-                    @php $totalHutangVal = 0; @endphp
-                    @foreach ($data['hutang'] as $item)
-                        @php $totalHutangVal += $item['amount']; @endphp
-                        <tr class="group border-b border-gray-50 hover:bg-gray-50/50 transition">
-                            <td class="px-6 py-3 font-mono text-[11px] text-gray-400 w-24">{{ $item['code'] }}</td>
-                            <td class="px-2 py-3 text-gray-700 font-medium">{{ $item['name'] }}</td>
-                            <td class="px-6 py-3 text-right font-semibold text-gray-900">
-                                {{ number_format($item['amount'], 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-
-            <div class="flex-grow"></div>
-
-            {{-- TOTAL PASIVA --}}
-            <div class="border-t-2 border-double border-gray-200 bg-emerald-600 px-6 py-5 text-dark shadow-inner">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <span class="block text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Total
-                            Pasiva</span>
-                        <span class="text-sm font-extrabold uppercase italic tracking-tight">Jumlah Hutang & Modal</span>
+                <div class="mt-10 bg-green-100 px-6 py-6 text-green-600">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Total Pasiva
+                            </p>
+                            <h4 class="text-lg font-bold">Hutang & Modal</h4>
+                        </div>
+                        <div class="text-2xl font-black tabular-nums tracking-tighter">
+                            Rp{{ number_format($modalTetap + $modalLancar + $surplusDeficit + $totalHutangVal, 0, ',', '.') }}
+                        </div>
                     </div>
-                    <span class="text-2xl font-black tracking-tighter">
-                        {{-- Penjumlahan Modal Tetap + Modal Lancar + Surplus + Hutang pasti akan sama dengan Total Aset --}}
-                        Rp{{ number_format($modalTetap + $modalLancar + $surplusDeficit + $totalHutangVal, 0, ',', '.') }}
-                    </span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- GRAND FOOTER --}}
-    <div class="mt-0 grid grid-cols-1 border-x border-b border-gray-300 lg:grid-cols-2">
-        <div class="bg-gray-800 p-6 text-dark flex items-center justify-between border-r border-gray-700">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-white/10 rounded-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <span class="text-sm font-bold uppercase tracking-widest text-white/70">Account Check</span>
-            </div>
-            <span class="text-2xl font-black italic tracking-tighter">BALANCE</span>
+    {{-- STATUS BAR --}}
+    <div
+        class="mt-4 flex items-center justify-center gap-4 py-4 border-4 border-dashed border-gray-600 rounded-2xl bg-gray-50/50 shadow-sm">
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Status Laporan:</span>
         </div>
-        <div class="bg-primary p-6 text-dark flex items-center justify-center">
-            <span class="text-sm font-medium mr-2 text-white/80 italic">Status Neraca:</span>
-            <span class="text-xl font-extrabold uppercase tracking-widest">SEIMBANG</span>
+        <div class="px-4 py-1 bg-green-500 text-white text-xs font-black rounded-full shadow-sm italic tracking-widest">
+            SEIMBANG / BALANCED
         </div>
     </div>
 

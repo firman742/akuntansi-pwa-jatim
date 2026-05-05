@@ -81,26 +81,30 @@
 
                 {{-- Header --}}
                 <thead
-                    class="px-6 py-3.5 border-t border-y border-gray-100 bg-gray-50
-                           dark:border-white/[0.05] dark:bg-gray-900">
+                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
                     <tr>
-                        <th class="px-6 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             No
                         </th>
 
-                        <th class="px-6 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Foto
                         </th>
 
-                        <th class="px-6 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Informasi Pengguna
                         </th>
 
-                        <th class="px-6 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Akun COA
                         </th>
 
-                        <th class="px-6 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Action
                         </th>
                     </tr>
@@ -120,10 +124,8 @@
                     {{-- Data Rows --}}
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
-                            <tr
-                                class="border-b border-gray-100 transition hover:bg-gray-50 transition hover:bg-gray-50
-                                       dark:border-white/[0.05] dark:hover:bg-white/[0.02]">
-
+                            <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
+                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
                                 {{-- Number --}}
                                 <td class="px-3 py-4 sm:px-6 text-sm text-gray-600 dark:text-gray-400">
                                     <span class="font-medium text-gray-700 dark:text-gray-300"
@@ -172,8 +174,8 @@
                                                dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
                                         Hubungkan COA
 
-                                        <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                        <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
                                             </path>

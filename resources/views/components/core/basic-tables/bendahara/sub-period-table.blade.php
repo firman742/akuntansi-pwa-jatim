@@ -86,17 +86,16 @@
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
 
-                <thead>
-                    <tr
-                        class="bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-600 border-b border-gray-200">
-                        <th class="px-6 py-4 text-center border-r border-gray-100">No</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">Periode</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">Nama</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">Deskripsi</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">Tanggal Mulai</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">Tanggal Selesai</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">Status</th>
-                        <th class="px-6 py-4 text-center border-r border-gray-100">Action</th>
+                <thead class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">No</th>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Periode</th>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Nama</th>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Deskripsi</th>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Tanggal Mulai</th>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Tanggal Selesai</th>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Status</th>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Action</th>
 
                     </tr>
 
@@ -107,9 +106,8 @@
                     {{-- Jika data ada --}}
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
-
                             <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
+                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                                 <td class="px-4 sm:px-6 py-3.5"
                                     x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">

@@ -369,7 +369,7 @@ class TransactionService
         foreach ($lines as $line) {
             JournalDetail::create([
                 'journal_id'  => $journal->id,
-                'coa_id'      => $line['coa_id'],
+                'chart_of_account_id'      => $line['coa_id'],
                 'debit'       => $line['debit'],
                 'credit'      => $line['credit'],
                 'description' => $line['description'],
@@ -444,7 +444,7 @@ class TransactionService
     {
         $query = DB::table('journal_details as jd')
             ->join('journals as j', 'jd.journal_id', '=', 'j.id')
-            ->where('jd.coa_id', $coaId)
+            ->where('jd.chart_of_account_id', $coaId)
             ->where('j.period_id', $periodId);
 
         if ($subPeriodId) {

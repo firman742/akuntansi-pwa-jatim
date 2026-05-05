@@ -63,7 +63,7 @@ class TrialBalanceController extends Controller
             | MUTATION QUERY (SUDAH PAKAI FILTER BARU)
             |--------------------------------------------------------------------------
             */
-            $mutationQuery = JournalDetail::where('coa_id', $coa->id)
+            $mutationQuery = JournalDetail::where('chart_of_account_id', $coa->id)
                 ->whereHas('journal', function ($q) use ($periodId, $subPeriodId) {
 
                     $q->where('period_id', $periodId);
@@ -118,11 +118,11 @@ class TrialBalanceController extends Controller
 
         };
 
-        $totalRevenue = JournalDetail::whereHas('coa', fn($q) => $q->where('code', 'like', '4%'))
+        $totalRevenue = JournalDetail::whereHas('chartOfAccount', fn($q) => $q->where('code', 'like', '4%'))
             ->whereHas('journal', $journalFilter)
             ->sum(DB::raw('credit - debit'));
 
-        $totalExpense = JournalDetail::whereHas('coa', fn($q) => $q->where('code', 'like', '5%'))
+        $totalExpense = JournalDetail::whereHas('chartOfAccount', fn($q) => $q->where('code', 'like', '5%'))
             ->whereHas('journal', $journalFilter)
             ->sum(DB::raw('debit - credit'));
 

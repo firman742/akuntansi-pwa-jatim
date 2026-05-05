@@ -21,7 +21,7 @@ class JournalController extends Controller
         $endDate = $request->end_date;
 
         // Initial Query
-        $query  = Journal::with(['details.coa.accountType', 'postedBy']);
+        $query  = Journal::with(['details.chartOfAccount.accountType', 'postedBy']);
 
         // ================= FILTER =================
         if ($request->filled('period_id')) {
@@ -57,12 +57,12 @@ class JournalController extends Controller
 
         foreach ($journals as $journal) {
             $kasDetail = $journal->details->first(function ($detail) {
-                return $detail->coa?->accountType?->name === 'ASET';
+                return $detail->chartOfAccount?->accountType?->name === 'ASET';
             });
 
             if ($kasDetail) {
                 $coaId = $kasDetail->coa_id;
-                $coaName = $kasDetail->coa->name . ' (' . $kasDetail->coa->code . ')';
+                $coaName = $kasDetail->chartOfAccount->name . ' (' . $kasDetail->chartOfAccount->code . ')';
 
                 if (!isset($groupedJournals[$coaId])) {
                     $groupedJournals[$coaId] = [
@@ -91,7 +91,7 @@ class JournalController extends Controller
      */
     public function show(string $id)
     {
-        $journal = Journal::with(['postedBy', 'details.coa'])
+        $journal = Journal::with(['postedBy', 'details.chartOfAccount'])
             ->findOrFail($id);
 
         return view('pages.menus.bendahara.journals.show', compact('journal'));
@@ -106,7 +106,7 @@ class JournalController extends Controller
         $startMonth = $request->start_month; // format: Y-m
         $endMonth   = $request->end_month;   // format: Y-m
 
-        $query = Journal::with(['details.coa.accountType']);
+        $query = Journal::with(['details.chartOfAccount.accountType']);
 
         if ($periodId) {
             $query->where('period_id', $periodId);
@@ -156,11 +156,11 @@ class JournalController extends Controller
     {
         $grouped = [];
         foreach ($journals as $journal) {
-            $kasDetail = $journal->details->first(fn($d) => $d->coa?->accountType?->name === 'ASET');
+            $kasDetail = $journal->details->first(fn($d) => $d->chartOfAccount?->accountType?->name === 'ASET');
 
             if ($kasDetail) {
                 $coaId = $kasDetail->coa_id;
-                $coaName = $kasDetail->coa->name . ' (' . $kasDetail->coa->code . ')';
+                $coaName = $kasDetail->chartOfAccount->name . ' (' . $kasDetail->chartOfAccount->code . ')';
 
                 if (!isset($grouped[$coaId])) {
                     $grouped[$coaId] = [

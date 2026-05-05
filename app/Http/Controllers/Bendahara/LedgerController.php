@@ -86,7 +86,7 @@ class LedgerController extends Controller
             | 2️⃣ MUTASI SEBELUM FILTER (DATE RANGE)
             |--------------------------------------------------------------------------
             */
-            $mutationQuery = JournalDetail::where('coa_id', $coaId)
+            $mutationQuery = JournalDetail::where('chart_of_account_id', $coaId)
                 ->whereHas('journal', function ($q) use ($periodId, $subPeriodId, $startDate) {
                     $q->where('period_id', $periodId);
 
@@ -117,7 +117,7 @@ class LedgerController extends Controller
             |--------------------------------------------------------------------------
             */
             $transactions = JournalDetail::with('journal')
-                ->where('coa_id', $coaId)
+                ->where('chart_of_account_id', $coaId)
                 ->whereHas('journal', function ($q) use ($periodId, $subPeriodId, $startDate, $endDate) {
 
                     $q->where('period_id', $periodId);
@@ -155,15 +155,16 @@ class LedgerController extends Controller
 
                 // Ambil akun lawan
                 $opposingTrx = JournalDetail::where('journal_id', $trx->journal_id)
-                    ->where('coa_id', '!=', $coaId)
-                    ->with('coa')
+                    ->where('chart_of_account_id', '!=', $coaId)
+                    ->with('chartOfAccount')
                     ->first();
 
                 $ledger[] = [
                     'date'            => $trx->journal->journal_date,
                     'description'     => $trx->description ?? $trx->journal->description,
-                    'ref_code'        => $opposingTrx?->coa?->code ?? '-',
-                    'ref_name'        => $opposingTrx?->coa?->name ?? '-',
+                    'posted_by'       => $trx->journal->postedBy?->name ?? '-',
+                    'ref_code'        => $opposingTrx?->chartOfAccount?->code ?? '-',
+                    'ref_name'        => $opposingTrx?->chartOfAccount?->name ?? '-',
                     'debit'           => $trx->debit,
                     'credit'          => $trx->credit,
                     'current_balance' => $runningBalance,

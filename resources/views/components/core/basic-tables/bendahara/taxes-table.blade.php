@@ -123,8 +123,7 @@
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
                             <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
-
+                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
                                 <!-- No -->
                                 <td
                                     class="px-3 py-2 text-xs sm:px-6 sm:py-4 sm:text-sm text-gray-600 dark:text-gray-400">
