@@ -4,54 +4,114 @@
     <x-common.page-breadcrumb pageTitle="Dashboard Bendahara" />
 
     <div class="space-y-6">
+        {{-- GREETING --}}
+        <div
+            class="overflow-hidden rounded-3xl border border-gray-200 bg-gradient-to-r bg-blue-500 p-6 text-white shadow-lg dark:border-gray-800">
 
-        {{-- Welcome Section --}}
-        <div class="bg-white rounded-2xl shadow-sm p-6 border">
-            <div class="flex justify-between items-center">
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">
-                        Selamat <span id="greeting"></span>,
-                        {{ auth()->user()->name }} 👋
+                    <h1 class="mt-2 text-2xl font-bold">
+                        Selamat Datang, {{ auth()->user()->name }}👋
                     </h1>
-                    <p class="text-gray-500 mt-2">
+                    <p class="mt-1 text-sm text-white/70">
                         Selamat datang di sistem manajemen keuangan.
                         Pastikan seluruh transaksi tercatat dengan benar.
                     </p>
                 </div>
 
-                <div class="text-right">
-                    <div id="date" class="text-gray-500"></div>
-                    <div id="clock" class="text-3xl font-bold text-primary"></div>
+                {{-- CLOCK --}}
+                <div class="rounded-2xl text-center border border-white/20 bg-white/10 px-3 py-2 backdrop-blur-sm">
+
+                    <h2 id="clock" class="mt-2 text-4xl font-bold tracking-wider">
+                        00:00:00
+                    </h2>
+
+                    <p class="mt-1 text-sm text-white/70">
+                        <span id="date-now"></span>
+                    </p>
                 </div>
             </div>
         </div>
 
+        {{-- FILTER --}}
+        <form method="GET">
+            <div
+                class="flex flex-col gap-4 rounded-2xl border shadow-lg border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] xl:flex-row xl:items-center xl:justify-between">
+
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white/90">
+                        Dashboard Bendahara Akuntansi
+                    </h2>
+
+                    <p class="mt-1 text-sm text-gray-500">
+                        Monitor aktivitas akuntansi secara realtime.
+                    </p>
+                </div>
+
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <select name="sub_period_id" onchange="this.form.submit()"
+                        class="h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm text-gray-700 shadow-theme-xs outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                        <option value="">
+                            Semua Sub Period
+                        </option>
+
+                        @foreach ($subPeriods as $subPeriod)
+                            <option value="{{ $subPeriod->id }}"
+                                {{ $selectedSubPeriodId == $subPeriod->id ? 'selected' : '' }}>
+                                {{ $subPeriod->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                </div>
+
+
+                {{-- <div>
+                  <p class="text-sm text-gray-500">
+                      Period Aktif:
+                      <span class="font-semibold text-gray-700">
+                          {{ $activePeriod?->name ?? '-' }}
+                      </span>
+                  </p>
+              </div> --}}
+            </div>
+        </form>
+
         {{-- Summary Cards --}}
         {{-- TODO: harapannya mendapatkan data realtime bukan sekedar hardcode --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-xl shadow-sm border">
+            <div class="bg-white p-5 rounded-xl shadow-lg border">
                 <p class="text-gray-500">Saldo Seluruh Kas Periode Sekarang</p>
-                <h2 class="text-2xl font-bold">Rp 25.000.000</h2>
+                <h2 class="text-2xl font-bold">
+                    Rp {{ number_format($totalCashBalance, 0, ',', '.') }}
+                </h2>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border">
+            <div class="bg-white p-5 rounded-xl shadow-lg border">
                 <p class="text-gray-500">Pemasukan Bulan Ini</p>
-                <h2 class="text-2xl font-bold text-green-600">Rp 10.000.000</h2>
+                <h2 class="text-2xl font-bold text-green-600">
+                    Rp {{ number_format($totalIncome, 0, ',', '.') }}
+                </h2>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border">
+            <div class="bg-white p-5 rounded-xl shadow-lg border">
                 <p class="text-gray-500">Pengeluaran Bulan Ini</p>
-                <h2 class="text-2xl font-bold text-red-600">Rp 6.500.000</h2>
+                <h2 class="text-2xl font-bold text-red-600">
+                    Rp {{ number_format($totalExpense, 0, ',', '.') }}
+                </h2>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border">
+            <div class="bg-white p-5 rounded-xl shadow-lg border">
                 <p class="text-gray-500">Saldo Bersih</p>
-                <h2 class="text-2xl font-bold text-blue-500">Rp 3.500.000</h2>
+                <h2 class="text-2xl font-bold text-blue-500">
+                    Rp {{ number_format($netBalance, 0, ',', '.') }}
+                </h2>
             </div>
         </div>
 
         {{-- Accounting Flow Section --}}
-        <div class="bg-white rounded-2xl shadow-sm p-6 border">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border">
             <div class="mb-6">
                 <h2 class="text-xl font-semibold text-gray-800">
                     Alur Sistem Akuntansi
@@ -101,7 +161,7 @@
                     <div>
                         <h3 class="font-semibold">Pencatatan Transaksi</h3>
                         <p class="text-sm text-gray-600 mt-1">
-                            Pengguna ATC dan Pengguna KLL mencatat transaksi berdasarkan akun
+                            Pengguna umum mencatat transaksi berdasarkan akun
                             yang telah tersedia pada COA dengan status Draft atau Submitted.
                         </p>
                     </div>
@@ -185,15 +245,16 @@
         <div class="grid lg:grid-cols-2 gap-6">
 
             {{-- Transaksi Terbaru --}}
-            <div class="bg-white rounded-2xl shadow-sm p-6 border">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">
                         Transaksi Terbaru
                     </h2>
 
-                    <a href="" class="text-sm text-blue-500 hover:underline">
+                    {{-- TODO: Belum ada halaman getall transactionnya --}}
+                    {{-- <a href="" class="text-sm text-blue-500 hover:underline">
                         Lihat Semua
-                    </a>
+                    </a> --}}
                 </div>
 
                 <div class="space-y-4">
@@ -237,7 +298,7 @@
             </div>
 
             {{-- Jurnal Terbaru --}}
-            <div class="bg-white rounded-2xl shadow-sm p-6 border">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">
                         Jurnal Terbaru
@@ -269,7 +330,7 @@
 
                             <div class="text-right">
                                 @php
-                                    $total_amount = $total_debit ?? $total_credit ?? 0;
+                                    $total_amount = $total_debit ?? ($total_credit ?? 0);
                                 @endphp
                                 <p class="font-semibold">
                                     Rp {{ number_format($total_amount, 0, ',', '.') }}
@@ -292,33 +353,26 @@
         </div>
     </div>
 
-    {{-- Script Jam --}}
-    <script>
-        function updateClock() {
-            const now = new Date();
+    {{-- CLOCK SCRIPT --}}
+    @push('scripts')
+        <script>
+            function updateClock() {
+                const now = new Date();
 
-            document.getElementById('clock').innerHTML =
-                now.toLocaleTimeString('id-ID');
-
-            document.getElementById('date').innerHTML =
-                now.toLocaleDateString('id-ID', {
+                const time = now.toLocaleTimeString('id-ID');
+                const date = now.toLocaleDateString('id-ID', {
                     weekday: 'long',
-                    day: 'numeric',
+                    year: 'numeric',
                     month: 'long',
-                    year: 'numeric'
+                    day: 'numeric'
                 });
 
-            const hour = now.getHours();
-            let greeting = 'Pagi';
+                document.getElementById('clock').innerHTML = time;
+                document.getElementById('date-now').innerHTML = date;
+            }
 
-            if (hour >= 12 && hour < 15) greeting = 'Siang';
-            else if (hour >= 15 && hour < 18) greeting = 'Sore';
-            else if (hour >= 18) greeting = 'Malam';
-
-            document.getElementById('greeting').innerHTML = greeting;
-        }
-
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
+            setInterval(updateClock, 1000);
+            updateClock();
+        </script>
+    @endpush
 @endsection
