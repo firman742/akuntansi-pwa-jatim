@@ -150,6 +150,12 @@ class menu
                 '/bendahara/reports/trial-balance',
                 ['bendahara/reports/trial-balance*']
             ),
+            self::item(
+                'Laporan Transaksi',
+                'report',
+                '/bendahara/reports/transactions',
+                ['bendahara/reports/transactions*']
+            )
         ];
     }
 

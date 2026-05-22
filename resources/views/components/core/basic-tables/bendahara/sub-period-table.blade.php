@@ -77,6 +77,12 @@
             month: 'long',
             year: 'numeric'
         });
+    },
+    canEdit(row) {
+        return row.transactions_count === 0;
+    },
+    canDelete(row) {
+        return row.transactions_count === 0;
     }
 }">
 
@@ -86,16 +92,33 @@
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
 
-                <thead class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+                <thead
+                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
                     <tr>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">No</th>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Periode</th>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Nama</th>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Deskripsi</th>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Tanggal Mulai</th>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Tanggal Selesai</th>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Status</th>
-                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Action</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            No</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Periode</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Nama</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Deskripsi</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Tanggal Mulai</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Tanggal Selesai</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Status</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Action</th>
 
                     </tr>
 
@@ -136,39 +159,44 @@
                                 <!-- Action -->
                                 <td class="px-4 sm:px-3 py-2.5">
                                     <div class="flex items-center gap-2">
-                                        <!-- Edit SELALU tampil -->
-                                        <a :href="editUrl.replace(':id', row.id)"
-                                            class="flex h-8 w-8 items-center justify-center rounded-md
-                                            text-blue-500 hover:bg-green-50
-                                            dark:text-blue-400 dark:hover:bg-green-500/10"
-                                            title="Edit Sub Periode">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </a>
-
-                                        <!-- Delete SELALU tampil -->
-                                        <form :action="destroyUrl.replace(':id', row.id)" method="POST"
-                                            onsubmit="return confirm('Yakin hapus sub periode ini?')">
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button type="submit"
+                                        <template x-if="canEdit(row)">
+                                            <!-- Edit SELALU tampil -->
+                                            <a :href="editUrl.replace(':id', row.id)"
                                                 class="flex h-8 w-8 items-center justify-center rounded-md
-                                                text-red-600 hover:bg-red-50
-                                                dark:text-red-400 dark:hover:bg-red-500/10"
-                                                title="Hapus Sub Periode">
+                                        text-blue-500 hover:bg-green-50
+                                        dark:text-blue-400 dark:hover:bg-green-500/10"
+                                                title="Edit Sub Periode">
                                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
-                                                    a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
-                                                    m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
-                                            </button>
-                                        </form>
+                                            </a>
+                                        </template>
+
+                                        <template x-if="canDelete(row)">
+                                            <!-- Delete SELALU tampil -->
+                                            <form :action="destroyUrl.replace(':id', row.id)" method="POST"
+                                                onsubmit="return confirm('Yakin hapus sub periode ini?')">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="submit"
+                                                    class="flex h-8 w-8 items-center justify-center rounded-md
+                                            text-red-600 hover:bg-red-50
+                                            dark:text-red-400 dark:hover:bg-red-500/10"
+                                                    title="Hapus Sub Periode">
+                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
+                                                a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
+                                                m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </template>
 
                                         <!-- Badge jika sudah ditutup -->
                                         <template x-if="row.is_closed">

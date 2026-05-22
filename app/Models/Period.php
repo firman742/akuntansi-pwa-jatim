@@ -15,7 +15,7 @@ class Period extends Model
     use HasUuids, HasFactory;
 
     protected $table = 'periods';
-    
+
     protected $fillable = [
         'name',
         'description',
@@ -66,7 +66,7 @@ class Period extends Model
         return $this->hasMany(SubPeriod::class, 'period_id');
     }
 
-     /**
+    /**
      * Scope a query to only include active periods.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
@@ -76,5 +76,33 @@ class Period extends Model
     {
         return $query
             ->where('is_closed', false);
+    }
+
+    /**
+     * Check if period has transactions.
+     * @return bool
+     */
+    public function hasTransactions(): bool
+    {
+        return $this->transactions()->exists();
+    }
+
+    /**
+     * Check if period can be edited.
+     * @return bool
+     */
+    public function canBeEdited(): bool
+    {
+        return !$this->hasTransactions();
+    }
+
+    /**
+     * Check if period can be closed.
+     * @return bool
+     */
+    public function canBeClosed(): bool
+    {
+        return !$this->hasTransactions()
+            && now()->greaterThan($this->end_date);
     }
 }

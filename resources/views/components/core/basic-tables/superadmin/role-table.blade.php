@@ -80,8 +80,8 @@
                                 <div class="flex items-center gap-3">
                                     <!-- View -->
                                     <a :href="showUrl.replace(':id', row.id)"
-                                        class="inline-flex items-center justify-center">
-                                        <svg class="size-5 text-gray-700 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500"
+                                        class="flex h-8 w-8 items-center justify-center rounded-md text-green-500 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-500/10">
+                                        <svg class="h-5 w-5"
                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

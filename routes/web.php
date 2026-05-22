@@ -203,6 +203,8 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
        
         Route::get('/trial-balance', [App\Http\Controllers\Bendahara\TrialBalanceController::class, 'index'])->name('trial-balance.index');
 
+        Route::get('/transactions', [App\Http\Controllers\Bendahara\TransactionController::class, 'index'])->name('transactions.index');
+
     });
 
 });

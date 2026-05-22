@@ -24,11 +24,20 @@ class COAController extends Controller
      */
     public function index(): View
     {
-        $chartOfAccounts = ChartOfAccount::with(['accountType', 'creator', 'parent'])
+        $chartOfAccounts = ChartOfAccount::with([
+            'accountType',
+            'creator',
+            'parent',
+            'children.children'
+        ])
             ->orderBy('code')
             ->get();
 
-        return view('pages.menus.bendahara.master.coa.index', compact('chartOfAccounts'));
+        $groupedByType = $chartOfAccounts->groupBy(fn($coa) => $coa->accountType?->name ?? 'Uncategorized');
+
+        return view('pages.menus.bendahara.master.coa.index', [
+            'groupedByType' => $groupedByType
+        ]);
     }
 
     /**
@@ -106,7 +115,7 @@ class COAController extends Controller
 
         $normalBalances = NormalBalanceEnum::cases();
 
-        $isLocked = $coa->transactionLines()->exists() || $coa->journalDetails()->exists();
+        $isLocked = true;
 
         return view('pages.menus.bendahara.master.coa.edit',
             compact(

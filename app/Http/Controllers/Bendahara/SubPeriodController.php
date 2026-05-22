@@ -26,14 +26,20 @@ class SubPeriodController extends Controller
             ->first();
 
         // Ambil semua periode untuk filter
-        $periods = Period::orderBy('name')->get();
+        $periods = Period::select([
+            'id',
+            'name',
+            'start_date',
+            'end_date',
+            'is_closed'
+        ])->orderBy('name')->get();
 
         // Jika tidak ada periode aktif, fallback ke periode terbaru
         $periodId = request('period_id')
             ?? optional($activePeriod)->id
             ?? optional($periods->first())->id;
 
-        $query = SubPeriod::with('period');
+        $query = SubPeriod::with('period')->withCount('transactions');
 
         if (request()->period_id) {
             $query->where('period_id', request()->period_id);
@@ -41,8 +47,7 @@ class SubPeriodController extends Controller
 
         $sub_periods = $query->get();
 
-        return view(
-            'pages.menus.bendahara.sub_periods.index',
+        return view('pages.menus.bendahara.sub_periods.index',
             compact('sub_periods', 'periods', 'periodId')
         );
     }
@@ -54,10 +59,14 @@ class SubPeriodController extends Controller
      */
     public function create(): View
     {
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::select(
+            'id',
+            'name',
+            'start_date',
+            'end_date'
+        )->where('is_closed', false)->get();
 
-        return view(
-            'pages.menus.bendahara.sub_periods.create',
+        return view('pages.menus.bendahara.sub_periods.create',
             compact('periods')
         );
     }
@@ -77,7 +86,6 @@ class SubPeriodController extends Controller
             return redirect()
                 ->route('bendahara.sub-periods.index')
                 ->with('success', 'Sub Periode berhasil ditambahkan');
-
         } catch (Exception $e) {
             return back()
                 ->withInput()
@@ -120,7 +128,6 @@ class SubPeriodController extends Controller
             return redirect()
                 ->route('bendahara.sub-periods.index')
                 ->with('success', 'Sub Periode berhasil diperbarui');
-
         } catch (Exception $e) {
             return back()
                 ->withInput()
@@ -146,7 +153,6 @@ class SubPeriodController extends Controller
             return redirect()
                 ->route('bendahara.sub-periods.index')
                 ->with('success', 'Sub Periode berhasil dihapus');
-
         } catch (Exception $e) {
             return back()
                 ->withErrors([

@@ -67,6 +67,10 @@ class PeriodService
             throw new Exception('Periode sudah ditutup dan tidak dapat diubah.');
         }
 
+        if ($period->transactions()->exists()) {
+            throw new Exception('Periode tidak dapat diubah karena sudah memiliki transaksi.');
+        }
+
         $existing = Period::query()
             ->where('id', '!=', $period->id)
             ->where('is_closed', false)
@@ -123,6 +127,14 @@ class PeriodService
             throw new Exception('Periode sudah ditutup.');
         }
 
+        if ($period->transactions()->exists()) {
+            return new Exception('Periode tidak dapat ditutup karena sudah memiliki transaksi.');
+        }
+
+        if (now()->lessThanOrEqualTo($period->end_date)) {
+            return new Exception('Periode belum dapat ditutup karena tanggal akhir belum lewat.');
+        }
+
         $hasDraft = Journal::where('period_id', $period->id)
             ->whereNull('posted_at')
             ->exists();
@@ -153,11 +165,11 @@ class PeriodService
                 $q->where('period_id', $period->id);
             })
                 ->selectRaw("
-                coa_id,
+                chart_of_account_id,
                 SUM(debit - credit) as total
             ")
-                ->groupBy('coa_id')
-                ->pluck('total', 'coa_id');
+                ->groupBy('chart_of_account_id')
+                ->pluck('total', 'chart_of_account_id');
 
             $dataInsert = [];
 

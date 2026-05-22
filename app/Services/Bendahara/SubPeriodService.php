@@ -43,6 +43,10 @@ class SubPeriodService
     {
         $SubPeriod = SubPeriod::findOrFail($id);
 
+        if ($SubPeriod->transactions()->exists()) {
+            throw new Exception('Sub periode tidak bisa diubah karena sudah memiliki transaksi.');
+        }
+
         $this->validateSubPeriodDates($data);
 
         $SubPeriod->update([

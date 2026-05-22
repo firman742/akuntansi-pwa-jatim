@@ -21,7 +21,9 @@ class PeriodController extends Controller
      */
     public function index(): View
     {
-        $periods = Period::orderBy('is_closed', 'desc')->get();
+        $periods = Period::withCount('transactions')
+            ->orderBy('is_closed', 'desc')
+            ->get();
 
         return view('pages.menus.bendahara.periods.index', compact('periods'));
     }

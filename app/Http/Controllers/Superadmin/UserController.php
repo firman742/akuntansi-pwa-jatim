@@ -2,33 +2,55 @@
 
 namespace App\Http\Controllers\Superadmin;
 
+use App\Enums\RoleEnum;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index()
+    /**
+     *
+     * @return View
+     */
+    public function index(): View
     {
         $users = User::with('roles')->get();
         return view('pages.menus.superadmin.users.index', compact('users'));
     }
 
-    public function show(string $id)
+    /**
+     *
+     * @param string $id
+     * @return View
+     */
+    public function show(string $id): View
     {
         $user = User::with('roles')->findOrFail($id);
         return view('pages.menus.superadmin.users.show', compact('user'));
     }
 
-    public function create()
+    /**
+     *
+     * @return View
+     */
+    public function create(): View
     {
-        $roles = Role::pluck('name');
+        $roles = Role::where('name', '!=', RoleEnum::SUPER_ADMIN->value)->pluck('name');
+
         return view('pages.menus.superadmin.users.create', compact('roles'));
     }
 
-    public function store(Request $request)
+    /**
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name'      => 'required|string|max:255',
@@ -54,7 +76,12 @@ class UserController extends Controller
             ->with('success', 'User berhasil ditambahkan');
     }
 
-    public function edit(string $id)
+    /**
+     *
+     * @param string $id
+     * @return View
+     */
+    public function edit(string $id): View
     {
         $user = User::with('roles')->findOrFail($id);
         $roles = Role::pluck('name');
@@ -63,7 +90,13 @@ class UserController extends Controller
         return view('pages.menus.superadmin.users.edit', compact('user', 'roles', 'userRole'));
     }
 
-    public function update(Request $request, string $id)
+    /**
+     *
+     * @param Request $request
+     * @param string $id
+     * @return RedirectResponse
+     */
+    public function update(Request $request, string $id): RedirectResponse
     {
         $user = User::findOrFail($id);
 
@@ -89,7 +122,12 @@ class UserController extends Controller
             ->with('success', 'User berhasil diperbarui');
     }
 
-    public function destroy(string $id)
+    /**
+     *
+     * @param string $id
+     * @return RedirectResponse
+     */
+    public function destroy(string $id): RedirectResponse
     {
         $user = User::findOrFail($id);
 

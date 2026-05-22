@@ -51,7 +51,7 @@ class CoaService
         $coa = ChartOfAccount::findOrFail($id);
 
         // cek apakah coa sudah dipakai
-        $isUsed = $coa->transactionLines()->exists() || $coa->journalDetails()->exists();
+        $isUsed = $coa->transactionLines()->exists() || $coa->journalDetails()->exists() || $coa->userAccounts()->exists();
 
         // jika sudah dipakai, tipe akun & normal balance tidak boleh berubah
         if ($isUsed) {
@@ -60,7 +60,7 @@ class CoaService
                 $coa->normal_balance !== $data['normal_balance']
             ) {
                 throw new Exception(
-                    'Tipe akun dan saldo normal tidak dapat diubah karena akun sudah digunakan dalam transaksi atau jurnal.'
+                    'COA sudah digunakan dalam transaksi, jurnal, atau sudah dihubungkan ke pengguna. Tipe akun dan normal balance tidak dapat diubah.'
                 );
             }
         }
@@ -103,10 +103,12 @@ class CoaService
 
         $usedInTransactions = $coa->transactionLines()->exists();
         $usedInJournals = $coa->journalDetails()->exists();
+        $usedByUsers = $coa->userAccounts()->exists(); // ✅ NEW VALIDATION
 
-        if ($usedInTransactions || $usedInJournals) {
+
+        if ($usedInTransactions || $usedInJournals || $usedByUsers) {
             throw new Exception(
-                'COA tidak dapat dihapus karena sudah digunakan dalam transaksi atau jurnal.'
+                'COA tidak dapat dihapus karena sudah digunakan dalam transaksi, jurnal, atau sudah dihubungkan ke pengguna.'
             );
         }
 

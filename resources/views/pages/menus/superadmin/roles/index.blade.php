@@ -14,11 +14,11 @@
     <div class="space-y-6">
         <x-core.basic-tables.core-table title="Daftar Peran" description="Berikut daftar peran dan izin">
             <x-slot name="actions">
-                {{-- <a href="{{ route('superadmin.roles.create') }}">
+                <a href="{{ route('superadmin.roles.create') }}">
                     <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
-                        + Tambah Perizinan
+                        + Tambah Peran
                     </x-ui.button>
-                </a> --}}
+                </a>
             </x-slot>
 
             <x-core.basic-tables.superadmin.role-table :roles="$roles" />

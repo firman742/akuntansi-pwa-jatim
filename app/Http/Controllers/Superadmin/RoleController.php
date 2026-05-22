@@ -2,36 +2,81 @@
 
 namespace App\Http\Controllers\Superadmin;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
-    public function index()
+    /**
+     *
+     * @return View
+     */
+    public function index(): View
     {
         $roles = Role::with('permissions')->get();
         return view('pages.menus.superadmin.roles.index', compact('roles'));
     }
 
-    public function show(string $id)
+    /**
+     *
+     * @param string $id
+     * @return View
+     */
+    public function show(string $id): View
     {
         $role = Role::with('permissions')->findOrFail($id);
         $permissions = Permission::orderBy('group')->orderByDesc('is_default')->get();
         return view('pages.menus.superadmin.roles.show', compact('role', 'permissions'));
     }
+
+    /**
+     *
+     * @return View
+     */
+    public function create(): View
+    {
+        $permissions = Permission::orderBy('group')->orderByDesc('is_default')->get();
+        return view('pages.menus.superadmin.roles.create', compact('permissions'));
+    }
+
+    /**
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => 'required|unique:roles,name',
+            'permissions' => 'array',
+        ]);
+
+        $role = Role::create(['name' => strtoupper($request->input('name'))]);
+        $permissions = $request->input('permissions', []);
+        $role->syncPermissions($permissions);
+
+        return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil dibuat');
+    }
    
-    public function update(Request $request, string $id)
+    /**
+     *
+     * @param Request $request
+     * @param string $id
+     * @return RedirectResponse
+     */
+    public function update(Request $request, string $id): RedirectResponse
     {
         $role = Role::findOrFail($id);
         $permissions = $request->input('permissions', []);
 
         $role->syncPermissions($permissions);
 
-        return redirect()->route('superadmin.roles.index')->with('success', 'Role updated successfully');
+        return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil diperbarui');
     }
+
 
 }

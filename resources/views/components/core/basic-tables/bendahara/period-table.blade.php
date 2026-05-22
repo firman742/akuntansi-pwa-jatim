@@ -100,7 +100,18 @@
                 this.currentPage = this.totalPages || 1;
             }
         }
-    }
+    },
+    canEdit(row) {
+        return row.transactions_count === 0;
+    },
+
+    canClose(row) {
+        const today = new Date();
+        const endDate = new Date(row.end_date);
+
+        return row.transactions_count === 0 &&
+            today > endDate;
+    },
 }">
     <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <!-- Table -->
@@ -185,39 +196,43 @@
                                         <template x-if="!row.is_closed">
                                             <div class="flex items-center gap-2">
 
-                                                <!-- Close -->
-                                                <form :action="closeUrl.replace(':id', row.id)" method="POST"
-                                                    onsubmit="return confirm('Apakah anda yakin MENUTUP periode ini?')">
-                                                    @csrf
-                                                    @method('PATCH')
+                                                <template x-if="canClose(row)">
+                                                    <!-- Close -->
+                                                    <form :action="closeUrl.replace(':id', row.id)" method="POST"
+                                                        onsubmit="return confirm('Apakah anda yakin MENUTUP periode ini?')">
+                                                        @csrf
+                                                        @method('PATCH')
 
-                                                    <button type="submit"
+                                                        <button type="submit"
+                                                            class="flex h-8 w-8 items-center justify-center rounded-md
+                                                       text-yellow-600 hover:bg-yellow-50
+                                                       dark:text-yellow-400 dark:hover:bg-yellow-500/10"
+                                                            title="Tutup Periode">
+                                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                                stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                </template>
+
+                                                <!-- Edit -->
+                                                <template x-if="canEdit(row)">
+                                                    <a :href="editUrl.replace(':id', row.id)"
                                                         class="flex h-8 w-8 items-center justify-center rounded-md
-                                                           text-yellow-600 hover:bg-yellow-50
-                                                           dark:text-yellow-400 dark:hover:bg-yellow-500/10"
-                                                        title="Tutup Periode">
+                                                    text-blue-500 hover:bg-green-50
+                                                    dark:text-blue-400 dark:hover:bg-green-500/10"
+                                                        title="Edit Periode">
                                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                             stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 stroke-width="2"
-                                                                d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
-                                                    </button>
-                                                </form>
-
-                                                <!-- Edit -->
-                                                <a :href="editUrl.replace(':id', row.id)"
-                                                    class="flex h-8 w-8 items-center justify-center rounded-md
-                                                    text-blue-500 hover:bg-green-50
-                                                    dark:text-blue-400 dark:hover:bg-green-500/10"
-                                                    title="Edit Periode">
-                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                        stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </a>
+                                                    </a>
+                                                </template>
 
                                             </div>
                                         </template>

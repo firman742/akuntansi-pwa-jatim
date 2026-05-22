@@ -73,8 +73,7 @@
     }
 }">
 
-    <div
-        class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <!-- Table -->
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
@@ -105,7 +104,7 @@
                 <tbody>
                     <template x-for="(row, index) in paginatedData" :key="row.id">
                         <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
+                            class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                             <!-- No Urut -->
                             <td class="px-4 sm:px-6 py-3.5">
@@ -148,8 +147,8 @@
                                 <div class="flex items-center gap-3">
                                     <!-- View -->
                                     <a :href="showUrl.replace(':id', row.id)"
-                                        class="inline-flex items-center justify-center">
-                                        <svg class="size-5 text-gray-700 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500"
+                                        class="flex h-8 w-8 items-center justify-center rounded-md text-green-500 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-500/10">
+                                        <svg class="h-5 w-5"
                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -157,28 +156,30 @@
                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     </a>
+                                    
                                     <!-- Edit -->
                                     <a :href="editUrl.replace(':id', row.id)"
-                                        class="inline-flex items-center justify-center">
-                                        <svg class="size-5 text-gray-700 hover:text-green-500 dark:text-gray-400 dark:hover:text-green-500"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165
-                                                     3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5" />
+                                        class="flex h-8 w-8 items-center justify-center rounded-md text-blue-500 hover:bg-green-50 dark:text-blue-400 dark:hover:bg-green-500/10"
+                                        title="Edit Pengguna">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </a>
 
                                     <!-- Delete -->
+                                    <!-- Delete SELALU tampil -->
                                     <form :action="destroyUrl.replace(':id', row.id)" method="POST"
-                                        onsubmit="return confirm('Yakin hapus user ini?')" class="inline-flex">
+                                        onsubmit="return confirm('Yakin hapus pengguna ini?')">
                                         @csrf
                                         @method('DELETE')
 
-                                        <button type="submit" class="inline-flex items-center justify-center">
-                                            <svg class="size-5 text-gray-700 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-500"
-                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6
-                                                         m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        <button type="submit"
+                                            class="flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                                            title="Hapus Sub Periode">
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862 a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6 m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
                                             </svg>
                                         </button>
                                     </form>

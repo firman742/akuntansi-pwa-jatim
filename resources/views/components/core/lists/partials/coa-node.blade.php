@@ -1,43 +1,79 @@
 @php
-    $hasChildren = isset($tree[$coa->id]);
-    $indent = ($coa->level ?? 1) * 4;
+    $hasChildren = $coa->children->count() > 0;
 @endphp
 
-<li
-    data-coa-node
-    class=" py-1
-           {{ $coa->level > 1 ? 'border-l border-gray-200 dark:border-gray-700' : '' }}" style="margin-left: {{ $indent }}px;">
+<div class="coa-node border-l pl-3 py-1 ml-{{ $level * 4 }}" data-name="{{ strtolower($coa->name) }}"
+    data-code="{{ strtolower($coa->code) }}">
 
-    <label class="flex items-start gap-3 cursor-pointer select-none">
-        <input
-            type="checkbox"
-            name="coa_ids[]"
-            value="{{ $coa->id }}"
-            class="mt-1 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
-            @checked(in_array($coa->id, $assignedCoaIds))
+    <div class="flex items-center justify-between rounded-md px-2 py-1 hover:bg-gray-50">
+
+        <div class="flex items-center gap-2">
+
             @if ($hasChildren)
-                @change="toggleParent"
+                <button onclick="toggleNode('{{ $coa->id }}')" class="text-xs text-gray-500">
+                    ▸
+                </button>
             @endif
-        >
 
-        <span
-            class="
-                text-sm
-                {{ $hasChildren ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300' }}
-            ">
-            {{ $coa->code }} — {{ $coa->name }} - {{ $coa->normal_balance }}
-        </span>
-    </label>
+            <div>
+                <div class="text-sm font-medium text-gray-800">
+                    {{ $coa->code }} - {{ $coa->name }}
+                </div>
+
+                <div class="text-xs text-gray-500">
+                    {{ $coa->accountType?->name ?? '-' }}
+                    • {{ strtoupper($coa->normal_balance) }}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="flex items-center gap-2">
+
+            <span
+                class="text-xs px-2 py-1 rounded-full
+                {{ $coa->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                {{ $coa->is_active ? 'Active' : 'Inactive' }}
+            </span>
+
+            {{-- EDIT --}}
+            <a href="{{ route('bendahara.master.coas.edit', $coa->id) }}"
+                class="flex h-8 w-8 items-center justify-center rounded-md text-blue-500 hover:bg-green-50 dark:text-blue-400 dark:hover:bg-green-500/10"
+                title="Edit akun coa">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+            </a>
+
+            {{-- Delete --}}
+            <form action="{{ route('bendahara.master.coas.destroy', $coa->id) }}" method="POST"
+                onsubmit="return confirm('Yakin ingin menghapus COA ini?')" class="inline-flex">
+                @csrf
+                @method('DELETE')
+
+                <button type="submit"
+                    class="flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                    title="hapus akun coa">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
+                                                    a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
+                                                    m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </form>
+
+        </div>
+    </div>
 
     @if ($hasChildren)
-        <ul class="mt-1 space-y-1">
-            @foreach ($tree[$coa->id] as $child)
+        <div id="node-{{ $coa->id }}" class="ml-4 mt-1 space-y-1">
+            @foreach ($coa->children as $child)
                 @include('components.core.lists.partials.coa-node', [
                     'coa' => $child,
-                    'tree' => $tree,
-                    'assignedCoaIds' => $assignedCoaIds,
+                    'level' => $level + 1,
                 ])
             @endforeach
-        </ul>
+        </div>
     @endif
-</li>
+</div>

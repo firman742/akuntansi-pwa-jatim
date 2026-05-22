@@ -24,28 +24,19 @@
     @endif
 
     @if ($isLocked)
-        <div class="mb-6">
-            <x-ui.alert variant="warning" title="Perhatian">
-                Akun COA ini sudah digunakan dalam transaksi atau jurnal.
-                Yang masih dapat diubah hanya:
-                <ul class="list-disc list-inside mt-2 space-y-1">
-                    <li>Nama akun</li>
-                    <li>Deskripsi</li>
-                    <li>Status aktif/nonaktif</li>
-                </ul>
-
-                Tipe akun, saldo normal, dan struktur parent dikunci
-                untuk menjaga konsistensi data akuntansi.
-            </x-ui.alert>
+        <div class="mb-6 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+            Akun ini hanya dapat diedit nama dan deskripsinya saja!
         </div>
     @endif
 
     <x-common.component-card title="Edit Akun COA">
+
         <form method="POST" action="{{ route('bendahara.master.coas.update', $coa->id) }}">
             @csrf
             @method('PUT')
 
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4" x-data="{
+            <div class="grid grid-cols-1 gap-4" x-data="{
+                isLocked: {{ $isLocked ? 'true' : 'false' }},
                 parentId: '{{ old('parent_id', $coa->parent_id) }}',
                 code: '{{ $coa->code }}',
                 level: {{ old('level', $coa->level) }},
@@ -53,6 +44,8 @@
                 oldParentId: '{{ old('parent_id', $coa->parent_id) }}',
             
                 async fetchCode() {
+                    if (this.isLocked) return;
+            
                     try {
                         let url = '{{ route('bendahara.master.coas.generate-code') }}';
             
@@ -61,38 +54,34 @@
                         }
             
                         const response = await fetch(url);
-            
-                        if (!response.ok) {
-                            throw new Error('Gagal mengambil kode');
-                        }
-            
                         const data = await response.json();
             
                         this.code = data.code;
                         this.level = data.level;
                         this.order = data.order;
             
-                    } catch (error) {
-                        console.error(error);
+                    } catch (e) {
+                        console.error(e);
                     }
                 }
             }"
                 x-effect="
-                    if (!{{ $isLocked ? 'true' : 'false' }} && parentId !== oldParentId) {
-                        fetchCode();
-                        oldParentId = parentId;
-                    }
-                ">
+                if (!isLocked && parentId !== oldParentId) {
+                    fetchCode();
+                    oldParentId = parentId;
+                }
+            ">
 
-                {{-- Parent --}}
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                {{-- PARENT --}}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
                         Parent Akun (Opsional)
                     </label>
 
-                    <select name="parent_id" x-model="parentId" @disabled($isLocked)
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                        {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-70' : '' }}">
+                    <select name="parent_id" x-model="parentId" :disabled="isLocked"
+                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm
+                    {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
+
                         <option value="">-- Tidak Ada --</option>
 
                         @foreach ($parents as $parent)
@@ -101,126 +90,119 @@
                             </option>
                         @endforeach
                     </select>
+
+                    @if ($isLocked)
+                        <p class="mt-1 text-xs text-gray-500">
+                            Parent tidak dapat diubah karena COA sudah digunakan.
+                        </p>
+                    @endif
                 </div>
 
-                {{-- Code --}}
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                {{-- CODE --}}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
                         Kode Akun (Otomatis)
                     </label>
 
-                    <input type="text" x-model="code" readonly disabled
-                        class="h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4">
+                    <input type="text" x-model="code" readonly
+                        class="h-11 w-full rounded-lg border bg-gray-100 px-4 text-gray-700 cursor-not-allowed">
 
                     <input type="hidden" name="code" :value="code">
                     <input type="hidden" name="level" :value="level">
                     <input type="hidden" name="order" :value="order">
 
-                    {{-- Info level & order --}}
-                    <div class="mt-1 text-gray-500 text-sm">
+                    <div class="mt-1 text-xs text-gray-500">
                         Level: <span x-text="level"></span> • Order: <span x-text="order"></span>
                     </div>
                 </div>
 
-                {{-- Nama Akun --}}
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                {{-- NAME (editable always) --}}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
                         Nama Akun COA
                     </label>
+
                     <input type="text" name="name" value="{{ old('name', $coa->name) }}"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('name') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-400">
                 </div>
 
-                {{-- Tipe Akun --}}
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                {{-- ACCOUNT TYPE --}}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
                         Tipe Akun
                     </label>
-                    <select name="account_type_id" @disabled($isLocked)
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('account_type_id') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-70' : '' }}">
+
+                    <select name="account_type_id" :disabled="isLocked"
+                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm
+                    {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
+
                         <option value="">-- Pilih Tipe Akun --</option>
+
                         @foreach ($accountTypes as $type)
                             <option value="{{ $type->id }}" @selected(old('account_type_id', $coa->account_type_id) == $type->id)>
                                 {{ $type->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('account_type_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
 
-                {{-- Normal Balance --}}
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                {{-- NORMAL BALANCE --}}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
                         Normal Balance
                     </label>
-                    <select name="normal_balance"  @disabled($isLocked)
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-70' : '' }}">
+
+                    <select name="normal_balance" :disabled="isLocked"
+                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm
+                    {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
+
                         @foreach ($normalBalances as $balance)
                             <option value="{{ $balance->value }}" @selected(old('normal_balance', $coa->normal_balance) === $balance->value)>
                                 {{ $balance->label() }}
                             </option>
                         @endforeach
                     </select>
-
-                    @error('normal_balance')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
 
-                {{-- Description --}}
+                {{-- DESCRIPTION --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
                         Deskripsi
                     </label>
 
-                    <textarea name="description" rows="4" class="w-full rounded-lg border border-gray-300 px-4 py-3">{{ old('description', $coa->description) }}</textarea>
-                    @error('description')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <textarea name="description" rows="4"
+                        class="w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 focus:ring-blue-400">{{ old('description', $coa->description) }}</textarea>
                 </div>
 
-                {{-- Active --}}
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Aktifkan Akun COA
+                {{-- ACTIVE --}}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                        Status Aktif
                     </label>
 
-                    <div x-data="{ switcherToggle: {{ $coa->is_active ? 'true' : 'false' }} }">
-                        {{-- hidden input agar selalu terkirim --}}
+                    <div x-data="{ toggle: {{ $coa->is_active ? 'true' : 'false' }} }">
                         <input type="hidden" name="is_active" value="0">
 
-                        <label
-                            class="flex cursor-pointer items-center gap-3 text-sm font-medium
-                                   text-gray-700 select-none dark:text-gray-400">
+                        <label class="flex items-center gap-3 cursor-pointer select-none">
 
                             <div class="relative">
-                                <input type="checkbox" name="is_active" value="1" class="sr-only"
-                                    x-model="switcherToggle" />
+                                <input type="checkbox" name="is_active" value="1" class="sr-only" x-model="toggle">
 
-                                <div class="block h-6 w-11 rounded-full transition"
-                                    :class="switcherToggle
-                                        ?
-                                        'bg-brand-500 dark:bg-brand-500' :
-                                        'bg-gray-200 dark:bg-white/10'">
-                                </div>
+                                <div class="h-6 w-11 rounded-full transition"
+                                    :class="toggle ? 'bg-green-500' : 'bg-gray-300'"></div>
 
-                                <div class="shadow-theme-sm absolute top-0.5 left-0.5 h-5 w-5
-                                           rounded-full bg-white transition-transform duration-300"
-                                    :class="switcherToggle ? 'translate-x-full' : 'translate-x-0'">
-                                </div>
+                                <div class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform"
+                                    :class="toggle ? 'translate-x-full' : ''"></div>
                             </div>
 
-                            <span x-text="switcherToggle ? 'Aktif' : 'Nonaktif'"></span>
+                            <span class="text-sm text-gray-700" x-text="toggle ? 'Aktif' : 'Nonaktif'"></span>
                         </label>
                     </div>
                 </div>
+
             </div>
 
+            {{-- ACTION --}}
             <div class="mt-8 flex justify-end gap-3">
                 <a href="{{ route('bendahara.master.coas.index') }}">
                     <x-ui.button variant="outline" size="sm">
@@ -229,9 +211,11 @@
                 </a>
 
                 <x-ui.button type="submit" variant="primary" size="sm">
-                    Update Akun COA
+                    Update COA
                 </x-ui.button>
             </div>
+
         </form>
+
     </x-common.component-card>
 @endsection
