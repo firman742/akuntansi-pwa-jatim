@@ -11,7 +11,7 @@
             </h3>
 
             <div class="flex items-center gap-2">
-                <a href="#" >
+                {{-- <a href="#" >
                     <x-ui.button size="sm">
                         <x-slot:startIcon>
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -20,7 +20,7 @@
                         </x-slot:startIcon>
                         Buat Izin Baru
                     </x-ui.button>
-                </a>
+                </a> --}}
             </div>
         </div>
 

@@ -130,7 +130,8 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         // COA
         Route::prefix('coas')->name('coas.')->group(function () {
             Route::get('/', [App\Http\Controllers\Bendahara\Master\COAController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\Bendahara\Master\COAController::class, 'create'])->name('create');
+            Route::get('/create-child', [App\Http\Controllers\Bendahara\Master\COAController::class, 'createChild'])->name('create-child');
+            Route::get('/create-parent', [App\Http\Controllers\Bendahara\Master\COAController::class, 'createParent'])->name('create-parent');
             Route::get('/generate-code', [App\Http\Controllers\Bendahara\Master\COAController::class, 'generateCodeApi'])->name('generate-code');
             Route::post('/', [App\Http\Controllers\Bendahara\Master\COAController::class, 'store'])->name('store');
             Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\COAController::class, 'edit'])->name('edit');
@@ -146,24 +147,24 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         });
 
         // tax
-        Route::prefix('taxes')->name('taxes.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'store'])->name('store');
-            Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'update'])->name('update');
-            Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'destroy'])->name('destroy');
-        });
+        // Route::prefix('taxes')->name('taxes.')->group(function () {
+        //     Route::get('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'index'])->name('index');
+        //     Route::get('/create', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'create'])->name('create');
+        //     Route::post('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'store'])->name('store');
+        //     Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'edit'])->name('edit');
+        //     Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'update'])->name('update');
+        //     Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'destroy'])->name('destroy');
+        // });
 
-        // interest
-        Route::prefix('interests')->name('interests.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'store'])->name('store');
-            Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'update'])->name('update');
-            Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'destroy'])->name('destroy');
-        });
+        // // interest
+        // Route::prefix('interests')->name('interests.')->group(function () {
+        //     Route::get('/', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'index'])->name('index');
+        //     Route::get('/create', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'create'])->name('create');
+        //     Route::post('/', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'store'])->name('store');
+        //     Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'edit'])->name('edit');
+        //     Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'update'])->name('update');
+        //     Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'destroy'])->name('destroy');
+        // });
 
     });
 

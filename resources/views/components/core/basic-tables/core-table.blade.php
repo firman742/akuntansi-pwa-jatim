@@ -3,7 +3,7 @@
     'description' => null,
 ])
 
-<div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+<div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-sm overflow-hidden">
 
     {{-- HEADER --}}
     <div
@@ -13,7 +13,7 @@
         {{-- TITLE --}}
         <div>
             @if ($title)
-                <h2 class="text-xl font-semibold text-gray-800">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
                     {{ $title }}
                 </h2>
             @endif
@@ -23,6 +23,11 @@
                     {{ $description }}
                 </p>
             @endif
+        </div>
+        
+        {{-- SEARCH BAR --}}
+        <div class="flex items-center gap-2">
+            {{ $search ?? '' }}
         </div>
 
         {{-- ACTION SLOT --}}

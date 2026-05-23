@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Bendahara\Master;
 
+use App\Enums\NormalBalanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Bendahara\UserAccounts\SyncUserAccountRequest;
 use App\Models\ChartOfAccount;
@@ -21,7 +22,10 @@ class UserAccountController extends Controller
     public function index(): View
     {
         $users = User::role('ACCOUNTING USER')
-            ->withCount('coas')
+            ->withCount([
+                'debitCoas',
+                'creditCoas'
+            ])
             ->orderBy('name')
             ->get();
 
@@ -36,7 +40,12 @@ class UserAccountController extends Controller
      */
     public function edit(string $id): View
     {
-        $user = User::with('coas')->findOrFail($id);
+        
+        $user = User::with([
+            'coas',
+            'debitCoas',
+            'creditCoas'
+        ])->findOrFail($id);
 
         $coas = ChartOfAccount::where('is_active', true)
             ->orderBy('code')
@@ -44,8 +53,10 @@ class UserAccountController extends Controller
 
         // COA yang sudah di-assign
         $assignedCoaIds = $user->coas->pluck('id')->toArray();
+        $assignedDebitCoaIds = $user->debitCoas->pluck('id')->toArray();
+        $assignedCreditCoaIds = $user->creditCoas->pluck('id')->toArray();
 
-        return view('pages.menus.bendahara.master.user_accounts.edit', compact('user', 'coas', 'assignedCoaIds'));
+        return view('pages.menus.bendahara.master.user_accounts.edit', compact('user', 'coas', 'assignedCoaIds', 'assignedDebitCoaIds', 'assignedCreditCoaIds'));
     }
 
 

@@ -1,16 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Master Data - Tambah Akun COA')
+@section('title', 'Master Data - Buat Sub Akun COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Tambah Akun COA" />
+    <x-common.page-breadcrumb pageTitle="Buat Sub Akun COA" />
 
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li>
+                            <span class="text-gray-500 dark:text-gray-400">{{ $error }}</span>
+                        </li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -27,35 +29,80 @@
         <form method="POST" action="{{ route('bendahara.master.coas.store') }}">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4" x-data="{
-                parentId: '{{ old('parent_id') }}',
-                code: '-', // kode otomatis
-                level: 1, // level otomatis
-                order: 1, // order otomatis
+                parentId: '{{ old('parent_id', $parents->first()?->id) }}',            
+                code: '-',
+                level: 1,
+                order: 1,
+            
+                accountTypeId: '{{ old('account_type_id') }}',
+                normalBalance: '{{ old('normal_balance', $normalBalances[0] ?? '') }}',
+            
                 oldParentId: null,
+            
+                parentsData: @js(
+                    $parents->mapWithKeys(
+                        fn($item) => [
+                            $item->id => [
+                                'account_type_id' => $item->account_type_id,
+                                'normal_balance' => $item->normal_balance,
+                            ],
+                        ],
+                    ),
+                ),
             
                 async fetchCode() {
                     try {
                         let url = '{{ route('bendahara.master.coas.generate-code') }}';
-                        if (this.parentId) url += '?parent_id=' + this.parentId;
+            
+                        if (this.parentId) {
+                            url += '?parent_id=' + this.parentId;
+                        }
             
                         const response = await fetch(url);
-                        if (!response.ok) throw new Error('Gagal mengambil kode');
+            
+                        if (!response.ok) {
+                            throw new Error('Gagal mengambil kode');
+                        }
             
                         const data = await response.json();
+            
                         this.code = data.code;
                         this.level = data.level;
                         this.order = data.order;
+            
                     } catch (error) {
                         console.error(error);
+            
                         this.code = 'Error';
                         this.level = 1;
                         this.order = 1;
                     }
+                },
+            
+                syncParentData() {
+                    if (!this.parentId) {
+                        return;
+                    }
+            
+                    const parent = this.parentsData[this.parentId];
+            
+                    if (!parent) {
+                        return;
+                    }
+            
+                    this.accountTypeId = parent.account_type_id;
+                    this.normalBalance = parent.normal_balance;
                 }
             }" x-init="fetchCode();
+            syncParentData();
             oldParentId = parentId;"
-                x-effect="if (parentId !== oldParentId) { fetchCode(); oldParentId = parentId; }">
-
+                x-effect="
+                if (parentId !== oldParentId) {
+                    fetchCode();
+                    syncParentData();
+                    oldParentId = parentId;
+                }
+            ">
                 {{-- Parent Akun --}}
                 <div class="col-span-1 md:col-span-2">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
@@ -63,13 +110,15 @@
                     </label>
                     <select name="parent_id" x-model="parentId"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                        <option value="">-- Pilih Akun Induk --</option>
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(old('parent_id') == $parent->id)>
                                 {{ $parent->code }} - {{ $parent->name }}
                             </option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-xs text-amber-600">
+                        Child account wajib memiliki parent account.
+                    </p>
                 </div>
 
                 {{-- Kode Akun Otomatis --}}
@@ -109,18 +158,26 @@
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Tipe Akun
                     </label>
-                    <select name="account_type_id"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('account_type_id') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+
+                    <select x-model="accountTypeId" :readonly="parentId" :disabled="parentId"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+
                         <option value="">-- Pilih Tipe Akun --</option>
+
                         @foreach ($accountTypes as $type)
-                            <option value="{{ $type->id }}" @selected(old('account_type_id') == $type->id)>
+                            <option value="{{ $type->id }}">
                                 {{ $type->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('account_type_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+
+                    <input type="hidden" name="account_type_id" :value="accountTypeId">
+
+                    <template x-if="parentId">
+                        <p class="mt-1 text-xs text-yellow-600">
+                            Mengikuti tipe akun parent.
+                        </p>
+                    </template>
                 </div>
 
                 {{-- Normal Balance --}}
@@ -128,24 +185,30 @@
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Normal Balance
                     </label>
-                    <select name="normal_balance" x-model="normal_balance"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+
+                    <select x-model="normalBalance" :readonly="parentId" :disabled="parentId"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+
                         @foreach ($normalBalances as $balance)
-                            <option value="{{ $balance }}" @selected(old('normal_balance') == $balance)>
+                            <option value="{{ $balance }}">
                                 {{ $balance }}
                             </option>
                         @endforeach
                     </select>
 
-                    @error('normal_balance')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <input type="hidden" name="normal_balance" :value="normalBalance">
+
+                    <template x-if="parentId">
+                        <p class="mt-1 text-xs text-yellow-600">
+                            Mengikuti normal balance parent.
+                        </p>
+                    </template>
                 </div>
 
                 {{-- Aktif --}}
                 <div class="col-span-1 md:col-span-2">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Aktifkan Akun COA
+                        Aktifkan Akun
                     </label>
                     <div x-data="{ switcherToggle: true }">
                         <input type="hidden" name="is_active" value="0">

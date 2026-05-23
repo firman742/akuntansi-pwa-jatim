@@ -27,7 +27,7 @@ class ChartOfAccount extends Model
         'is_active',
         'created_by',
     ];
-    
+
     protected $casts = [
         'is_active' => 'boolean',
     ];
@@ -48,7 +48,12 @@ class ChartOfAccount extends Model
 
     public function users()
     {
-        return $this->belongsToMany(ChartOfAccount::class, 'user_accounts', 'coa_id', 'user_id');
+        return $this->belongsToMany(
+            User::class,
+            'user_accounts',
+            'coa_id',
+            'user_id'
+        );
     }
 
     /**
@@ -75,15 +80,13 @@ class ChartOfAccount extends Model
         return $this->hasMany(OpeningBalance::class, 'chart_of_account_id');
     }
 
-    public function journalDetails() : HasMany
+    public function journalDetails(): HasMany
     {
         return $this->hasMany(JournalDetail::class, 'chart_of_account_id');
-        
     }
 
-    public function transactionLines() : HasMany
+    public function transactionLines(): HasMany
     {
         return $this->hasMany(TransactionLine::class, 'chart_of_account_id');
     }
-
 }

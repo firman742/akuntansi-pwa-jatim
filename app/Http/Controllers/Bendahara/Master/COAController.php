@@ -45,16 +45,31 @@ class COAController extends Controller
      * 
      * @return View
      */
-    public function create(): View
+    public function createChild(): View
     {
         $accountTypes = AccountType::orderBy('name')->get();
 
-        $parents = ChartOfAccount::orderBy('code')->get();
+        $parents = ChartOfAccount::with('accountType')
+        ->orderBy('code')
+        ->get();
+        
         $normalBalances = NormalBalanceEnum::values();
 
         return view('pages.menus.bendahara.master.coa.create', compact(
             'accountTypes',
             'parents',
+            'normalBalances'
+        ));
+    }
+
+    public function createParent(): View
+    {
+        $accountTypes = AccountType::orderBy('name')->get();
+
+        $normalBalances = NormalBalanceEnum::values();
+
+        return view('pages.menus.bendahara.master.coa.create-parent', compact(
+            'accountTypes',
             'normalBalances'
         ));
     }

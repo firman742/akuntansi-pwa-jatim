@@ -5,24 +5,23 @@
 <div class="coa-node border-l pl-3 py-1 ml-{{ $level * 4 }}" data-name="{{ strtolower($coa->name) }}"
     data-code="{{ strtolower($coa->code) }}">
 
-    <div class="flex items-center justify-between rounded-md px-2 py-1 hover:bg-gray-50">
+    <div class="flex items-center justify-between rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/[0.07]">
 
         <div class="flex items-center gap-2">
 
             @if ($hasChildren)
-                <button onclick="toggleNode('{{ $coa->id }}')" class="text-xs text-gray-500">
+                <button onclick="toggleNode('{{ $coa->id }}')" class="text-xs text-gray-500 dark:text-white/90">
                     ▸
                 </button>
             @endif
 
             <div>
-                <div class="text-sm font-medium text-gray-800">
+                <div class="text-sm font-medium text-gray-800 dark:text-white/90">
                     {{ $coa->code }} - {{ $coa->name }}
                 </div>
 
-                <div class="text-xs text-gray-500">
-                    {{ $coa->accountType?->name ?? '-' }}
-                    • {{ strtoupper($coa->normal_balance) }}
+                <div class="text-xs text-gray-500 dark:text-white/90">
+                    {{ strtoupper($coa->normal_balance) }}
                 </div>
             </div>
 

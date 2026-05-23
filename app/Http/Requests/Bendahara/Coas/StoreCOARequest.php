@@ -24,7 +24,7 @@ class StoreCOARequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:chart_of_accounts,name',
             'account_type_id' => 'required|exists:account_types,id',
             'parent_id' => 'nullable|exists:chart_of_accounts,id',
             'description' => 'nullable|string',
@@ -47,6 +47,7 @@ class StoreCOARequest extends FormRequest
             'name.required' => 'Nama akun harus diisi.',
             'name.string' => 'Nama akun harus berupa teks.',
             'name.max' => 'Nama akun tidak boleh lebih dari 255 karakter.',
+            'name.unique' => 'Nama akun sudah digunakan. Silahkan ganti dengan nama lain.',
             'account_type_id.required' => 'Tipe akun harus dipilih.',
             'account_type_id.exists' => 'Tipe akun yang dipilih tidak valid.',
             'parent_id.exists' => 'Akun induk yang dipilih tidak valid.',

@@ -44,7 +44,7 @@
                         Dashboard Bendahara Akuntansi
                     </h2>
 
-                    <p class="mt-1 text-sm text-gray-500">
+                    <p class="mt-1 text-sm text-gray-500 dark:text-white-90">
                         Monitor aktivitas akuntansi secara realtime.
                     </p>
                 </div>
@@ -68,7 +68,7 @@
 
 
                 {{-- <div>
-                  <p class="text-sm text-gray-500">
+                  <p class="text-sm text-gray-500 dark:text-white-90">
                       Period Aktif:
                       <span class="font-semibold text-gray-700">
                           {{ $activePeriod?->name ?? '-' }}
@@ -81,29 +81,29 @@
         {{-- Summary Cards --}}
         {{-- TODO: harapannya mendapatkan data realtime bukan sekedar hardcode --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-xl shadow-lg border">
-                <p class="text-gray-500">Saldo Seluruh Kas Periode Sekarang</p>
+            <div class="bg-white p-5 rounded-xl shadow-lg border dark:bg-white/[0.03] dark:text-white-90 dark:border-gray-800">
+                <p class="text-gray-500 dark:text-white-90">Saldo Seluruh Kas Periode Sekarang</p>
                 <h2 class="text-2xl font-bold">
                     Rp {{ number_format($totalCashBalance, 0, ',', '.') }}
                 </h2>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-lg border">
-                <p class="text-gray-500">Pemasukan Bulan Ini</p>
+            <div class="bg-white p-5 rounded-xl shadow-lg border dark:bg-white/[0.03] dark:text-white-90 dark:border-gray-800">
+                <p class="text-gray-500 dark:text-white-90">Pemasukan Bulan Ini</p>
                 <h2 class="text-2xl font-bold text-green-600">
                     Rp {{ number_format($totalIncome, 0, ',', '.') }}
                 </h2>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-lg border">
-                <p class="text-gray-500">Pengeluaran Bulan Ini</p>
+            <div class="bg-white p-5 rounded-xl shadow-lg border dark:bg-white/[0.03] dark:text-white-90 dark:border-gray-800">
+                <p class="text-gray-500 dark:text-white-90">Pengeluaran Bulan Ini</p>
                 <h2 class="text-2xl font-bold text-red-600">
                     Rp {{ number_format($totalExpense, 0, ',', '.') }}
                 </h2>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-lg border">
-                <p class="text-gray-500">Saldo Bersih</p>
+            <div class="bg-white p-5 rounded-xl shadow-lg border dark:bg-white/[0.03] dark:text-white-90 dark:border-gray-800">
+                <p class="text-gray-500 dark:text-white-90">Saldo Bersih</p>
                 <h2 class="text-2xl font-bold text-blue-500">
                     Rp {{ number_format($netBalance, 0, ',', '.') }}
                 </h2>
@@ -111,12 +111,12 @@
         </div>
 
         {{-- Accounting Flow Section --}}
-        <div class="bg-white rounded-2xl shadow-lg p-6 border">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border dark:bg-white/[0.03] dark:text-white-90 dark:border-gray-800">
             <div class="mb-6">
-                <h2 class="text-xl font-semibold text-gray-800">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">
                     Alur Sistem Akuntansi
                 </h2>
-                <p class="text-gray-500 mt-2">
+                <p class="text-gray-500 dark:text-white-90 mt-2">
                     Berikut adalah alur utama penggunaan sistem akuntansi berdasarkan
                     pembagian tugas dan proses pencatatan transaksi.
                 </p>
@@ -168,8 +168,8 @@
                 </div>
 
                 {{-- Step 4 --}}
-                <div class="flex items-start gap-4 p-4 rounded-xl border bg-purple-50">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
+                <div class="flex items-start gap-4 p-4 rounded-xl border bg-red-50">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 dark text-white font-bold">
                         4
                     </div>
                     <div>
@@ -183,7 +183,7 @@
                 </div>
 
                 {{-- Step 5 --}}
-                <div class="flex items-start gap-4 p-4 rounded-xl border bg-indigo-50">
+                <div class="flex items-start gap-4 p-4 rounded-xl border bg-blue-50">
                     <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         5
                     </div>
@@ -197,7 +197,7 @@
                 </div>
 
                 {{-- Step 6 --}}
-                <div class="flex items-start gap-4 p-4 rounded-xl border bg-pink-50">
+                <div class="flex items-start gap-4 p-4 rounded-xl border bg-green-50">
                     <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         6
                     </div>
@@ -211,7 +211,7 @@
                 </div>
 
                 {{-- Step 7 --}}
-                <div class="flex items-start gap-4 p-4 rounded-xl border bg-orange-50">
+                <div class="flex items-start gap-4 p-4 rounded-xl border bg-yellow-50">
                     <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
                         7
                     </div>
@@ -245,9 +245,9 @@
         <div class="grid lg:grid-cols-2 gap-6">
 
             {{-- Transaksi Terbaru --}}
-            <div class="bg-white rounded-2xl shadow-lg p-6 border">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border dark:bg-white/[0.03] dark:text-white-90 dark:border-gray-800">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white">
                         Transaksi Terbaru
                     </h2>
 
@@ -262,11 +262,11 @@
                     @forelse ($recentTransactions ?? [] as $transaction)
                         <div class="flex items-start justify-between border-b pb-3">
                             <div>
-                                <p class="font-medium text-gray-800">
+                                <p class="font-medium text-gray-800 dark:text-white">
                                     {{ $transaction->description }}
                                 </p>
 
-                                <p class="text-sm text-gray-500 mt-1">
+                                <p class="text-sm text-gray-500 dark:text-white-90 mt-1">
                                     {{ $transaction->transaction_date->format('d M Y') }}
                                 </p>
 
@@ -289,7 +289,7 @@
                             </div>
                         </div>
                     @empty
-                        <p class="text-gray-500 text-sm">
+                        <p class="text-gray-500 dark:text-white-90 text-sm">
                             Belum ada transaksi terbaru.
                         </p>
                     @endforelse
@@ -298,9 +298,9 @@
             </div>
 
             {{-- Jurnal Terbaru --}}
-            <div class="bg-white rounded-2xl shadow-lg p-6 border">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border dark:bg-white/[0.03] dark:text-white-90 dark:border-gray-800">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white">
                         Jurnal Terbaru
                     </h2>
 
@@ -314,11 +314,11 @@
                     @forelse ($recentJournals ?? [] as $journal)
                         <div class="flex items-start justify-between border-b pb-3">
                             <div>
-                                <p class="font-medium text-gray-800">
+                                <p class="font-medium text-gray-800 dark:text-white">
                                     {{ $journal->journal_number }}
                                 </p>
 
-                                <p class="text-sm text-gray-500 mt-1">
+                                <p class="text-sm text-gray-500 dark:text-white-90 mt-1">
                                     {{ $journal->created_at->format('d M Y H:i') }}
                                 </p>
 
@@ -342,7 +342,7 @@
                             </div>
                         </div>
                     @empty
-                        <p class="text-gray-500 text-sm">
+                        <p class="text-gray-500 dark:text-white-90 text-sm">
                             Belum ada jurnal terbaru.
                         </p>
                     @endforelse

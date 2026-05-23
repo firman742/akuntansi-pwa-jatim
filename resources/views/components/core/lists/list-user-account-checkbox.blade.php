@@ -85,7 +85,7 @@
                 {{-- Card per Account Type --}}
                 <div
                     class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03] shadow-sm">
-                    <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-green-600 dark:text-green-400">
                         {{ $group }}
                     </h4>
                     <ul class="space-y-1">
@@ -105,19 +105,78 @@
 
 </div>
 
-{{-- Alpine Logic Global scope --}}
 <script>
     if (typeof coaTree !== 'function') {
+
         function coaTree() {
             return {
+
                 toggleParent(event) {
+
                     const checked = event.target.checked;
-                    const wrapper = event.target.closest('[data-coa-node]');
-                    if (wrapper) {
-                        wrapper.querySelectorAll('input[type=checkbox]').forEach(cb => {
-                            cb.checked = checked;
-                        });
+
+                    const currentNode = event.target.closest('[data-coa-node]');
+
+                    if (!currentNode) return;
+
+                    let parentId = currentNode.dataset.parentId;
+
+                    while (parentId) {
+
+                        const parentNode = document.querySelector(
+                            `[data-coa-id="${parentId}"]`
+                        );
+
+                        if (!parentNode) break;
+
+                        const parentCheckbox = parentNode.querySelector(
+                            'input[type="checkbox"]'
+                        );
+
+                        if (parentCheckbox) {
+                            parentCheckbox.checked = checked;
+                        }
+
+                        parentId = parentNode.dataset.parentId;
                     }
+
+                    // cleanup parent jika semua child uncheck
+                    this.cleanupParents();
+                },
+
+                cleanupParents() {
+
+                    document.querySelectorAll('[data-coa-node]').forEach(node => {
+
+                        const nodeId = node.dataset.coaId;
+
+                        const childNodes = document.querySelectorAll(
+                            `[data-parent-id="${nodeId}"]`
+                        );
+
+                        if (childNodes.length === 0) return;
+
+                        let hasCheckedChild = false;
+
+                        childNodes.forEach(child => {
+
+                            const cb = child.querySelector(
+                                'input[type="checkbox"]'
+                            );
+
+                            if (cb && cb.checked) {
+                                hasCheckedChild = true;
+                            }
+                        });
+
+                        const parentCheckbox = node.querySelector(
+                            'input[type="checkbox"]'
+                        );
+
+                        if (parentCheckbox) {
+                            parentCheckbox.checked = hasCheckedChild;
+                        }
+                    });
                 }
             }
         }

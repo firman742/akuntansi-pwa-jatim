@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Enums\NormalBalanceEnum;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -69,6 +70,26 @@ class User extends Authenticatable
     public function coas()
     {
         return $this->belongsToMany(ChartOfAccount::class, 'user_accounts', 'user_id', 'coa_id');
+    }
+
+    public function debitCoas()
+    {
+        return $this->belongsToMany(
+            ChartOfAccount::class,
+            'user_accounts',
+            'user_id',
+            'coa_id'
+        )->where('chart_of_accounts.normal_balance', NormalBalanceEnum::DEBIT->value);
+    }
+
+    public function creditCoas()
+    {
+        return $this->belongsToMany(
+            ChartOfAccount::class,
+            'user_accounts',
+            'user_id',
+            'coa_id'
+        )->where('chart_of_accounts.normal_balance', NormalBalanceEnum::CREDIT->value);
     }
 
     public function transactions(): HasMany

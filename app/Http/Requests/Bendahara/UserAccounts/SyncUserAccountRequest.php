@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Bendahara\UserAccounts;
 
+use App\Models\ChartOfAccount;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
 
 class SyncUserAccountRequest extends FormRequest
 {
@@ -29,6 +31,33 @@ class SyncUserAccountRequest extends FormRequest
                 'exists:chart_of_accounts,id'
             ],
         ];
+    }
+
+    /**
+     *
+     * @return void
+     */
+    protected function passedValidation(): void
+    {
+        $coas = ChartOfAccount::whereIn(
+            'id',
+            $this->coa_ids
+        )->get();
+
+        $hasDebit = $coas->contains(function ($coa) {
+            return strtoupper($coa->normal_balance) === 'DEBIT';
+        });
+
+        $hasCredit = $coas->contains(function ($coa) {
+            return strtoupper($coa->normal_balance) === 'CREDIT';
+        });
+
+        if (!$hasDebit || !$hasCredit) {
+
+            throw ValidationException::withMessages([
+                'coa_ids' => 'Minimal harus memilih 1 akun Debit dan 1 akun Credit.'
+            ]);
+        }
     }
 
     /**

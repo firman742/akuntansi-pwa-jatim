@@ -10,7 +10,9 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li>
+                            <span class="text-gray-500 dark:text-gray-400">{{ $error }}</span>
+                        </li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -74,13 +76,12 @@
 
                 {{-- PARENT --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Parent Akun (Opsional)
                     </label>
 
                     <select name="parent_id" x-model="parentId" :disabled="isLocked"
-                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm
-                    {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
 
                         <option value="">-- Tidak Ada --</option>
 
@@ -100,12 +101,12 @@
 
                 {{-- CODE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Kode Akun (Otomatis)
                     </label>
 
                     <input type="text" x-model="code" readonly
-                        class="h-11 w-full rounded-lg border bg-gray-100 px-4 text-gray-700 cursor-not-allowed">
+                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white/70 cursor-not-allowed">
 
                     <input type="hidden" name="code" :value="code">
                     <input type="hidden" name="level" :value="level">
@@ -118,23 +119,26 @@
 
                 {{-- NAME (editable always) --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Nama Akun COA
                     </label>
 
                     <input type="text" name="name" value="{{ old('name', $coa->name) }}"
-                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-400">
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('name') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
+
+                    @error('name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 {{-- ACCOUNT TYPE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Tipe Akun
                     </label>
 
                     <select name="account_type_id" :disabled="isLocked"
-                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm
-                    {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
 
                         <option value="">-- Pilih Tipe Akun --</option>
 
@@ -148,13 +152,12 @@
 
                 {{-- NORMAL BALANCE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Normal Balance
                     </label>
 
                     <select name="normal_balance" :disabled="isLocked"
-                        class="h-11 w-full rounded-lg border px-4 py-2.5 text-sm
-                    {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
 
                         @foreach ($normalBalances as $balance)
                             <option value="{{ $balance->value }}" @selected(old('normal_balance', $coa->normal_balance) === $balance->value)>
@@ -166,17 +169,17 @@
 
                 {{-- DESCRIPTION --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Deskripsi
                     </label>
 
                     <textarea name="description" rows="4"
-                        class="w-full rounded-lg border px-4 py-3 text-sm focus:ring-2 focus:ring-blue-400">{{ old('description', $coa->description) }}</textarea>
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('description', $coa->description) }}</textarea>
                 </div>
 
                 {{-- ACTIVE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Status Aktif
                     </label>
 
@@ -195,7 +198,8 @@
                                     :class="toggle ? 'translate-x-full' : ''"></div>
                             </div>
 
-                            <span class="text-sm text-gray-700" x-text="toggle ? 'Aktif' : 'Nonaktif'"></span>
+                            <span class="text-sm text-gray-700 dark:text-gray-400"
+                                x-text="toggle ? 'Aktif' : 'Nonaktif'"></span>
                         </label>
                     </div>
                 </div>

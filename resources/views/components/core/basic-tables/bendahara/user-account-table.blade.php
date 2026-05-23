@@ -100,7 +100,12 @@
 
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Akun COA
+                            Akun COA Debit
+                        </th>
+
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Akun COA Kredit
                         </th>
 
                         <th
@@ -153,14 +158,26 @@
                                     </div>
                                 </td>
 
-                                {{-- COA Count --}}
+                                {{-- COA debet Count --}}
+                                <td class="px-3 py-4 sm:px-6">
+                                    <span
+                                        class="inline-flex items-center rounded-full
+                                               bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700
+                                               dark:bg-blue-500/15 dark:text-blue-500">
+
+                                        <span x-text="row.debit_coas_count ?? 0"></span>
+                                        <span class="ml-1">Akun</span>
+                                    </span>
+                                </td>
+
+                                {{-- COA credit Count --}}
                                 <td class="px-3 py-4 sm:px-6">
                                     <span
                                         class="inline-flex items-center rounded-full
                                                bg-green-50 px-3 py-1 text-xs font-medium text-green-700
                                                dark:bg-green-500/15 dark:text-green-500">
 
-                                        <span x-text="row.coas_count ?? 0"></span>
+                                        <span x-text="row.credit_coas_count ?? 0"></span>
                                         <span class="ml-1">Akun</span>
                                     </span>
                                 </td>
@@ -171,7 +188,7 @@
                                         class="inline-flex items-center rounded-lg
                                                border border-brand-300 px-3 py-2 text-sm font-medium bg-blue-500
                                                text-white transition hover:bg-blue-100
-                                               dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
+                                               dark:border-brand-700 dark:text-white-90 dark:hover:bg-brand-500/10">
                                         Hubungkan COA
 
                                         <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor"

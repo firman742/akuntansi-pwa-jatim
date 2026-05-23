@@ -45,24 +45,50 @@
                     </p>
                 </div>
 
-                <div
-                    class="inline-flex items-center rounded-full
-                           border border-brand-200 bg-blue-500 text-white px-4 py-2
-                           text-sm font-medium
-                           dark:border-brand-800 dark:bg-brand-500/10 dark:text-brand-400">
+                <div class="flex flex-wrap items-center gap-2">
 
-                    {{ count($assignedCoaIds) }} Akun COA Terhubung
+                    {{-- Debit --}}
+                    <div
+                        class="inline-flex min-w-[220px] items-center justify-center rounded-full
+                               border border-blue-200 bg-blue-500 px-4 py-2
+                               text-sm font-medium text-white
+                               dark:border-blue-800 dark:bg-blue-500/15 dark:text-blue-300">
+
+                        <span class="font-semibold">
+                            {{ count($assignedDebitCoaIds) }}
+                        </span>
+
+                        <span class="ml-2">
+                            Akun COA DEBIT Terhubung
+                        </span>
+                    </div>
+
+                    {{-- Credit --}}
+                    <div
+                        class="inline-flex min-w-[220px] items-center justify-center rounded-full
+                               border border-green-200 bg-green-500 px-4 py-2
+                               text-sm font-medium text-white
+                               dark:border-green-800 dark:bg-green-500/15 dark:text-green-300">
+
+                        <span class="font-semibold">
+                            {{ count($assignedCreditCoaIds) }}
+                        </span>
+
+                        <span class="ml-2">
+                            Akun COA KREDIT Terhubung
+                        </span>
+                    </div>
+
                 </div>
             </div>
         </div>
 
         {{-- Information Box --}}
         <div
-            class="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4
-                   dark:border-blue-800 dark:bg-blue-500/10">
+            class="mb-6 rounded-xl border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03] px-5 py-4">
 
             <div class="space-y-2">
-                <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                <h3 class="text-sm font-semibold text-blue-800 dark:text-gray-400">
                     Informasi Sinkronisasi
                 </h3>
 
