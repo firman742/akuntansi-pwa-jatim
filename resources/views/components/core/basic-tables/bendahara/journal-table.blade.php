@@ -107,7 +107,7 @@
 
                     {{-- SUBTOTAL PER GRUP --}}
                     <tr class="bg-primary/[0.03] border-b-2 border-gray-200">
-                        <td colspan="5"
+                        <td colspan="6"
                             class="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-primary">
                             Subtotal {{ $group['account_info'] }}
                         </td>

@@ -40,6 +40,23 @@ class COAController extends Controller
         ]);
     }
 
+
+    /**
+     * Get children COA for a given parent ID (JSON FOR API)
+     * 
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function getChildren(string $id): JsonResponse
+    {
+        $children = ChartOfAccount::with('accountType')
+            ->where('parent_id', $id)
+            ->orderBy('code')
+            ->get();
+
+        return response()->json($children);
+    }
+
     /**
      * Show the form for creating a new resource.
      * 

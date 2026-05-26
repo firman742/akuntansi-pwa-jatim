@@ -9,6 +9,7 @@ use App\Models\Journal;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -20,7 +21,7 @@ class DashboardController extends Controller
      */
     public function index(): View
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         /**
          * Active Period

@@ -34,14 +34,27 @@
                 {{-- LEFT COLUMN: FORM INPUTS --}}
                 <div class="md:col-span-2 space-y-6">
 
-                    {{-- Selector Tipe Transaksi (Dibuat lebih visual) --}}
-                    <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex gap-2">
+                    {{-- Selector Tipe Transaksi (Dibuat lebih visual) - old --}}
+                    {{-- <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex gap-2">
                         <template x-for="item in ['INCOME', 'EXPENSE', 'TRANSFER']">
                             <button type="button" @click="type = item"
                                 :class="type === item ?
                                     (item === 'INCOME' ? 'bg-green-50 text-green-700 border-green-200' :
                                         (item === 'EXPENSE' ? 'bg-red-50 text-red-700 border-red-200' :
                                             'bg-blue-50 text-blue-700 border-blue-200')) :
+                                    'text-gray-500 border-transparent hover:bg-gray-50'"
+                                class="flex-1 py-3 px-4 rounded-lg border-2 font-bold text-sm transition-all duration-200 flex flex-col items-center gap-1">
+                                <span
+                                    x-text="item === 'INCOME' ? '📥 Penerimaan' : (item === 'EXPENSE' ? '📤 Pengeluaran' : '🔄 Transfer')"></span>
+                            </button>
+                        </template>
+                        <input type="hidden" name="type" x-model="type">
+                    </div> --}}
+                    <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex gap-2">
+                        <template x-for="item in ['EXPENSE']">
+                            <button type="button" @click="type = item"
+                                :class="type === item ?
+                                    (item === 'EXPENSE' ? 'bg-red-50 text-red-700 border-red-200') :
                                     'text-gray-500 border-transparent hover:bg-gray-50'"
                                 class="flex-1 py-3 px-4 rounded-lg border-2 font-bold text-sm transition-all duration-200 flex flex-col items-center gap-1">
                                 <span
@@ -117,7 +130,7 @@
                     </x-common.component-card>
 
                     {{-- Dynamic Sections with Animation --}}
-                    <template x-if="type === 'INCOME'" x-transition>
+                    {{-- <template x-if="type === 'INCOME'" x-transition>
                         <div>
                             <x-common.component-card title="Rincian Pendapatan">
                                 <div class="space-y-3">
@@ -216,7 +229,7 @@
                                 </x-common.component-card>
                             </div>
                         </div>
-                    </template>
+                    </template> --}}
 
                     <template x-if="type === 'EXPENSE'" x-transition>
                         <div>
@@ -257,7 +270,7 @@
                         </div>
                     </template>
 
-                    <template x-if="type === 'TRANSFER'" x-transition>
+                    {{-- <template x-if="type === 'TRANSFER'" x-transition>
                         <div>
                             <x-common.component-card title="Transfer Antar Kas">
                                 <div
@@ -295,7 +308,7 @@
                                 </div>
                             </x-common.component-card>
                         </div>
-                    </template>
+                    </template> --}}
                 </div>
 
                 {{-- RIGHT COLUMN: SUMMARY (Sticky) --}}
@@ -364,7 +377,7 @@
     <script>
         function transactionForm() {
             return {
-                type: 'INCOME',
+                type: 'EXPENSE',
                 period_id: '{{ $selectedPeriodId }}',
                 sub_period_id: '{{ $subPeriods->first()?->id }}',
                 cash_coa_id: '',

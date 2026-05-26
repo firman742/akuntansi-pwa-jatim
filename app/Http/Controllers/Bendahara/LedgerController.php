@@ -81,6 +81,8 @@ class LedgerController extends Controller
                     : -1 * $opening->amount;
             }
 
+            $openingBalanceCreatedBy = $opening?->creator?->name ?? '-';
+
             /*
             |--------------------------------------------------------------------------
             | 2️⃣ MUTASI SEBELUM FILTER (DATE RANGE)
@@ -187,7 +189,8 @@ class LedgerController extends Controller
             'subPeriods',
             'subPeriodId',
             'startDate',
-            'endDate'
+            'endDate',
+            'openingBalanceCreatedBy'
         ));
     }
 

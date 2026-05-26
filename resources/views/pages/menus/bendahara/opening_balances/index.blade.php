@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Neraca Saldo Awal')
+@section('title', 'Saldo Awal')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Neraca Saldo Awal" />
+    <x-common.page-breadcrumb pageTitle="Saldo Awal" />
 
     {{-- FILTER & ACTION CARD --}}
     <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -74,11 +74,11 @@
                     </x-ui.button>
                 </a>
 
-                <a href="{{ route('bendahara.opening-balances.create-bulk') }}">
+                {{-- <a href="{{ route('bendahara.opening-balances.create-bulk') }}">
                     <x-ui.button variant="outline" class="rounded-xl px-4 py-2">
                         + Multi Periode
                     </x-ui.button>
-                </a>
+                </a> --}}
 
             </x-slot>
 

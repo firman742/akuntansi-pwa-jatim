@@ -189,6 +189,45 @@
                     </thead>
 
                     <tbody class="text-sm">
+                        {{-- OPENING BALANCE --}}
+                        @if ($coa)
+                            <tr class="bg-blue-50/60 border-b border-blue-100">
+                                <td class="px-6 py-4 text-center font-medium text-blue-700">
+                                    -
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-blue-800">
+                                        Saldo Awal
+                                    </div>
+                                </td>
+
+                                {{-- created_by from opening balance --}}
+                                <td class="px-6 py-4 text-gray-500 text-center">
+                                    {{ $openingBalanceCreatedBy ? $openingBalanceCreatedBy : '-' }}
+                                </td>
+
+                                {{-- DEBIT --}}
+                                <td class="px-6 py-4 text-right font-semibold text-blue-700">
+                                    {{ $coa->normal_balance === 'DEBIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
+                                </td>
+
+                                {{-- CREDIT --}}
+                                <td class="px-6 py-4 text-right font-semibold text-blue-700 border-r">
+                                    {{ $coa->normal_balance === 'CREDIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
+                                </td>
+
+                                {{-- SALDO DEBIT --}}
+                                <td class="px-6 py-4 text-right font-bold text-blue-900 bg-blue-50">
+                                    {{ $coa->normal_balance === 'DEBIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
+                                </td>
+
+                                {{-- SALDO CREDIT --}}
+                                <td class="px-6 py-4 text-right font-bold text-blue-900 bg-blue-50 border-l">
+                                    {{ $coa->normal_balance === 'CREDIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
+                                </td>
+                            </tr>
+                        @endif
                         {{-- DATA TRANSAKSI --}}
                         @forelse ($ledger as $index => $row)
                             <tr
@@ -234,7 +273,7 @@
                                     </svg>
                                     <p class="text-sm font-medium">Tidak ada transaksi ditemukan pada periode ini.</p>
                                     {{-- @if (!$coaId) --}}
-                                        <p class="text-xs">Silakan pilih Akun (COA) terlebih dahulu.</p>
+                                    <p class="text-xs">Silakan pilih Akun (COA) terlebih dahulu.</p>
                                     {{-- @endif --}}
                                 </td>
                             </tr>

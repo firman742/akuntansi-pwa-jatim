@@ -33,7 +33,7 @@
                         </label>
 
                         <select name="period_id"
-                            class="w-full border rounded-lg p-2 @error('period_id') border-red-500 @enderror">
+                            class="w-full border rounded-lg p-2 @error('period_id') border-red-500 @enderror" required>
                             <option value="">Pilih Periode</option>
 
                             @foreach ($periods as $period)
@@ -58,7 +58,7 @@
 
                         <input type="text" name="name" value="{{ old('name') }}"
                             class="w-full border rounded-lg p-2 @error('name') border-red-500 @enderror"
-                            placeholder="Masukkan nama sub periode">
+                            placeholder="Masukkan nama sub periode" required>
 
                         @error('name')
                             <p class="mt-1 text-sm text-red-500">

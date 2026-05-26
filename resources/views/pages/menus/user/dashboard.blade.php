@@ -1,61 +1,62 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Dashboard User" />
+    <x-common.page-breadcrumb pageTitle="Dashboard Pengguna Umum" />
 
     <div class="space-y-6">
 
-        {{-- HEADER --}}
-        <div class="rounded-3xl bg-gradient-to-r bg-blue-500 p-6 text-white shadow-lg dark:border-gray-800">
+        {{-- HERO --}}
+        <div
+            class="relative overflow-hidden rounded-3xl border border-gray-200 bg-white px-6 py-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
 
-            <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div
+                class="absolute right-0 top-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-blue-500/10 blur-3xl">
+            </div>
+
+            <div class="relative z-10 flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 
                 <div>
-                    <p class="text-sm text-white/80">
-                        Dashboard Pengguna Akuntansi
-                    </p>
+                    <span
+                        class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                        Dashboard Pengguna Umum
+                    </span>
 
-                    <h1 class="mt-2 text-3xl font-bold">
+                    <h1 class="mt-4 text-3xl font-bold text-gray-800 dark:text-white/90">
                         Halo, {{ auth()->user()->name }} 👋
                     </h1>
 
-                    <p class="mt-2 text-sm text-white/80">
-                        Pantau transaksi dan aktivitas akun Anda secara realtime.
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-2xl">
+                        Pantau transaksi, akun COA, dan aktivitas keuangan Anda secara realtime.
                     </p>
                 </div>
 
-                <div class="rounded-2xl border border-white/20 bg-white/10 px-5 py-4 text-center backdrop-blur-sm">
+                <div class="flex flex-col gap-4">
 
-                    <p class="text-sm text-white/70">
-                        Period Aktif
-                    </p>
+                    {{-- PERIOD --}}
+                    <div
+                        class="rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-center shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
 
-                    <h2 class="mt-2 text-xl font-bold">
-                        {{ $activePeriod?->name ?? '-' }}
-                    </h2>
-                </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Periode Aktif
+                        </p>
 
-            </div>
-        </div>
+                        <h2 class="mt-1 text-xl font-bold text-gray-800 dark:text-white">
+                            {{ $activePeriod?->name ?? '-' }}
+                        </h2>
+                    </div>
 
-        {{-- FILTER --}}
-        <div class="rounded-2xl border bg-white p-4 shadow-lg">
+                    {{-- FILTER --}}
+                    <form method="GET"
+                        class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
 
-            <form method="GET">
-
-                <div class="flex flex-col gap-4 md:flex-row md:items-end">
-
-                    <div class="w-full md:w-80">
-
-                        <label class="mb-2 block text-sm font-medium text-gray-700">
+                        <label class="mb-2 block text-xs font-medium text-gray-500 dark:text-gray-400">
                             Filter Sub Period
                         </label>
 
                         <select name="sub_period_id" onchange="this.form.submit()"
-                            class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm text-gray-700 shadow-theme-xs outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                            <option value="">
-                                Semua Sub Period
-                            </option>
+                            class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm text-gray-700 shadow-theme-xs outline-none transition focus:border-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+
+                            <option value="">Semua Sub Period</option>
 
                             @foreach ($subPeriods as $subPeriod)
                                 <option value="{{ $subPeriod->id }}"
@@ -65,54 +66,45 @@
                             @endforeach
 
                         </select>
-
-                    </div>
+                    </form>
 
                 </div>
-
-            </form>
-
+            </div>
         </div>
 
         {{-- SUMMARY --}}
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-            <div class="rounded-2xl border bg-white p-5 shadow-lg">
-                <p class="text-sm text-gray-500">
-                    Total Transaksi Saya
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-gray-800">
-                    {{ $totalTransactions }}
-                </h2>
+            {{-- CARD --}}
+            <div
+                class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Total Transaksi</p>
+                <h2 class="mt-2 text-2xl font-bold text-gray-800 dark:text-white">{{ $totalTransactions }}</h2>
             </div>
 
-            <div class="rounded-2xl border bg-white p-5 shadow-lg">
-                <p class="text-sm text-gray-500">
-                    Pemasukan Saya
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-green-600">
+            {{-- CARD --}}
+            <div
+                class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Pemasukan</p>
+                <h2 class="mt-2 text-2xl font-bold text-green-600">
                     Rp {{ number_format($totalIncome, 0, ',', '.') }}
                 </h2>
             </div>
 
-            <div class="rounded-2xl border bg-white p-5 shadow-lg">
-                <p class="text-sm text-gray-500">
-                    Pengeluaran Saya
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-red-600">
+            {{-- CARD --}}
+            <div
+                class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Pengeluaran</p>
+                <h2 class="mt-2 text-2xl font-bold text-red-600">
                     Rp {{ number_format($totalExpense, 0, ',', '.') }}
                 </h2>
             </div>
 
-            <div class="rounded-2xl border bg-white p-5 shadow-lg">
-                <p class="text-sm text-gray-500">
-                    Saldo Bersih
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-blue-600">
+            {{-- CARD --}}
+            <div
+                class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Saldo Bersih</p>
+                <h2 class="mt-2 text-2xl font-bold text-blue-600">
                     Rp {{ number_format($netBalance, 0, ',', '.') }}
                 </h2>
             </div>
@@ -120,108 +112,112 @@
         </div>
 
         {{-- MAIN GRID --}}
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-            {{-- RECENT TRANSACTIONS --}}
-            <div class="lg:col-span-2 rounded-2xl border bg-white p-6 shadow-lg">
+            {{-- TRANSACTIONS --}}
+            <div
+                class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
 
-                <div class="mb-5 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-800">
-                        Transaksi Terbaru
-                    </h2>
+                <div class="flex items-center justify-between border-b border-gray-100 px-6 py-5 dark:border-gray-800">
 
-                    <a href="{{ route('user.transactions.histories.index') }}" class="text-sm text-blue-500 hover:underline">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 dark:text-white">
+                            Transaksi Terbaru
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Aktivitas transaksi Anda
+                        </p>
+                    </div>
+
+                    <a href="{{ route('user.transactions.histories.index') }}"
+                        class="text-sm text-blue-500 hover:underline">
                         Lihat Semua
                     </a>
                 </div>
 
-                <div class="space-y-4">
+                <div class="p-6 space-y-4">
 
                     @forelse ($recentTransactions as $transaction)
-                        <div class="flex items-start justify-between rounded-xl border p-4">
+                        <div class="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
 
-                            <div>
-                                <p class="font-semibold text-gray-800">
-                                    {{ $transaction->description }}
-                                </p>
+                            <div class="flex justify-between">
 
-                                <p class="mt-1 text-sm text-gray-500">
-                                    {{ $transaction->transaction_date->format('d M Y') }}
-                                </p>
+                                <div>
+                                    <p class="font-semibold text-gray-800 dark:text-white">
+                                        {{ $transaction->description }}
+                                    </p>
 
-                                <div class="mt-2 flex flex-wrap gap-2">
-
-                                    @foreach ($transaction->transactionLines as $line)
-                                        <span class="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
-                                            {{ $line->chartOfAccount->code ?? '-' }}
-                                        </span>
-                                    @endforeach
-
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {{ $transaction->transaction_date->format('d M Y') }}
+                                    </p>
                                 </div>
-                            </div>
 
-                            <div class="text-right">
+                                <div class="text-right">
+                                    <p class="font-bold text-gray-800 dark:text-white">
+                                        Rp {{ number_format($transaction->gross_amount, 0, ',', '.') }}
+                                    </p>
 
-                                <p class="font-bold text-gray-800">
-                                    Rp {{ number_format($transaction->gross_amount, 0, ',', '.') }}
-                                </p>
-
-                                <span
-                                    class="mt-2 inline-block rounded-full px-2 py-1 text-xs
-                                    {{ $transaction->transaction_type->value === 'INCOME'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-red-100 text-red-700' }}">
-
-                                    {{ $transaction->transaction_type->label() }}
-
-                                </span>
+                                    <span
+                                        class="mt-2 inline-block rounded-full px-2 py-1 text-xs
+                                        {{ $transaction->transaction_type->value === 'INCOME'
+                                            ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
+                                            : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400' }}">
+                                        {{ $transaction->transaction_type->label() }}
+                                    </span>
+                                </div>
 
                             </div>
 
                         </div>
 
                     @empty
-
-                        <div class="rounded-xl border border-dashed p-6 text-center text-gray-500">
+                        <div class="text-center text-sm text-gray-500 dark:text-gray-400 py-10">
                             Belum ada transaksi.
                         </div>
                     @endforelse
 
                 </div>
-
             </div>
 
-            {{-- MY COA --}}
-            <div class="rounded-2xl border bg-white p-6 shadow-lg">
+            {{-- COA --}}
+            <div
+                class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+                <div class="flex items-center justify-between border-b border-gray-100 px-6 py-5 dark:border-gray-800">
 
-                <div class="mb-5">
-                    <h2 class="text-lg font-semibold text-gray-800">
-                        Akun COA Saya
-                    </h2>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 dark:text-white">
+                            Akun COA Saya
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Daftar akun yang dapat digunakan
+                        </p>
+                    </div>
 
-                    <p class="mt-1 text-sm text-gray-500">
-                        Akun yang dapat digunakan.
-                    </p>
+                    <a href="{{ route('user.coas.index') }}"
+                        class="text-sm text-blue-500 hover:underline">
+                        Lihat Semua
+                    </a>
                 </div>
 
-                <div class="space-y-3">
+                <div class="p-6 space-y-3">
 
                     @forelse ($userCoas as $coa)
-                        <div class="rounded-xl border p-4">
+                        <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
 
                             <div class="flex items-center justify-between">
 
                                 <div>
-                                    <p class="font-semibold text-gray-800">
+                                    <p class="font-semibold text-gray-800 dark:text-white">
                                         {{ $coa->code }}
                                     </p>
 
-                                    <p class="text-sm text-gray-500">
-                                        {{ $coa->name }}
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $coa->name }} • {{ $coa->normal_balance }}
                                     </p>
                                 </div>
 
-                                <span class="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
+                                <span
+                                    class="text-xs rounded-full bg-green-100 px-2 py-1 text-green-700 dark:bg-green-500/10 dark:text-green-400">
                                     Active
                                 </span>
 
@@ -230,17 +226,12 @@
                         </div>
 
                     @empty
-
-                        <div class="rounded-xl border border-dashed p-6 text-center text-gray-500">
+                        <div class="text-center text-sm text-gray-500 dark:text-gray-400 py-10">
                             Tidak ada COA aktif.
                         </div>
                     @endforelse
 
-                    <a href="" class="text-sm text-blue-500 hover:underline">
-                        Lihat Semua
-                    </a>
                 </div>
-
             </div>
 
         </div>

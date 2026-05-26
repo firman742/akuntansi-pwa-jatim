@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use App\Models\SubPeriod;
+use App\Models\CoaBalance;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -134,6 +134,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
             Route::get('/create-parent', [App\Http\Controllers\Bendahara\Master\COAController::class, 'createParent'])->name('create-parent');
             Route::get('/generate-code', [App\Http\Controllers\Bendahara\Master\COAController::class, 'generateCodeApi'])->name('generate-code');
             Route::post('/', [App\Http\Controllers\Bendahara\Master\COAController::class, 'store'])->name('store');
+            Route::get('/{id}/children', [App\Http\Controllers\Bendahara\Master\COAController::class, 'getChildren'])->name('children');
             Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\COAController::class, 'edit'])->name('edit');
             Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\COAController::class, 'update'])->name('update');
             Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\COAController::class, 'destroy'])->name('destroy');
@@ -170,6 +171,68 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
 
     /*
     |--------------------------------------------------------------------------
+    | API FOR DYNAMIC FORM
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/coa-balances/{coa}', function ($coa) {
+        $sub = request('sub_period_id');
+
+
+        $balance = CoaBalance::where('chart_of_account_id', $coa)
+            ->where('sub_period_id', $sub->id)
+            ->first();
+
+        return response()->json([
+            'current_balance' => $balance->current_balance ?? 0
+        ]);
+    });
+
+    Route::get('/coa-available-fund/{coa}', function ($coa) {
+
+        $periodId = request('period_id');
+        $subPeriodId = request('sub_period_id');
+    
+        /**
+         * 1. PRIORITY: COA BALANCE
+         */
+        $balance = \App\Models\CoaBalance::where('chart_of_account_id', $coa)
+            ->where('period_id', $periodId)
+            ->where('sub_period_id', $subPeriodId)
+            ->first();
+    
+        if ($balance && $balance->current_balance !== null) {
+            return response()->json([
+                'available' => (float) $balance->current_balance,
+                'source' => 'coa_balance'
+            ]);
+        }
+    
+        /**
+         * 2. FALLBACK: OPENING BALANCE
+         * (kalau sistem kamu pakai opening_balance sebagai baseline)
+         */
+        $opening = \App\Models\OpeningBalance::where('chart_of_account_id', $coa)
+            ->where('period_id', $periodId)
+            ->where('sub_period_id', $subPeriodId)
+            ->first();
+    
+        if ($opening) {
+            return response()->json([
+                'available' => (float) $opening->amount,
+                'source' => 'opening_balance'
+            ]);
+        }
+    
+        /**
+         * 3. DEFAULT
+         */
+        return response()->json([
+            'available' => 0,
+            'source' => null
+        ]);
+    });
+    /*
+    |--------------------------------------------------------------------------
     | OPENING BALANCE
     |--------------------------------------------------------------------------
     */
@@ -189,6 +252,32 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
 
     /*
     |--------------------------------------------------------------------------
+    | BUDGET ALLOCATION
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('budget-allocations')->name('budget-allocations.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bendahara\BudgetAllocationController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Bendahara\BudgetAllocationController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Bendahara\BudgetAllocationController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\BudgetAllocationController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\Bendahara\BudgetAllocationController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\Bendahara\BudgetAllocationController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER ACCOUNT BALANCE
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('user-account-balances')->name('user-account-balances.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'store'])->name('store');
+        Route::get('/coas/{coa}/users', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'getUserAccountsByCoa'])->name('users-by-coa');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | REPORTS
     |--------------------------------------------------------------------------
     */
@@ -199,15 +288,13 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
 
         Route::get('/ledger', [App\Http\Controllers\Bendahara\LedgerController::class, 'index'])->name('ledger.index');
         Route::get('/ledger/export', [App\Http\Controllers\Bendahara\LedgerController::class, 'export'])->name('ledger.export');
-        
+
         Route::get('/activity', [App\Http\Controllers\Bendahara\ActivityReportController::class, 'index'])->name('activity.index');
-       
+
         Route::get('/trial-balance', [App\Http\Controllers\Bendahara\TrialBalanceController::class, 'index'])->name('trial-balance.index');
 
         Route::get('/transactions', [App\Http\Controllers\Bendahara\TransactionController::class, 'index'])->name('transactions.index');
-
     });
-
 });
 
 /*
@@ -219,6 +306,26 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
 
     Route::get('/dashboard', [App\Http\Controllers\AccountingUsers\DashboardController::class, 'index'])
         ->name('dashboard');
+
+    
+    /*
+    |--------------------------------------------------------------------------
+    | COA
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('coas')->name('coas.')->group(function () {
+        Route::get('/', [App\Http\Controllers\AccountingUsers\COAController::class, 'index'])->name('index');
+        Route::get('/{id}/children', [App\Http\Controllers\AccountingUsers\COAController::class, 'getChildren'])->name('children');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER ACCOUNT BALANCE
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('user-account-balances')->name('user-account-balances.')->group(function () {
+        Route::get('/', [App\Http\Controllers\AccountingUsers\UserAccountBalanceController::class, 'index'])->name('index');
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -263,6 +370,5 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
         Route::prefix('histories')->name('histories.')->group(function () {
             Route::get('/', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'index'])->name('index');
         });
-
     });
 });

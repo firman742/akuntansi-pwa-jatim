@@ -41,9 +41,14 @@ class menu
             self::item(
                 'Peran & Izin',
                 'roles',
-                '/superadmin/roles',   
+                '/superadmin/roles',
                 ['superadmin/roles*'],
             ),
+            self::item(
+                'Log Aktifitas',
+                'logs',
+                '/superadmin/logs',
+            )
         ];
     }
 
@@ -59,19 +64,29 @@ class menu
                 ['bendahara/dashboard*']
             ),
 
-            self::item(
-                'Periode',
-                'calendar',
-                '/bendahara/periods',
-                ['bendahara/periods*']
-            ),
-            
-            self::item(
-                'Sub Periode',
-                'calendar',
-                '/bendahara/sub-periods',
-                ['bendahara/sub-periods*']
-            ),
+            [
+                'name' => 'Periode',
+                'icon' => 'calendar',
+                'active_on' => [
+                    'bendahara/periods*',
+                    'bendahara/sub-periods*',
+                ],
+                'subItems' => [
+                    self::item(
+                        'Periode',
+                        null,
+                        '/bendahara/periods',
+                        ['bendahara/periods*']
+                    ),
+
+                    self::item(
+                        'Sub Periode',
+                        null,
+                        '/bendahara/sub-periods',
+                        ['bendahara/sub-periods*']
+                    ),
+                ]
+            ],
             [
                 'name' => 'Master Data',
                 'icon' => 'book',
@@ -99,28 +114,50 @@ class menu
                         ['bendahara/master/account-users*'],
                         PermissionEnum::COA_ASSIGN_USER
                     ),
-                    // pajak
                     // self::item(
-                    //     'Pajak',
+                    //     'Hirarki Dana',
                     //     null,
                     //     '/bendahara/master/taxes',
                     //     ['bendahara/master/taxes*'],
                     // ),
-                    // // bunga
-                    // self::item(
-                    //     'Bunga',
-                    //     null,
-                    //     '/bendahara/master/interests',
-                    //     ['bendahara/master/interests*'],
-                    // ),
                 ],
             ],
-            self::item(
-                'Neraca Saldo Awal',
-                'wallet',
-                '/bendahara/opening-balances',
-                ['bendahara/opening-balances*']
-            ),
+            [
+                'name' => 'Saldo & Alokasi Dana',
+                'icon' => 'money',
+                'active_on' => [
+                    'bendahara/opening-balances*',
+                    'bendahara/budget-allocations*',
+                    'bendahara/user-account-balances*',
+                ],
+                'subItems' => [
+                    self::item(
+                        'Saldo Awal',
+                        null,
+                        '/bendahara/opening-balances',
+                        ['bendahara/opening-balances*']
+                    ),
+                    self::item(
+                        'Distribusi Saldo',
+                        null,
+                        '/bendahara/budget-allocations',
+                        ['bendahara/budget-allocations*']
+                    ),
+                    self::item(
+                        'Pembagian Saldo Ke Pengguna',
+                        null,
+                        '/bendahara/user-account-balances',
+                        ['bendahara/user-account-balances*']
+                    ),
+                    self::item(
+                        'Permintaan Dana',
+                        null,
+                        '/bendahara/budgetasd',
+                        ['bendahara/budgetasd*']
+                    ),
+                ]
+            ],
+            
 
             // REPORTS
             self::item(
@@ -136,7 +173,7 @@ class menu
                 '/bendahara/reports/ledger',
                 ['bendahara/reports/ledger*']
             ),
-            
+
             self::item(
                 'Laporan Aktifitas',
                 'ledger',
@@ -145,7 +182,7 @@ class menu
             ),
 
             self::item(
-                'Neraca',
+                'Laporan Neraca',
                 'balance',
                 '/bendahara/reports/trial-balance',
                 ['bendahara/reports/trial-balance*']
@@ -170,30 +207,84 @@ class menu
                 '/user/dashboard',
                 ['user/dashboard*']
             ),
-            self::item(
-                'Buat Transaksi',
-                'income',
-                '/user/transactions/create',
-                ['user/transactions/create*']
-            ),
-            // self::item(
-            //     'Penerimaan',
-            //     'income',
-            //     '/user/transactions/incomes',
-            //     ['user/transactions/incomes*']
-            // ),
-            // self::item(
-            //     'Pengeluaran',
-            //     'expense',
-            //     '/user/transactions/expenses',
-            //     ['user/transactions/expenses*']
-            // ),
-            self::item(
-                'Riwayat Transaksi',
-                'cash',
-                '/user/transactions/histories',
-                ['user/transactions/histories*']
-            ),
+            [
+                'name' => 'Dana & Saldo',
+                'icon' => 'money',
+                'active_on' => [
+                    'user/coas*',
+                    'user/user-account-balances*',
+                ],
+                'subItems' => [
+                    self::item(
+                        'Daftar COA',
+                        null,
+                        '/user/coas',
+                        ['user/coas*']
+                    ),
+                    self::item(
+                        'Saldo Saya',
+                        null,
+                        '/user/user-account-balances',
+                        ['user/user-account-balances*']
+                    ),
+                ]
+            ],
+            [
+                'name' => 'Transaksi',
+                'icon' => 'transaction',
+                'active_on' => [
+                    // 'user/transactions/draft*',
+                    'user/transactions/create*',
+                    'user/transactions/histories*'
+                ],
+                'subItems' => [
+                    // self::item(
+                    //     'Darft Transaksi',
+                    //     null,
+                    //     '/user/trnsaction-drafs',
+                    //     ['user/trnsaction-drafs*']
+                    // ),
+                    self::item(
+                        'Buat Transaksi',
+                        null,
+                        '/user/transactions/create',
+                        ['user/transactions/create*']
+                    ),
+                    self::item(
+                        'Riwayat Transaksi',
+                        null,
+                        '/user/transactions/histories',
+                        ['user/transactions/histories*']
+                    ),
+                ]
+            ],
+            [
+                'name' => 'Pengajuan',
+                'icon' => 'request',
+                'active_on' => [
+
+                ],
+                'subItems' => [
+                    self::item(
+                        'Pengajuan COA Baru',
+                        null,
+                        '/user/trnsaction-drafs',
+                        ['user/trnsaction-drafs*']
+                    ),
+                    self::item(
+                        'Pengajuan Penambahan Dana',
+                        null,
+                        '/user/transactions/create',
+                        ['user/transactions/create*']
+                    ),
+                    self::item(
+                        'Riwayat Pengajuan',
+                        null,
+                        '/user/transactions/histories',
+                        ['user/transactions/histories*']
+                    ),
+                ]
+            ],
 
         ];
     }

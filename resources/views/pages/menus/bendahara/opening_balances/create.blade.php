@@ -7,7 +7,7 @@
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -59,7 +59,7 @@
                 untuk akun tersebut di periode sebelumnya.
             </p>
         </div>
-        {{-- Form Seleksi (Input periode, sub periode, coa seperti kode sebelumnya) --}} 
+        {{-- Form Seleksi (Input periode, sub periode, coa seperti kode sebelumnya) --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
                 <label class="block text-sm font-medium mb-2">Periode</label>
@@ -86,7 +86,9 @@
                     class="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm dark:border-gray-700 dark:bg-dark-900">
                     <option value="">-- Pilih Akun --</option>
                     @foreach ($coaLists as $coa)
-                        <option value="{{ $coa->id }}">{{ $coa->code }} — {{ $coa->name }}</option>
+                        <option value="{{ $coa->id }}" data-balance="{{ $coa->normal_balance }}">
+                            {{ $coa->code }} — {{ $coa->name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -130,7 +132,7 @@
                         </label>
                         <input type="text" id="additional_display"
                             class="h-11 w-full rounded-lg border border-blue-300 px-4 text-sm focus:ring-2 focus:ring-blue-500 dark:bg-dark-900"
-                            placeholder="Masukkan nominal tambahan jika ada">
+                            placeholder="Masukkan nominal tambahan jika ada" required>
                         <input type="hidden" name="additional_amount" id="additional_hidden" value="0">
                     </div>
 
@@ -138,7 +140,7 @@
                     <div>
                         <label class="block text-sm font-medium mb-2">Tipe Saldo</label>
                         <select name="balance_type" id="final_balance_type"
-                            class="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm dark:bg-dark-900">
+                            class="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm dark:bg-dark-900" readonly>
                             <option value="DEBIT">DEBIT</option>
                             <option value="CREDIT">KREDIT</option>
                         </select>
@@ -153,9 +155,11 @@
                 </div>
 
                 <div class="mt-8 flex justify-end gap-3 border-t pt-6">
-                    <x-ui.button type="button" onclick="location.reload()" variant="outline" size="sm">
-                        Batal
-                    </x-ui.button>
+                    <a href="{{ route('bendahara.budget-allocations.index') }}">
+                        <x-ui.button variant="outline" size="sm">
+                            Kembali
+                        </x-ui.button>
+                    </a>
                     <x-ui.button type="submit" variant="primary" size="sm">
                         Simpan Saldo Awal
                     </x-ui.button>
@@ -268,5 +272,16 @@
             const total = sisa + tambahan;
             document.getElementById('total_preview').innerText = formatRupiah(total);
         }
+
+
+        // Auto set balance type berdasarkan normal balance COA
+        selectCoa.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const normalBalance = selectedOption.dataset.balance;
+
+            if (normalBalance) {
+                document.getElementById('final_balance_type').value = normalBalance;
+            }
+        });
     </script>
 @endsection

@@ -11,10 +11,13 @@
         class="flex items-start gap-2.5 cursor-pointer select-none py-0.5 rounded hover:bg-gray-500 dark:hover:bg-white/[0.02] px-1 transition-colors">
 
         <input type="checkbox" name="coa_ids[]" value="{{ $coa->id }}"
-            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800"
-            @checked(in_array($coa->id, $assignedCoaIds)) {{-- parent tidak bisa dipilih manual --}} @disabled($hasChildren) {{-- hanya leaf node yang trigger --}}
-            @if (!$hasChildren) @change="toggleParent($event)" @endif>
-
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800" 
+            @checked(in_array($coa->id, $assignedCoaIds))
+            @if ($hasChildren) 
+                x-on:click.prevent 
+            @else
+                @change="toggleParent($event)" 
+            @endif>
         <span
             class="text-sm leading-tight px-2
             {{ $hasChildren ? 'font-semibold text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200' }}">
