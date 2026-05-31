@@ -30,7 +30,7 @@
                     </p>
                 </div>
 
-                <div class="flex flex-col items-end gap-4">
+                <div class="flex flex-col gap-4">
 
                     {{-- CLOCK --}}
                     <div
@@ -49,12 +49,17 @@
                     </div>
 
                     {{-- FILTER --}}
-                    <form action="" method="get">
+                    <form method="GET"
+                        class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+
+                        <label class="mb-2 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Filter Sub Period
+                        </label>
+
                         <select name="sub_period_id" onchange="this.form.submit()"
-                            class="h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm text-gray-700 shadow-theme-xs outline-none transition focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                            <option value="">
-                                Pilih Sub Periode
-                            </option>
+                            class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm text-gray-700 shadow-theme-xs outline-none transition focus:border-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+
+                            <option value="">Semua Sub Period</option>
 
                             @foreach ($subPeriods as $subPeriod)
                                 <option value="{{ $subPeriod->id }}"
@@ -62,6 +67,7 @@
                                     {{ $subPeriod->name }}
                                 </option>
                             @endforeach
+
                         </select>
                     </form>
 

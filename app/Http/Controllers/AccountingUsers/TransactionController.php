@@ -4,38 +4,43 @@ namespace App\Http\Controllers\AccountingUsers;
 
 use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionType;
-use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AccountingUsers\StoreTransactionRequest;
-use App\Models\AccountType;
 use App\Models\ChartOfAccount;
-use App\Models\Interest;
 use App\Models\Period;
 use App\Models\SubPeriod;
-use App\Models\Tax;
 use App\Models\Transaction;
+use App\Models\UserAccountBalance;
 use App\Services\AccountingUsers\TransactionService;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class TransactionController extends Controller
 {
-    public function create()
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return View
+     * @throws Exception
+     */
+    public function create(): View
     {
         $userId = Auth::id();
 
-        // ── Account Type IDs ───────────────────────────────
-        $assetTypeId   = AccountType::where('name', 'ASET')->value('id');
-        $incomeTypeId  = AccountType::where('name', 'PENDAPATAN')->value('id');
-        $expenseTypeId = AccountType::where('name', 'BEBAN')->value('id');
-
         // ── Period ─────────────────────────────────────────
-        $periods          = Period::where('is_closed', false)->latest()->get();
-        $selectedPeriodId = request('period_id') ?? $periods->first()?->id;
+        $periods = Period::where('is_closed', false)
+            ->latest()
+            ->get();
+
+        $selectedPeriodId = request('period_id')
+            ?? $periods->first()?->id;
 
         if (!$selectedPeriodId) {
-            return back()->withErrors(['period' => 'Tidak ada periode aktif.']);
+            throw new Exception('Tidak ada periode aktif. Silakan hubungi administrator.');
         }
 
         $subPeriods = SubPeriod::where('period_id', $selectedPeriodId)
@@ -43,85 +48,78 @@ class TransactionController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        // ── COA: Kas / Bank (ASET - DEBIT) ────────────────
-        $cashCoas = ChartOfAccount::where('account_type_id', $assetTypeId)
-            ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
-            ->where('is_active', true)
-            ->whereDoesntHave('children')
-            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
-            ->orderBy('code')
-            ->get();
+        $selectedSubPeriodId = request('sub_period_id')
+            ?? $subPeriods->first()?->id;
 
-        // ── COA: Pendapatan ───────────────────────────────
-        $incomeCoas = ChartOfAccount::where('account_type_id', $incomeTypeId)
+        // ── Kas User (Distribusi Bendahara) ────────────────
+        $cashCoas = UserAccountBalance::query()
+            ->with([
+                'userAccount.coa'
+            ])
+            ->whereHas('userAccount', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->where('period_id', $selectedPeriodId)
+            ->where('sub_period_id', $selectedSubPeriodId)
+            ->where('remaining_balance', '>', 0)
+            ->get()
+            ->map(function ($balance) {
+                return [
+                    'user_account_balance_id' => $balance->id,
+                    'coa_id'                  => $balance->userAccount->coa->id,
+                    'coa_code'                => $balance->userAccount->coa->code,
+                    'coa_name'                => $balance->userAccount->coa->name,
+                    'remaining_balance'       => $balance->remaining_balance,
+                ];
+            });
+
+        // ── Semua akun CREDIT ─────────────────────────────
+        $expenseCoas = ChartOfAccount::query()
             ->where('normal_balance', NormalBalanceEnum::CREDIT->value)
             ->where('is_active', true)
             ->whereDoesntHave('children')
-            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
             ->orderBy('code')
             ->get();
-
-        // ── COA: Beban ────────────────────────────────────
-        $expenseCoas = ChartOfAccount::where('account_type_id', $expenseTypeId)
-            ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
-            ->where('is_active', true)
-            ->whereDoesntHave('children')
-            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
-            ->orderBy('code')
-            ->get();
-
-        // ── Tax & Interest ────────────────────────────────
-        $taxes = Tax::with(['accountPayable', 'accountExpense', 'accountPrepaid'])->get();
-
-        $interests = Interest::with(['accountInterest', 'accountExpense'])->get();
-
-        $taxesData = $taxes->map(fn($t) => [
-            'id' => $t->id,
-            'name' => $t->name,
-            'rate' => $t->rate,
-            'prepaid_id' => optional($t->accountPrepaid)->id,
-            'prepaid_name' => optional($t->accountPrepaid)->name,
-        ])->values();
 
         return view('pages.menus.user.transactions.create', compact(
             'cashCoas',
-            'incomeCoas',
             'expenseCoas',
             'periods',
             'subPeriods',
             'selectedPeriodId',
-            'taxes',
-            'interests',
-            'taxesData'
+            'selectedSubPeriodId'
         ));
     }
 
     /**
-     * Store a newly created income transaction in storage. This method handles the complex logic of saving the transaction,
-     * 
+     * Store a newly created resource in storage.
+     *
      * @param TransactionService $service
      * @param StoreTransactionRequest $request
      * @return RedirectResponse
+     * @throws Exception
      */
-    public function store(TransactionService $service, StoreTransactionRequest $request): RedirectResponse
+    public function store(TransactionService $service, StoreTransactionRequest $request): RedirectResponse 
     {
-        // ── Proses Simpan ───────────────────────────────────
-        $service->handle($request->validated());
+        $service->handleExpense($request->validated());
 
         return redirect()
             ->route('user.transactions.create')
-            ->with('success', 'Transaksi penerimaan berhasil disimpan.');
+            ->with('success', 'Transaksi pengeluaran berhasil disimpan.');
     }
 
     /**
-     * Display the specified income transaction, including all related lines and journal entries.
+     * Display the specified resource.
      *
      * @param string $id
-     * @return \Illuminate\View\View
+     * @return View
      */
-    public function show(string $id)
+    public function show(string $id): View
     {
-        $transaction = Transaction::where('transaction_type', TransactionType::INCOME->value)
+        $transaction = Transaction::where(
+            'transaction_type',
+            TransactionType::EXPENSE->value
+        )
             ->findOrFail($id);
 
         $transaction->load([
@@ -132,29 +130,25 @@ class TransactionController extends Controller
             'journal.details.coa',
         ]);
 
-        return view('pages.menus.user.incomes.show', compact('transaction'));
+        return view('pages.menus.user.histories.show',
+            compact('transaction')
+        );
     }
 
-
     /**
-     * FOR AJAX:
-     * Get the current cash balance for a given chart of account and period. This is used for real-time validation when creating income transactions.
+     * Get cash balance for a specific user account balance.
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getCashBalance(Request $request)
+    public function getCashBalance(Request $request): JsonResponse
     {
-        $coaId       = $request->coa_id;
-        $periodId    = $request->period_id;
-        $subPeriodId = $request->sub_period_id;
+        $balance = UserAccountBalance::query()
+            ->where('id', $request->user_account_balance_id)
+            ->value('remaining_balance');
 
-        if (! $coaId || ! $periodId) {
-            return response()->json(['balance' => 0]);
-        }
-
-        $balance = CashBalanceHelper::getBalance($coaId, $periodId, $subPeriodId);
-
-        return response()->json(['balance' => $balance]);
+        return response()->json([
+            'balance' => $balance ?? 0
+        ]);
     }
 }

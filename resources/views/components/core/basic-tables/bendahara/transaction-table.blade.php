@@ -5,6 +5,7 @@
     currentPage: 1,
     perPage: 10,
     selected: null,
+    showUrl: '{{ route('bendahara.reports.transactions.show', ':id') }}',
 
     get totalPages() {
         return Math.ceil(this.rows.length / this.perPage);
@@ -131,9 +132,7 @@
 
                         {{-- AKSI --}}
                         <td class="px-6 py-4 text-center">
-                            {{-- <a :href="row.transaction_type === 'INCOME' ?
-                                `/user/transaksi/penerimaan/${row.id}` :
-                                `/user/transaksi/pengeluaran/${row.id}`"
+                            <a :href="showUrl.replace(':id', row.id)"
                                 class="text-blue-500 hover:underline text-sm font-medium">
                                 <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
                                     xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
@@ -143,7 +142,7 @@
                                     <path stroke="currentColor" stroke-width="2"
                                         d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                 </svg>
-                            </a> --}}
+                            </a>
                         </td>
                     </tr>
                 </template>

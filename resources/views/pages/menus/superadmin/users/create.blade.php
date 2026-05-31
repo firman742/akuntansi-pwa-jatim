@@ -7,8 +7,8 @@
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
-                <ul class="list-disc list-inside space-y-1">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                <ul class="list-disc list-inside space-y-1 dark:text-white">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -31,47 +31,73 @@
 
         <form method="POST" action="{{ route('superadmin.users.store') }}">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-                <div class="col-span-1 md:col-span-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-1">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Nama Pengguna
                     </label>
                     <input type="text" name="name" value="{{ old('name') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('name') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
+                        @error('name') 
+                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
+                        @else 
+                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
+                        @enderror 
+                        bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                        required />
 
                     @error('name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
+                <div class="col-span-1">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         No Telpon
                     </label>
-                    <input type="text" name="no_telp" value="{{ old('no_telp') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('no_telp') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <input type="number" name="no_telp" value="{{ old('no_telp') }}"
+                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
+                        @error('no_telp') 
+                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
+                        @else 
+                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
+                        @enderror 
+                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('no_telp')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
+                <div class="col-span-1">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Email
                     </label>
                     <input type="email" name="email" value="{{ old('email') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('email') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
+                        @error('email') 
+                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
+                        @else 
+                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
+                        @enderror 
+                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                        required />
                     @error('email')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
+                <div class="col-span-1">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Alamat
                     </label>
                     <input type="text" name="address" value="{{ old('address') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('address') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
+                        @error('address') 
+                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
+                        @else 
+                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
+                        @enderror 
+                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('address')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -85,7 +111,7 @@
                         <select name="role"
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full appearance-none rounded-lg border @error('role') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent bg-none px-4 py-2.5 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                             :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
-                            @change="isOptionSelected = true">
+                            @change="isOptionSelected = true" required>
                             <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
                                 Pilih Peran
                             </option>
@@ -110,14 +136,21 @@
                     @enderror
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
+                <div class="col-span-1">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Password
                     </label>
                     <div x-data="{ showPassword: false }" class="relative">
                         <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
                             placeholder="Enter your password"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border  @error('password') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                            class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
+                            @error('password') 
+                                border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
+                            @else 
+                                border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
+                            @enderror 
+                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                            required />
                         <span @click="showPassword = !showPassword"
                             class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
                             <svg x-show="!showPassword" class="fill-current" width="20" height="20"
@@ -139,14 +172,20 @@
                     @enderror
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
+                <div class="col-span-1">
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Konfirmasi Password
                     </label>
                     <div x-data="{ showPassword: false }" class="relative">
                         <input :type="showPassword ? 'text' : 'password'" id="password_confirmation"
                             name="password_confirmation" placeholder="Enter your password"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('password') border-error-300 focus:border-error-300 @else border-gray-300 @enderror  bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                            class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
+                            @error('password') 
+                                border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
+                            @else 
+                                border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
+                            @enderror 
+                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         <span @click="showPassword = !showPassword"
                             class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
                             <svg x-show="!showPassword" class="fill-current" width="20" height="20"

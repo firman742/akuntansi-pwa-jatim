@@ -51,6 +51,7 @@ class LedgerController extends Controller
         $runningBalance = 0;
         $endingBalance  = 0;
         $coa            = null;
+        $openingBalanceCreatedBy = '-';
 
         /*
         |--------------------------------------------------------------------------

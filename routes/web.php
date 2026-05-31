@@ -64,6 +64,13 @@ Route::middleware(['auth', 'role:SUPER ADMIN'])->prefix('superadmin')->name('sup
     Route::resource('roles', App\Http\Controllers\Superadmin\RoleController::class);
     Route::resource('permissions', App\Http\Controllers\Superadmin\PermissionController::class)
         ->only(['index', 'create', 'store']);
+
+
+    // Activity Logs
+    Route::get('/activity-logs', [App\Http\Controllers\Superadmin\ActivityLogController::class, 'index'])
+        ->name('activity-logs.index');
+    Route::get('/activity-logs/{id}', [App\Http\Controllers\Superadmin\ActivityLogController::class, 'show'])
+        ->name('activity-logs.show');
 });
 
 /*
@@ -294,6 +301,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         Route::get('/trial-balance', [App\Http\Controllers\Bendahara\TrialBalanceController::class, 'index'])->name('trial-balance.index');
 
         Route::get('/transactions', [App\Http\Controllers\Bendahara\TransactionController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/{id}', [App\Http\Controllers\Bendahara\TransactionController::class, 'show'])->name('transactions.show');
     });
 });
 
@@ -369,6 +377,7 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
         // History
         Route::prefix('histories')->name('histories.')->group(function () {
             Route::get('/', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'index'])->name('index');
+            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'show'])->name('show');
         });
     });
 });

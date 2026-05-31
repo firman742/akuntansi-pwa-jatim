@@ -8,6 +8,7 @@ use App\Models\SubPeriod;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class TransactionController extends Controller
 {
@@ -61,7 +62,30 @@ class TransactionController extends Controller
             'periods',
             'subPeriods'
         ));
+    }
 
+    
+    
+    /**
+     * Display the specified resource.
+     *
+     * @param string $id
+     * @return View
+     */
+    public function show(string $id): View
+    {
+        $transaction = Transaction::findOrFail($id);
 
+        $transaction->load([
+            'creator:id,name',
+            'period:id,name',
+            'subPeriod:id,name',
+            'transactionLines.chartOfAccount',
+            'journal.details.chartOfAccount',
+        ]);
+
+        return view('pages.menus.bendahara.transactions.show',
+            compact('transaction')
+        );
     }
 }

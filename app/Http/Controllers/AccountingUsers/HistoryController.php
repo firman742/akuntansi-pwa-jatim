@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\AccountingUsers;
 
+use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class HistoryController extends Controller
 {
@@ -67,5 +69,29 @@ class HistoryController extends Controller
             'periods',
             'subPeriods'
         ));
+    }
+
+    
+    /**
+     * Display the specified resource.
+     *
+     * @param string $id
+     * @return View
+     */
+    public function show(string $id): View
+    {
+        $transaction = Transaction::findOrFail($id);
+
+        $transaction->load([
+            'creator:id,name',
+            'period:id,name',
+            'subPeriod:id,name',
+            'transactionLines.chartOfAccount',
+            'journal.details.chartOfAccount',
+        ]);
+
+        return view('pages.menus.user.histories.show',
+            compact('transaction')
+        );
     }
 }

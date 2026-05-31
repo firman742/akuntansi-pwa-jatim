@@ -239,7 +239,7 @@
                                 <td class="border-b border-gray-100 px-6 py-4">
                                     <div class="font-semibold text-gray-800 leading-tight">{{ $row['description'] }}</div>
                                     <div class="mt-1 font-mono text-[10px] text-primary/70 tracking-tighter">
-                                        {{ $row['ref_code'] }}</div>
+                                        {{ $row['ref_code'] }} - {{ $row['ref_name'] }}</div>
                                 </td>
                                 <td class="border-b border-gray-100 px-6 py-4 text-gray-500">
                                     {{ $row['posted_by'] }}

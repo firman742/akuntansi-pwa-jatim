@@ -65,7 +65,7 @@
 
     {{-- TABLE --}}
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Distribusi Saldo" description="Kelola dan monitor perpindahan saldo antar akun Chart of Account (COA) pada setiap periode pembukuan.">
+        <x-core.basic-tables.core-table title="Pembagian Saldo ke Pengguna" description="Kelola dan monitor pembagian saldo ke masing-masing pengguna.">
             <x-slot name="actions">
 
                 <a href="{{ route('bendahara.user-account-balances.create') }}">

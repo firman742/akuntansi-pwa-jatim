@@ -47,7 +47,8 @@ class menu
             self::item(
                 'Log Aktifitas',
                 'logs',
-                '/superadmin/logs',
+                '/superadmin/activity-logs',
+                ['superadmin/activity-logs*'],
             )
         ];
     }

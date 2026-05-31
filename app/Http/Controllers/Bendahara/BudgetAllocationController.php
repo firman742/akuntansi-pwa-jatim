@@ -58,7 +58,7 @@ class BudgetAllocationController extends Controller
         try {
             $service->store($request->validated());
 
-            return redirect()->route('bendahara.opening-balances.index')
+            return redirect()->route('bendahara.budget-allocations.index')
                 ->with('success', 'Distribusi Saldo berhasil disimpan.');
         } catch (Exception $e) {
             return back()->withErrors(['error' => 'Gagal simpan: ' . $e->getMessage()])->withInput();

@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $table = 'users';
     protected $keyType = 'string';   // ⬅️ WAJIB
     public $incrementing = false;    // ⬅️ WAJIB
+    protected string $activityModule = 'User';
 
 
     /**
