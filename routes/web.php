@@ -154,25 +154,13 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
             Route::post('/{id}', [App\Http\Controllers\Bendahara\Master\UserAccountController::class, 'sync'])->name('sync');
         });
 
-        // tax
-        // Route::prefix('taxes')->name('taxes.')->group(function () {
-        //     Route::get('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'index'])->name('index');
-        //     Route::get('/create', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'create'])->name('create');
-        //     Route::post('/', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'store'])->name('store');
-        //     Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'edit'])->name('edit');
-        //     Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'update'])->name('update');
-        //     Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\TaxController::class, 'destroy'])->name('destroy');
-        // });
-
-        // // interest
-        // Route::prefix('interests')->name('interests.')->group(function () {
-        //     Route::get('/', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'index'])->name('index');
-        //     Route::get('/create', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'create'])->name('create');
-        //     Route::post('/', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'store'])->name('store');
-        //     Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'edit'])->name('edit');
-        //     Route::put('/{id}', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'update'])->name('update');
-        //     Route::delete('/{id}', [App\Http\Controllers\Bendahara\Master\InterestController::class, 'destroy'])->name('destroy');
-        // });
+        // request COA
+        Route::prefix('requests')->name('requests.')->group(function () {
+            Route::get('/coas', [App\Http\Controllers\Bendahara\Master\RequestCoaController::class, 'index'])->name('coas.index');
+            Route::get('/coas/{id}', [App\Http\Controllers\Bendahara\Master\RequestCoaController::class, 'show'])->name('coas.show');
+            Route::post('/coas/{id}/approve', [App\Http\Controllers\Bendahara\Master\RequestCoaController::class, 'approve'])->name('coas.approve');
+            Route::post('/coas/{id}/reject', [App\Http\Controllers\Bendahara\Master\RequestCoaController::class, 'reject'])->name('coas.reject');
+        });
 
     });
 
@@ -356,28 +344,44 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
         Route::get('/create', [App\Http\Controllers\AccountingUsers\TransactionController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\AccountingUsers\TransactionController::class, 'store'])->name('store');
 
-        // Income
-        Route::prefix('incomes')->name('incomes.')->group(function () {
-            Route::get('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'index'])->name('index');
-            Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'getCashBalance'])->name('cash-balance');
-            Route::get('/create', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'store'])->name('store');
-            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'show'])->name('show');
-        });
+        // // Income
+        // Route::prefix('incomes')->name('incomes.')->group(function () {
+        //     Route::get('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'index'])->name('index');
+        //     Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'getCashBalance'])->name('cash-balance');
+        //     Route::get('/create', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'create'])->name('create');
+        //     Route::post('/', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'store'])->name('store');
+        //     Route::get('/{id}', [App\Http\Controllers\AccountingUsers\IncomeController::class, 'show'])->name('show');
+        // });
 
-        // Expense
-        Route::prefix('expenses')->name('expenses.')->group(function () {
-            Route::get('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'index'])->name('index');
-            Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'getCashBalance'])->name('cash-balance');
-            Route::get('/create', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'store'])->name('store');
-            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'show'])->name('show');
-        });
+        // // Expense
+        // Route::prefix('expenses')->name('expenses.')->group(function () {
+        //     Route::get('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'index'])->name('index');
+        //     Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'getCashBalance'])->name('cash-balance');
+        //     Route::get('/create', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'create'])->name('create');
+        //     Route::post('/', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'store'])->name('store');
+        //     Route::get('/{id}', [App\Http\Controllers\AccountingUsers\ExpenseController::class, 'show'])->name('show');
+        // });
 
         // History
         Route::prefix('histories')->name('histories.')->group(function () {
             Route::get('/', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'index'])->name('index');
             Route::get('/{id}', [App\Http\Controllers\AccountingUsers\HistoryController::class, 'show'])->name('show');
+        });
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | COA REQUEST
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('requests')->name('requests.')->group(function () {
+        // COA Request
+        Route::prefix('coas')->name('coas.')->group(function () {
+            Route::get('/', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'store'])->name('store');
+            Route::get('/generate-code', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'generateCodeApi'])->name('generate-code');
+            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'show'])->name('show');
         });
     });
 });

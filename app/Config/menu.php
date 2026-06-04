@@ -115,12 +115,12 @@ class menu
                         ['bendahara/master/account-users*'],
                         PermissionEnum::COA_ASSIGN_USER
                     ),
-                    // self::item(
-                    //     'Hirarki Dana',
-                    //     null,
-                    //     '/bendahara/master/taxes',
-                    //     ['bendahara/master/taxes*'],
-                    // ),
+                    self::item(
+                        'Pengajuan COA',
+                        null,
+                        '/bendahara/master/requests/coas',
+                        ['bendahara/master/requests/coas*'],
+                    ),
                 ],
             ],
             [
@@ -263,14 +263,16 @@ class menu
                 'name' => 'Pengajuan',
                 'icon' => 'request',
                 'active_on' => [
-
+                    'user/requests/coas*',
+                    // 'user/transactions/create*',
+                    // 'user/transactions/histories*'
                 ],
                 'subItems' => [
                     self::item(
                         'Pengajuan COA Baru',
                         null,
-                        '/user/trnsaction-drafs',
-                        ['user/trnsaction-drafs*']
+                        '/user/requests/coas',
+                        ['user/requests/coas*']
                     ),
                     self::item(
                         'Pengajuan Penambahan Dana',

@@ -22,10 +22,17 @@ class COAController extends Controller
             ->whereHas('userAccounts', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->with('parent')
+            ->with([
+                'accountType',
+                'creator',
+                'parent',
+                'children.children'
+            ])
             ->orderBy('code')
             ->get();
+        
+        $groupedByType = $coas->groupBy(fn($coa) => $coa->accountType?->name ?? 'Uncategorized');
 
-        return view('pages.menus.user.coas.index', compact('coas'));
+        return view('pages.menus.user.coas.index', compact('coas', 'groupedByType'));
     }
 }

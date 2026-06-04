@@ -165,4 +165,13 @@ class ChartOfAccount extends Model
     {
         return $this->hasMany(BudgetAllocation::class, 'to_chart_of_account_id');
     }
+
+    /**
+     * Get the coa requests associated with this chart of account.
+     * @return HasMany
+     */
+    public function coaRequests(): HasMany
+    {
+        return $this->hasMany(CoaRequest::class, 'parent_coa_id');
+    }
 }
