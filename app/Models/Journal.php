@@ -2,9 +2,33 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
+/**
+ * Class Journal
+ * @package App\Models
+ *
+ * @property string $id
+ * @property string $journal_number
+ * @property Carbon $journal_date
+ * @property string|null $description
+ * @property float $total_debit
+ * @property float $total_credit
+ * @property string|null $posted_by
+ * @property Carbon|null $posted_at
+ * @property string|null $period_id
+ * @property string|null $sub_period_id
+ * @property string|null $transaction_id
+ *
+ * @property Period|null $period
+ * @property SubPeriod|null $subPeriod
+ * @property Transaction|null $transaction
+ * @property User|null $postedBy
+ * @property Collection|JournalDetail[] $details
+ */
 class Journal extends Model
 {
     use HasUuids;

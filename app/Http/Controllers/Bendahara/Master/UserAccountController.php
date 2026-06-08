@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Bendahara\Master;
 
-use App\Enums\NormalBalanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Bendahara\UserAccounts\SyncUserAccountRequest;
 use App\Models\ChartOfAccount;
@@ -40,7 +39,6 @@ class UserAccountController extends Controller
      */
     public function edit(string $id): View
     {
-        
         $user = User::with([
             'coas',
             'debitCoas',

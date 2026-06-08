@@ -161,7 +161,6 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
             Route::post('/coas/{id}/approve', [App\Http\Controllers\Bendahara\Master\RequestCoaController::class, 'approve'])->name('coas.approve');
             Route::post('/coas/{id}/reject', [App\Http\Controllers\Bendahara\Master\RequestCoaController::class, 'reject'])->name('coas.reject');
         });
-
     });
 
     /*
@@ -186,7 +185,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
 
         $periodId = request('period_id');
         $subPeriodId = request('sub_period_id');
-    
+
         /**
          * 1. PRIORITY: COA BALANCE
          */
@@ -194,14 +193,14 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
             ->where('period_id', $periodId)
             ->where('sub_period_id', $subPeriodId)
             ->first();
-    
+
         if ($balance && $balance->current_balance !== null) {
             return response()->json([
                 'available' => (float) $balance->current_balance,
                 'source' => 'coa_balance'
             ]);
         }
-    
+
         /**
          * 2. FALLBACK: OPENING BALANCE
          * (kalau sistem kamu pakai opening_balance sebagai baseline)
@@ -210,14 +209,14 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
             ->where('period_id', $periodId)
             ->where('sub_period_id', $subPeriodId)
             ->first();
-    
+
         if ($opening) {
             return response()->json([
                 'available' => (float) $opening->amount,
                 'source' => 'opening_balance'
             ]);
         }
-    
+
         /**
          * 3. DEFAULT
          */
@@ -273,6 +272,20 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
 
     /*
     |--------------------------------------------------------------------------
+    | REQUEST BALANCE
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('requests')->name('requests.')->group(function () {
+        Route::get('/balances', [App\Http\Controllers\Bendahara\BalanceRequestController::class, 'index'])->name('balances.index');
+        Route::get('/balances/create', [App\Http\Controllers\Bendahara\BalanceRequestController::class, 'create'])->name('balances.create');
+        Route::post('/balances', [App\Http\Controllers\Bendahara\BalanceRequestController::class, 'store'])->name('balances.store');
+        Route::get('/balances/{id}', [App\Http\Controllers\Bendahara\BalanceRequestController::class, 'show'])->name('balances.show');
+        Route::post('/balances/{id}/approve', [App\Http\Controllers\Bendahara\BalanceRequestController::class, 'approve'])->name('balances.approve');
+        Route::post('/balances/{id}/reject', [App\Http\Controllers\Bendahara\BalanceRequestController::class, 'reject'])->name('balances.reject');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | REPORTS
     |--------------------------------------------------------------------------
     */
@@ -303,7 +316,7 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
     Route::get('/dashboard', [App\Http\Controllers\AccountingUsers\DashboardController::class, 'index'])
         ->name('dashboard');
 
-    
+
     /*
     |--------------------------------------------------------------------------
     | COA
@@ -382,6 +395,14 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
             Route::post('/', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'store'])->name('store');
             Route::get('/generate-code', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'generateCodeApi'])->name('generate-code');
             Route::get('/{id}', [App\Http\Controllers\AccountingUsers\CoaRequestController::class, 'show'])->name('show');
+        });
+
+        // Balance Request
+        Route::prefix('balances')->name('balances.')->group(function () {
+            Route::get('/', [App\Http\Controllers\AccountingUsers\BalanceRequestController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\AccountingUsers\BalanceRequestController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\AccountingUsers\BalanceRequestController::class, 'store'])->name('store');
+            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\BalanceRequestController::class, 'show'])->name('show');
         });
     });
 });

@@ -5,6 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class JournalDetail
+ * @package App\Models
+ *
+ * @property string $id
+ * @property string $journal_id
+ * @property string $chart_of_account_id
+ * @property float $debit
+ * @property float $credit
+ * @property string|null $description
+ *
+ * @property Journal $journal
+ * @property ChartOfAccount $chartOfAccount
+ */
 class JournalDetail extends Model
 {
     use HasUuids;

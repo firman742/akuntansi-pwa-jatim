@@ -38,7 +38,7 @@
     </div>
 
     {{-- CONTENT --}}
-    <div class="w-full overflow-x-auto">
+    <div class="w-full overflow-x-auto min-w-0">
         {{ $slot }}
     </div>
 

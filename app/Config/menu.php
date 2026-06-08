@@ -14,9 +14,9 @@ class menu
             [
                 'title' => 'Menu',
                 'items' => match ($role) {
-                    RoleEnum::SUPER_ADMIN        => self::superAdmin(),
-                    RoleEnum::BENDAHARA => self::bendahara(),
-                    RoleEnum::USER     => self::accountingUser(),
+                    RoleEnum::SUPER_ADMIN   => self::superAdmin(),
+                    RoleEnum::BENDAHARA     => self::bendahara(),
+                    RoleEnum::USER          => self::accountingUser(),
                 },
             ],
         ];
@@ -130,6 +130,7 @@ class menu
                     'bendahara/opening-balances*',
                     'bendahara/budget-allocations*',
                     'bendahara/user-account-balances*',
+                    'bendahara/requests/balances*',
                 ],
                 'subItems' => [
                     self::item(
@@ -153,8 +154,8 @@ class menu
                     self::item(
                         'Permintaan Dana',
                         null,
-                        '/bendahara/budgetasd',
-                        ['bendahara/budgetasd*']
+                        '/bendahara/requests/balances',
+                        ['bendahara/requests/balances*']
                     ),
                 ]
             ],
@@ -264,8 +265,7 @@ class menu
                 'icon' => 'request',
                 'active_on' => [
                     'user/requests/coas*',
-                    // 'user/transactions/create*',
-                    // 'user/transactions/histories*'
+                    'user/requests/balances*',
                 ],
                 'subItems' => [
                     self::item(
@@ -277,15 +277,15 @@ class menu
                     self::item(
                         'Pengajuan Penambahan Dana',
                         null,
-                        '/user/transactions/create',
-                        ['user/transactions/create*']
+                        '/user/requests/balances',
+                        ['user/requests/balances*']
                     ),
-                    self::item(
-                        'Riwayat Pengajuan',
-                        null,
-                        '/user/transactions/histories',
-                        ['user/transactions/histories*']
-                    ),
+                    // self::item(
+                    //     'Riwayat Pengajuan',
+                    //     null,
+                    //     '/user/transactions/histories',
+                    //     ['user/transactions/histories*']
+                    // ),
                 ]
             ],
 

@@ -7,6 +7,7 @@ enum RequestStatus: string
     case PENDING = 'pending';
     case APPROVED = 'approved';
     case REJECTED = 'rejected';
+    case CANCELLED = 'canceled';
 
     /**
      * Label untuk UI
@@ -17,6 +18,7 @@ enum RequestStatus: string
             self::PENDING => 'Menunggu',
             self::APPROVED => 'Disetujui',
             self::REJECTED => 'Ditolak',
+            self::CANCELLED => 'Dibatalkan',
         };
     }
     

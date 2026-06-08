@@ -12,6 +12,7 @@ enum ActivityLogAction: string
     case FORCE_DELETED = 'force_deleted';
     case APPROVED = 'approved';
     case REJECT = 'reject';
+    case ERROR = 'error';
 
     /**
      * Label untuk UI
@@ -27,6 +28,7 @@ enum ActivityLogAction: string
             self::FORCE_DELETED => 'Dihapus Permanen',
             self::APPROVED => 'Disetujui',
             self::REJECT => 'Ditolak',
+            self::ERROR => 'error'
         };
     }
     
