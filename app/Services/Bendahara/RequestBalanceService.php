@@ -61,7 +61,7 @@ class RequestBalanceService extends BaseService
             $this->generateJournal($balanceRequest, $sourceCoa, $destinationCoaId);
 
             // Perbarui status permintaan menjadi disetujui
-            $this->updateBalanceRequest($balanceRequest, $sourceCoa, $data);
+            $balanceRequest = $this->updateBalanceRequest($balanceRequest, $sourceCoa, $data);
 
             return $balanceRequest->fresh();
         });
@@ -223,6 +223,11 @@ class RequestBalanceService extends BaseService
 
             $sourceCoa->decrement(
                 'current_balance',
+                $balanceRequest->amount
+            );
+
+            $sourceCoa->decrement(
+                'available_balance',
                 $balanceRequest->amount
             );
 

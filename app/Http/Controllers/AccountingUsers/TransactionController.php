@@ -32,16 +32,18 @@ class TransactionController extends Controller
         $userId = Auth::id();
 
         // ── Period ─────────────────────────────────────────
-        $periods = Period::where('is_closed', false)
+        $activePeriod = Period::query()
+            ->where('is_closed', false)
             ->latest()
-            ->get();
+            ->first();
 
-        $selectedPeriodId = request('period_id')
-            ?? $periods->first()?->id;
-
-        if (!$selectedPeriodId) {
-            throw new Exception('Tidak ada periode aktif. Silakan hubungi administrator.');
+        if (!$activePeriod) {
+            throw new Exception(
+                'Tidak ada periode aktif. Silakan hubungi administrator.'
+            );
         }
+
+        $selectedPeriodId = $activePeriod->id;
 
         $subPeriods = SubPeriod::where('period_id', $selectedPeriodId)
             ->active()
@@ -84,7 +86,6 @@ class TransactionController extends Controller
         return view('pages.menus.user.transactions.create', compact(
             'cashCoas',
             'expenseCoas',
-            'periods',
             'subPeriods',
             'selectedPeriodId',
             'selectedSubPeriodId'
@@ -99,7 +100,7 @@ class TransactionController extends Controller
      * @return RedirectResponse
      * @throws Exception
      */
-    public function store(TransactionService $service, StoreTransactionRequest $request): RedirectResponse 
+    public function store(TransactionService $service, StoreTransactionRequest $request): RedirectResponse
     {
         $service->handleExpense($request->validated());
 
@@ -130,7 +131,8 @@ class TransactionController extends Controller
             'journal.details.coa',
         ]);
 
-        return view('pages.menus.user.histories.show',
+        return view(
+            'pages.menus.user.histories.show',
             compact('transaction')
         );
     }

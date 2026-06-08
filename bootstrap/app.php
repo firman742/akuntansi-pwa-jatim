@@ -7,8 +7,8 @@ use App\Http\Middleware\RoleMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -33,9 +33,38 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             // \App\Http\Middleware\VerifyCsrfToken::class,
         ]);
-
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (
+            Throwable $e,
+            $request
+        ) {
+
+            $status = method_exists($e, 'getStatusCode')
+                ? $e->getStatusCode()
+                : 500;
+
+            if (view()->exists("errors.$status")) {
+                return response()->view(
+                    "errors.$status",
+                    [
+                        'status' => $status,
+                        'title' => "Error {$status}",
+                        'message' => $e->getMessage(),
+                    ],
+                    $status
+                );
+            }
+
+            return response()->view(
+                'errors.default',
+                [
+                    'status' => $status,
+                    'title' => "Error {$status}",
+                    'message' => $e->getMessage(),
+                ],
+                $status
+            );
+        });
     })
     ->create();

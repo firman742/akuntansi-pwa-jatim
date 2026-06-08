@@ -40,4 +40,29 @@ class UserAccountBalanceController extends Controller
 
         return view('pages.menus.user.userAccountBalances.index', compact('userAccountBalances'));
     }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param string $id
+     * @return View
+     */
+    public function show(string $id): View
+    {
+        $user = Auth::user();
+
+        $userAccountBalance = UserAccountBalance::with(
+            'coaBalance.chartOfAccount',
+            'subPeriod',
+            'allocatedBy',
+            'userAccount',
+            'userAccount.user',
+        )->findOrFail($id);
+
+        if ($userAccountBalance->userAccount->user_id !== $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        return view('pages.menus.user.userAccountBalances.show', compact('userAccountBalance'));
+    }
 }

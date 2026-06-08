@@ -21,21 +21,21 @@ class RoleMiddleware
         $user = $request->user();
 
         if (! $user) {
-            abort(401, 'Unauthorized');
+            abort(401, 'Anda harus login untuk mengakses halaman ini');
         }
 
         if (! method_exists($user, 'getRoleNames')) {
-            abort(500, 'Role system not configured on User model');
+            abort(500, 'Pengguna tidak memiliki metode getRoleNames. Pastikan model User menggunakan trait HasRoles dari Spatie.');
         }
 
         $userRole = $user->getRoleNames()->first();
 
         if (! $userRole) {
-            abort(403, 'User has no role');
+            abort(403, 'Pengguna tidak memiliki peran yang valid');
         }
 
         if (! in_array($userRole, $roles, true)) {
-            abort(403, 'You do not have access to this module');
+            abort(403, 'Anda tidak memiliki akses ke halaman ini');
         }
 
         return $next($request);

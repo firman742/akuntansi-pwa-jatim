@@ -39,33 +39,25 @@
 
                         <div class="grid md:grid-cols-2 gap-5">
                             <div class="space-y-1">
-                                <label class="text-xs font-bold uppercase text-gray-500 tracking-wider">Periode</label>
-                                <select name="period_id" x-model="period_id" @change="onPeriodChange"
-                                    class="w-full border rounded-lg focus:ring-primary focus:border-primary px-3 py-2.5 text-sm">
-                                    @foreach ($periods as $p)
-                                        <option value="{{ $p->id }}" @selected($p->id == $selectedPeriodId)>{{ $p->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="space-y-1">
                                 <label class="text-xs font-bold uppercase text-gray-500 tracking-wider">Sub Periode</label>
-                                <select name="sub_period_id" x-model="sub_period_id" @change="loadCashBalance"
+                                <select name="sub_period_id" x-model="sub_period_id"
                                     class="w-full border rounded-lg focus:ring-primary focus:border-primary px-3 py-2.5 text-sm">
                                     @foreach ($subPeriods as $s)
                                         <option value="{{ $s->id }}">{{ $s->name }}</option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="period_id" value="{{ $selectedPeriodId }}">
                             </div>
 
                             <div>
                                 <label class="text-xs font-bold">
                                     Tanggal
                                 </label>
-                                <x-form.date-picker id="transaction_date" name="transaction_date" placeholder="Tentukan Tanggal Transaksi" defaultDate="{{ now()->format('Y-m-d') }}" />
+                                <x-form.date-picker id="transaction_date" name="transaction_date"
+                                    placeholder="Tentukan Tanggal Transaksi" defaultDate="{{ now()->format('Y-m-d') }}" />
                             </div>
-
+                        </div>
+                        <div class="grid md:grid-cols-1 gap-5">
                             <div>
                                 <label class="text-xs font-bold">
                                     Pilih Kas
