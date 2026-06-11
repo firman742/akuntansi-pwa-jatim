@@ -8,6 +8,7 @@ use App\Http\Requests\Superadmin\Users\StoreUserRequest;
 use App\Http\Requests\Superadmin\Users\UpdateUserRequest;
 use App\Models\User;
 use App\Services\Superadmin\UserService;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
@@ -51,14 +52,22 @@ class UserController extends Controller
      * @param UserService $service
      * @param StoreUserRequest $request
      * @return RedirectResponse
+     * @throws Exception
      */
     public function store(UserService $service, StoreUserRequest $request): RedirectResponse
     {
-        $service->store($request->validated());
+        try {
+            $service->store($request->validated());
 
-        return redirect()
-            ->route('superadmin.users.index')
-            ->with('success', 'User berhasil ditambahkan');
+            return redirect()
+                ->route('superadmin.users.index')
+                ->with('success', 'User berhasil ditambahkan');
+        } catch (Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan user: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -81,14 +90,22 @@ class UserController extends Controller
      * @param UserService $service
      * @param UpdateUserRequest $request
      * @return RedirectResponse
+     * @throws Exception
      */
     public function update(string $id, UserService $service, UpdateUserRequest $request): RedirectResponse
     {
-        $service->update($id, $request->validated());
-       
-        return redirect()
-            ->route('superadmin.users.index')
-            ->with('success', 'User berhasil diperbarui');
+        try {
+            $service->update($id, $request->validated());
+
+            return redirect()
+                ->route('superadmin.users.index')
+                ->with('success', 'User berhasil diperbarui');
+        } catch (Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui user: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -96,13 +113,20 @@ class UserController extends Controller
      * @param string $id
      * @param UserService $service
      * @return RedirectResponse
+     * @throws Exception
      */
     public function destroy(string $id, UserService $service): RedirectResponse
     {
-        $service->delete($id);
+        try {
+            $service->delete($id);
 
-        return redirect()
-            ->route('superadmin.users.index')
-            ->with('success', 'User berhasil dihapus');
+            return redirect()
+                ->route('superadmin.users.index')
+                ->with('success', 'User berhasil dihapus');
+        } catch (Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus user: ' . $e->getMessage());
+        }
     }
 }

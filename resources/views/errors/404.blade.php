@@ -1,4 +1,9 @@
 @extends('errors.layout')
 
-@section('title', {{ $title ?? '404' }})
-@section('message', {{ $message ?? 'Halaman yang Anda cari tidak ditemukan.' }})
+@section('title')
+    {{ $title ?? '404' }}
+@endsection
+
+@section('message')
+    {{ $message ?? 'Halaman tidak ditemukan' }}
+@endsection

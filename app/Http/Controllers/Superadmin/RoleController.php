@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Superadmin;
 
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -47,21 +48,26 @@ class RoleController extends Controller
      *
      * @param Request $request
      * @return RedirectResponse
+     * @throws Exception
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|unique:roles,name',
-            'permissions' => 'array',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|unique:roles,name',
+                'permissions' => 'array',
+            ]);
 
-        $role = Role::create(['name' => strtoupper($request->input('name'))]);
-        $permissions = $request->input('permissions', []);
-        $role->syncPermissions($permissions);
+            $role = Role::create(['name' => strtoupper($request->input('name'))]);
+            $permissions = $request->input('permissions', []);
+            $role->syncPermissions($permissions);
 
-        return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil dibuat');
+            return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil dibuat');
+        } catch (Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat membuat peran: ' . $e->getMessage());
+        }
     }
-   
+
     /**
      *
      * @param Request $request
@@ -70,13 +76,22 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id): RedirectResponse
     {
-        $role = Role::findOrFail($id);
-        $permissions = $request->input('permissions', []);
+        try {
+            $request->validate([
+                'name' => 'required|unique:roles,name,' . $id,
+                'permissions' => 'array',
+            ]);
 
-        $role->syncPermissions($permissions);
+            $role = Role::findOrFail($id);
+            $role->name = strtoupper($request->input('name'));
+            $role->save();
 
-        return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil diperbarui');
+            $permissions = $request->input('permissions', []);
+            $role->syncPermissions($permissions);
+
+            return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil diperbarui');
+        } catch (Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat memperbarui peran: ' . $e->getMessage());
+        }
     }
-
-
 }

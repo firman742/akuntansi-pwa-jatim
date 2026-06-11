@@ -9,7 +9,6 @@ use Illuminate\View\View;
 class ActivityLogController extends Controller
 {
     /**
-     *
      * @return View
      */
     public function index(): View
@@ -21,7 +20,6 @@ class ActivityLogController extends Controller
     }
 
     /**
-     *
      * @param string $id
      * @return View
      */

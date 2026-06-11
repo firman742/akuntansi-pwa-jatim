@@ -39,7 +39,7 @@ class TransactionController extends Controller
 
         if (!$activePeriod) {
             throw new Exception(
-                'Tidak ada periode aktif. Silakan hubungi administrator.'
+                'Anda tidak bisa melakukan transaksi karena tidak ada periode aktif. Silakan hubungi administrator.'
             );
         }
 
@@ -102,11 +102,18 @@ class TransactionController extends Controller
      */
     public function store(TransactionService $service, StoreTransactionRequest $request): RedirectResponse
     {
-        $service->handleExpense($request->validated());
+        try {
+            $service->handleExpense($request->validated());
 
-        return redirect()
-            ->route('user.transactions.create')
-            ->with('success', 'Transaksi pengeluaran berhasil disimpan.');
+            return redirect()
+                ->route('user.histories.index')
+                ->with('success', 'Transaksi berhasil disimpan');
+        } catch (Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi: ' . $e->getMessage());
+        }
     }
 
     /**

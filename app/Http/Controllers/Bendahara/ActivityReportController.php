@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use App\Models\Period;
 use App\Models\SubPeriod;
-use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 
 
@@ -17,10 +17,14 @@ class ActivityReportController extends Controller
      *
      * @param Request $request
      * @return void
+     * @throws Exception
      */
     public function index(Request $request)
     {
         $periods = Period::orderBy('created_at', 'desc')->get();
+        if ($periods->isEmpty()) {
+            throw new Exception('Tidak ada periode aktif. Silakan buat periode terlebih dahulu.');
+        }
         $periodId = $request->period_id;
         $period = $periodId ? Period::findOrFail($periodId) : Period::active()->firstOrFail();
 
