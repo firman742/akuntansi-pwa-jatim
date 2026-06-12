@@ -71,6 +71,12 @@ Route::middleware(['auth', 'role:SUPER ADMIN'])->prefix('superadmin')->name('sup
         ->name('activity-logs.index');
     Route::get('/activity-logs/{id}', [App\Http\Controllers\Superadmin\ActivityLogController::class, 'show'])
         ->name('activity-logs.show');
+
+    // Configurations
+    Route::prefix('configurations')->name('configurations.')->group(function () {
+        Route::get('/edit', [App\Http\Controllers\Superadmin\ConfigurationController::class, 'edit'])->name('edit');
+        Route::post('/', [App\Http\Controllers\Superadmin\ConfigurationController::class, 'update'])->name('update');
+    });
 });
 
 /*

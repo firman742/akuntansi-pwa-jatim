@@ -1,7 +1,9 @@
 @php
     use App\Helpers\MenuHelper;
-    $menuGroups = MenuHelper::getMenuGroups();
+    use App\Helpers\SettingHelper;
 
+    $menuGroups = MenuHelper::getMenuGroups();
+    
     // Get current path
     $currentPath = request()->path();
 @endphp
@@ -91,7 +93,7 @@
                  whitespace-nowrap
              "
                 x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen">
-                {{ config('app.name', 'Laravel') }}
+                {{ SettingHelper::appName() }}
             </span>
 
         </a>

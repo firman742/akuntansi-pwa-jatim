@@ -49,6 +49,12 @@ class menu
                 'logs',
                 '/superadmin/activity-logs',
                 ['superadmin/activity-logs*'],
+            ),
+            self::item(
+                'Pengaturan Sistem',
+                'settings',
+                '/superadmin/configurations',
+                ['superadmin/configurations*'],
             )
         ];
     }

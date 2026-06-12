@@ -6,6 +6,7 @@ use App\Models\Period;
 use App\Models\SubPeriod;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Validation\ValidationException;
 
 class SubPeriodService
 {
@@ -85,6 +86,7 @@ class SubPeriodService
      *
      * @param array $data
      * @throws Exception if the sub-period dates are outside the parent period's date range.
+     * @throws ValidationException
      */
     private function validateSubPeriodDates(array $data): void
     {
@@ -104,6 +106,28 @@ class SubPeriodService
         // end_date tidak boleh melebihi period end_date
         if ($subEndDate->gt($periodEndDate)) {
             throw new Exception('Tanggal selesai sub periode tidak boleh melebihi periode utama.');
+        }
+
+        // cek apakah ada overlap dengna sub period lain pada periode yang sama
+        $overlap = SubPeriod::query()
+            ->where('period_id', $data['period_id'])
+            ->where(function ($query) use ($subStartDate, $subEndDate) {
+                $query
+                    ->whereBetween('start_date', [$subStartDate, $subEndDate])
+                    ->orWhereBetween('end_date', [$subStartDate, $subEndDate])
+                    ->orWhere(function ($q) use ($subStartDate, $subEndDate) {
+                        $q->where('start_date', '<=', $subStartDate)
+                            ->where('end_date', '>=', $subEndDate);
+                    });
+            })
+            ->exists();
+
+        if ($overlap) {
+            throw ValidationException::withMessages([
+                'start_date' => [
+                    'Rentang tanggal sub periode bertabrakan dengan sub periode yang sudah ada.'
+                ]
+            ]);
         }
     }
 }

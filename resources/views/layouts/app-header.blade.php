@@ -69,7 +69,11 @@
                         sm:text-base
                         whitespace-nowrap
                     ">
-                    {{ config('app.name') }}
+                    @php
+                        $config = \App\Models\Configuration::where('key', 'APP_NAME')->first();
+                        $appName = $config->value ?? config('app.name');
+                    @endphp
+                    {{ $appName }}
                 </span>
             </a>
 
