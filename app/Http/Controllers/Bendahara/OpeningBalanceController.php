@@ -65,80 +65,31 @@ class OpeningBalanceController extends Controller
         }
     }
 
-    // public function createBulk()
-    // {
-    //     $periods = Period::where('is_closed', false)->get();
-    //     $coaLists = ChartOfAccount::orderBy('code')->get();
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param string $id
+     * @return View
+     */
+    public function edit(string $id): View
+    {
+        $openingBalance = ClosingBalance::findOrFail($id);
 
-    //     return view('pages.menus.bendahara.opening_balances.create_bulk', compact('periods', 'coaLists'));
-    // }
+        return view('pages.menus.bendahara.opening_balances.edit', compact('openingBalance'));
+    }
 
-    // public function storeBulk(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'period_ids' => 'required|array|min:1',
-    //         'period_ids.*' => 'exists:periods,id',
-    //         'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
-    //         'balance_type' => 'required|in:DEBIT,CREDIT',
-    //         'amount' => 'required|numeric|min:0', // Ini bertindak sebagai nilai tambahan/manual
-    //     ]);
 
-    //     DB::beginTransaction();
-    //     try {
-    //         foreach ($validated['period_ids'] as $periodId) {
-    //             // 1. Cari sub periode pertama di tahun tersebut
-    //             $firstSubPeriod = SubPeriod::where('period_id', $periodId)
-    //                 ->orderBy('start_date')
-    //                 ->first();
+    public function update(string $id, OpeningBalanceService $service, StoreOpeningBalanceRequest $request): RedirectResponse
+    {
+        try {
+            $service->update($id, $request->validated());
 
-    //             if (!$firstSubPeriod) continue;
-
-    //             // 2. Validasi: Jangan timpa jika sudah ada atau ada jurnal
-    //             $exists = OpeningBalance::where([
-    //                 'chart_of_account_id' => $validated['chart_of_account_id'],
-    //                 'sub_period_id' => $firstSubPeriod->id
-    //             ])->exists();
-
-    //             $journalExists = Journal::where('sub_period_id', $firstSubPeriod->id)->exists();
-
-    //             if ($exists || $journalExists) continue;
-
-    //             // 3. CARI SALDO SISA PERIODE SEBELUMNYA (Masing-masing periode)
-    //             $lastSubPeriod = SubPeriod::where('end_date', '<', $firstSubPeriod->start_date)
-    //                 ->orderBy('end_date', 'desc')
-    //                 ->first();
-
-    //             $lastClosingAmount = 0;
-    //             if ($lastSubPeriod) {
-    //                 $closing = ClosingBalance::where('chart_of_account_id', $validated['chart_of_account_id'])
-    //                     ->where('period_id', $lastSubPeriod->period_id)
-    //                     ->first();
-    //                 $lastClosingAmount = $closing ? $closing->amount : 0;
-    //             }
-
-    //             // 4. TOTAL = Saldo Sisa + Input Nominal
-    //             $finalAmount = (float) $lastClosingAmount + (float) $validated['amount'];
-
-    //             if ($finalAmount > 0) {
-    //                 OpeningBalance::create([
-    //                     'chart_of_account_id' => $validated['chart_of_account_id'],
-    //                     'period_id' => $periodId,
-    //                     'sub_period_id' => $firstSubPeriod->id,
-    //                     'balance_type' => $validated['balance_type'],
-    //                     'amount' => $finalAmount,
-    //                     'created_by' => Auth::id()
-    //                 ]);
-    //             }
-    //         }
-
-    //         DB::commit();
-    //         return redirect()->route('bendahara.opening-balances.index')
-    //             ->with('success', 'Bulk Opening balance berhasil diproses.');
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return back()->withErrors(['error' => 'Gagal simpan bulk: ' . $e->getMessage()])->withInput();
-    //     }
-    // }
+            return redirect()->route('bendahara.opening-balances.index')
+                ->with('success', 'Opening balance berhasil diperbarui.');
+        } catch (Exception $e) {
+            return back()->withErrors(['error' => 'Gagal update: ' . $e->getMessage()])->withInput();
+        }
+    }
 
     /**
      * Endpoint Baru untuk AJAX: Mengambil Saldo Terakhir

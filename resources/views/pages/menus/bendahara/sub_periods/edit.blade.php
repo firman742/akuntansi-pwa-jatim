@@ -10,7 +10,7 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-red-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -23,110 +23,182 @@
         </div>
     @endif
 
+    @if($isLocked)
+        <div class="mb-6">
+            <x-ui.alert
+                variant="warning"
+                title="Sub Periode Terkunci" :dismissible="false">
+
+                @if($hasTransaction)
+                    <p>
+                        Sub periode ini tidak dapat diubah karena sudah memiliki transaksi.
+                    </p>
+                @elseif($isExpired)
+                    <p>
+                        Sub periode ini tidak dapat diubah karena tanggal berakhir telah terlewati.
+                    </p>
+                @endif
+
+            </x-ui.alert>
+        </div>
+    @endif
+
     <x-common.component-card title="Edit Sub Periode">
 
-        <form method="POST" action="{{ route('bendahara.sub-periods.update', $subPeriod->id) }}">
-            @csrf
-            @method('PUT')
+        <div x-data="{
+            periodStart: '',
+            periodEnd: '',
+        
+            init() {
+                this.$nextTick(() => {
+                    const select = document.getElementById('period_id');
+        
+                    if (!select) {
+                        return;
+                    }
+        
+                    const selected =
+                        select.options[
+                            select.selectedIndex
+                        ];
+        
+                    this.periodStart =
+                        selected.dataset.startDate || '';
+        
+                    this.periodEnd =
+                        selected.dataset.endDate || '';
+                    
+                    this.formatDate = (dateStr) => {
+                        if (!dateStr) return '';
+                        const options = { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        };
+                        return new Date(dateStr).toLocaleDateString('id-ID', options);
+                    };
+        
+                    this.$dispatch(
+                        'period-range', {
+                            startDate: selected.dataset.startDate,
+        
+                            endDate: selected.dataset.endDate
+                        }
+                    );
+                });
+            }
+        }" x-init="init()">
 
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <form method="POST" action="{{ route('bendahara.sub-periods.update', $subPeriod->id) }}">
+                @csrf
+                @method('PUT')
 
-                <div class="grid grid-cols-2 ls:grid-cols-2 gap-4">
-                    <div class="grid-row">
-                        <label class="block text-sm mb-2">Periode</label>
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
 
-                        <select name="period_id" class="w-full border rounded-lg p-2">
-                            <option value="">Pilih Periode</option>
-                            @foreach ($periods as $period)
-                                <option value="{{ $period->id }}"
-                                    {{ $subPeriod->period_id == $period->id ? 'selected' : '' }}>
-                                    {{ $period->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="grid grid-cols-2 ls:grid-cols-2 gap-4">
+
+                        {{-- Periode --}}
+                        <div class="grid-row">
+
+                            <x-form.select id="period_id" name="period_id" label="Periode" required :value="$subPeriod->period_id"
+                                x-on:change="
+                                    const selected =
+                                        $event.target.options[
+                                            $event.target.selectedIndex
+                                        ];
+
+                                    periodStart =
+                                        selected.dataset.startDate || '';
+
+                                    periodEnd =
+                                        selected.dataset.endDate || '';
+
+                                    $dispatch(
+                                        'period-range',
+                                        {
+                                            startDate:
+                                                selected.dataset.startDate,
+
+                                            endDate:
+                                                selected.dataset.endDate
+                                        }
+                                    );
+                                ">
+
+                                @foreach ($periods as $period)
+                                    <option value="{{ $period->id }}" data-start-date="{{ $period->start_date }}"
+                                        data-end-date="{{ $period->end_date }}" @selected(old('period_id', $subPeriod->period_id) == $period->id)>
+                                        {{ $period->name }}
+                                    </option>
+                                @endforeach
+
+                            </x-form.select>
+
+                            <p x-show="periodStart && periodEnd" class="mt-1 text-xs text-brand-500">
+
+                                Tanggal yang diperbolehkan:
+
+                                <span x-text="formatDate(periodStart)"></span>
+
+                                s/d
+
+                                <span x-text="formatDate(periodEnd)"></span>
+
+                            </p>
+
+                        </div>
+
+                        {{-- Nama --}}
+                        <div class="grid-row">
+                            <x-form.input name="name" label="Nama Sub Periode" :value="old('name', $subPeriod->name)" required />
+                        </div>
+
+                        {{-- Tanggal Mulai --}}
+                        <div class="grid-row">
+                            <x-form.date-picker id="start_date" name="start_date" label="Tanggal Masuk"
+                                placeholder="Tentukan Tanggal Mulai Sub Periode"
+                                defaultDate="{{ old('start_date', $subPeriod->start_date) }}" />
+                        </div>
+
+                        {{-- Tanggal Akhir --}}
+                        <div class="grid-row">
+                            <x-form.date-picker id="end_date" name="end_date" label="Tanggal Akhir"
+                                placeholder="Tentukan Tanggal Akhir Sub Periode"
+                                defaultDate="{{ old('end_date', $subPeriod->end_date) }}" />
+                        </div>
+
                     </div>
 
-                    <div class="grid-row">
-                        <label class="block text-sm mb-2">Nama Sub Periode</label>
-
-                        <input type="text" name="name" value="{{ $subPeriod->name }}"
-                            class="w-full border rounded-lg p-2" placeholder="Masukkan nama sub periode">
+                    {{-- Deskripsi --}}
+                    <div class="col-span-1 md:col-span-2">
+                        <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...."
+                            :value="old('description', $subPeriod->description)" rows="6" />
                     </div>
 
-                    <div class="grid-row">
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Tanggal Masuk
-                        </label>
-                        <x-form.date-picker id="start_date" name="start_date"
-                            placeholder="Tentukan Tanggal Mulai Sub Periode"
-                            defaultDate="{{ $subPeriod->start_date ?? now()->format('Y-m-d') }}" />
+                    {{-- Status --}}
+                    <div class="col-span-1 md:col-span-2">
+                        <x-form.toggle-switch name="is_active" label="Aktifkan Sub Periode" :value="old('is_active', $subPeriod->is_active)" />
                     </div>
-                    <div class="grid-row">
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Tanggal Keluar
-                        </label>
-                        <x-form.date-picker id="end_date" name="end_date" placeholder="Tentukan Tanggal Mulai Sub Periode"
-                            defaultDate="{{ $subPeriod->end_date ?? now()->format('Y-m-d') }}" />
-                    </div>
+
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
-                    <label class="block text-sm mb-2">Deskripsi</label>
-                    <textarea name="description" class="w-full border rounded-lg p-2" rows="3">{{ $subPeriod->description }}</textarea>
-                </div>
+                <div class="mt-6 flex justify-end gap-3">
 
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Aktifkan Tipe Akun
-                    </label>
+                    <a href="{{ route('bendahara.sub-periods.index') }}">
+                        <x-ui.button variant="outline" size="sm">
+                            Kembali
+                        </x-ui.button>
+                    </a>
 
-                    <div x-data="{ switcherToggle: {{ $subPeriod->is_active ? 'true' : 'false' }} }">
-                        {{-- hidden input agar selalu terkirim --}}
-                        <input type="hidden" name="is_active" value="0">
-
-                        <label
-                            class="flex cursor-pointer items-center gap-3 text-sm font-medium
-                                   text-gray-700 select-none dark:text-gray-400">
-
-                            <div class="relative">
-                                <input type="checkbox" name="is_active" value="1" class="sr-only"
-                                    x-model="switcherToggle" />
-
-                                <div class="block h-6 w-11 rounded-full transition"
-                                    :class="switcherToggle
-                                        ?
-                                        'bg-brand-500 dark:bg-brand-500' :
-                                        'bg-gray-200 dark:bg-white/10'">
-                                </div>
-
-                                <div class="shadow-theme-sm absolute top-0.5 left-0.5 h-5 w-5
-                                           rounded-full bg-white transition-transform duration-300"
-                                    :class="switcherToggle ? 'translate-x-full' : 'translate-x-0'">
-                                </div>
-                            </div>
-
-                            <span x-text="switcherToggle ? 'Aktif' : 'Nonaktif'"></span>
-                        </label>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="mt-6 flex justify-end gap-3">
-
-                <a href="{{ route('bendahara.sub-periods.index') }}">
-                    <x-ui.button variant="outline" size="sm">
-                        Kembali
+                    <x-ui.button type="submit" variant="primary" size="sm">
+                        Simpan
                     </x-ui.button>
-                </a>
 
-                <x-ui.button type="submit" variant="primary" size="sm">
-                    Simpan
-                </x-ui.button>
+                </div>
 
-            </div>
+            </form>
 
-        </form>
+        </div>
 
     </x-common.component-card>
 @endsection

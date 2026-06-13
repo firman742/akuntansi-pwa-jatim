@@ -23,9 +23,20 @@
         </div>
     @endif
 
+    {{-- Info --}}
+    <div class="mb-6">
+        <x-ui.alert variant="info" title="Aturan Pengelolaan Sub Periode" :dismissible="false">
+            <ul class="list-disc pl-5 space-y-1 text-sm text-blue-500">
+                <li>Sub periode dapat diubah atau dihapus hanya jika belum memiliki transaksi.</li>
+                <li>Sub periode tidak dapat diubah atau dihapus setelah tanggal berakhir terlewati.</li>
+                <li>Sub periode yang sudah memiliki transaksi dianggap terkunci untuk menjaga konsistensi data keuangan.</li>
+            </ul>
+        </x-ui.alert>
+    </div>
+
 
     {{-- FILTER & ACTION CARD --}}
-    <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div class="mb-8 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6 shadow-sm">
         <form method="GET" class="space-y-6">
 
             {{-- FILTER SECTION --}}
@@ -33,19 +44,14 @@
 
                 {{-- PERIOD --}}
                 <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Periode
-                    </label>
-                    <select name="period_id" id="filter_period"
-                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-                           focus:border-primary focus:bg-white focus:ring-primary transition">
-                        <option value="">Semua</option>
+                    <x-form.select name="period_id" label="Periode" placeholder="Pilih Periode">
                         @foreach ($periods as $period)
-                            <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
+                            <option value="{{ $period->id }}" @selected(old('period_id') == $period->id)
+                                class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
                                 {{ $period->name }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-form.select>
                 </div>
 
                 {{-- FILTER ACTION --}}

@@ -10,10 +10,16 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-red-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
         </div>
     @endif
 
@@ -21,132 +27,94 @@
 
         <form method="POST" action="{{ route('bendahara.sub-periods.store') }}">
             @csrf
-
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-
                 <div class="grid grid-cols-2 ls:grid-cols-2 gap-4">
-
                     {{-- Period --}}
                     <div class="grid-row">
-                        <label class="block text-sm mb-2">
-                            Periode
-                        </label>
+                        <x-form.select id="period_id" name="period_id" label="Periode" placeholder="Pilih Periode" required
+                            x-on:change="
+                                const selected =
+                                    $event.target.options[
+                                        $event.target.selectedIndex
+                                    ];
 
-                        <select name="period_id"
-                            class="w-full border rounded-lg p-2 @error('period_id') border-red-500 @enderror" required>
-                            <option value="">Pilih Periode</option>
+                                $dispatch(
+                                    'period-range',
+                                    {
+                                        startDate:
+                                            selected.dataset.startDate,
 
+                                        endDate:
+                                            selected.dataset.endDate
+                                    }
+                                );
+                                // Update local state to show allowed date range
+                                periodStart = selected.dataset.startDate || '';
+                                periodEnd = selected.dataset.endDate || '';
+                            ">
                             @foreach ($periods as $period)
-                                <option value="{{ $period->id }}" @selected(old('period_id') == $period->id)>
+                                <option 
+                                    value="{{ $period->id }}" 
+                                    data-start-date="{{ $period->start_date }}"
+                                    data-end-date="{{ $period->end_date }}" 
+                                    @selected(old('period_id') == $period->id)>
                                     {{ $period->name }}
                                 </option>
                             @endforeach
-                        </select>
-
-                        @error('period_id')
-                            <p class="mt-1 text-sm text-red-500">
-                                {{ $message }}
+                        </x-form.select>
+                        <div x-data="{ periodStart: '', periodEnd: '' }">
+                            <p x-show="periodStart && periodEnd" class="mt-1 text-xs text-brand-500">
+                                Tanggal yang diperbolehkan:
+                                <span x-text="periodStart"></span>
+                                s/d
+                                <span x-text="periodEnd"></span>
                             </p>
-                        @enderror
+
+                        </div>
                     </div>
 
                     {{-- Name --}}
                     <div class="grid-row">
-                        <label class="block text-sm mb-2">
-                            Nama Sub Periode
-                        </label>
-
-                        <input type="text" name="name" value="{{ old('name') }}"
-                            class="w-full border rounded-lg p-2 @error('name') border-red-500 @enderror"
-                            placeholder="Masukkan nama sub periode" required>
-
-                        @error('name')
-                            <p class="mt-1 text-sm text-red-500">
-                                {{ $message }}
-                            </p>
-                        @enderror
+                        <x-form.input 
+                            id="name" 
+                            name="name" 
+                            label="Nama Sub Periode"
+                            placeholder="Masukkan Nama Sub Periode" 
+                            value="{{ old('name') }}" 
+                            required />
                     </div>
 
                     {{-- Start Date --}}
                     <div class="grid-row">
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Tanggal Masuk
-                        </label>
-
-                        <x-form.date-picker id="start_date" name="start_date" placeholder="Tentukan Tanggal Mulai Periode"
-                            defaultDate="{{ old('start_date', now()->format('Y-m-d')) }}" />
+                        <x-form.date-picker 
+                            id="start_date" 
+                            name="start_date" 
+                            label="Tanggal Masuk"
+                            placeholder="Tentukan Tanggal Mulai Sub Periode" 
+                            defaultDate="{{ old('start_date') }}" />
                     </div>
 
                     {{-- End Date --}}
                     <div class="grid-row">
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Tanggal Keluar
-                        </label>
-
-                        <x-form.date-picker id="end_date" name="end_date" placeholder="Tentukan Tanggal Akhir Periode"
-                            defaultDate="{{ old('end_date', now()->format('Y-m-d')) }}" />
+                        <x-form.date-picker 
+                            id="end_date" 
+                            name="end_date" 
+                            label="Tanggal Akhir"
+                            placeholder="Tentukan Tanggal Akhir Sub Periode" 
+                            defaultDate="{{ old('end_date') }}" />
                     </div>
-
                 </div>
 
                 {{-- Description --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="block text-sm mb-2">
-                        Deskripsi
-                    </label>
-
-                    <textarea name="description" rows="3"
-                        class="w-full border rounded-lg p-2 @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
-
-                    @error('description')
-                        <p class="mt-1 text-sm text-red-500">
-                            {{ $message }}
-                        </p>
-                    @enderror
+                    <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...."
+                        rows="6" />
                 </div>
 
                 {{-- Is Active --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Aktifkan Sub Periode
-                    </label>
-
-                    <div x-data="{ switcherToggle: {{ old('is_active', 1) ? 'true' : 'false' }} }">
-
-                        {{-- hidden input agar selalu terkirim --}}
-                        <input type="hidden" name="is_active" value="0">
-
-                        <label
-                            class="flex cursor-pointer items-center gap-3 text-sm font-medium
-                                   text-gray-700 select-none dark:text-gray-400">
-                            <div class="relative">
-                                <input type="checkbox" name="is_active" value="1" class="sr-only"
-                                    x-model="switcherToggle" @checked(old('is_active', 1)) />
-
-                                <div class="block h-6 w-11 rounded-full transition"
-                                    :class="switcherToggle
-                                        ?
-                                        'bg-brand-500 dark:bg-brand-500' :
-                                        'bg-gray-200 dark:bg-white/10'">
-                                </div>
-
-                                <div class="shadow-theme-sm absolute top-0.5 left-0.5 h-5 w-5
-                                           rounded-full bg-white transition-transform duration-300"
-                                    :class="switcherToggle ? 'translate-x-full' : 'translate-x-0'">
-                                </div>
-                            </div>
-
-                            <span x-text="switcherToggle ? 'Aktif' : 'Nonaktif'"></span>
-                        </label>
-
-                        @error('is_active')
-                            <p class="mt-1 text-sm text-red-500">
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
+                    <x-form.toggle-switch name="is_active" label="Aktifkan Sub Periode" :value="true" />
                 </div>
-
             </div>
 
             <div class="mt-6 flex justify-end gap-3">

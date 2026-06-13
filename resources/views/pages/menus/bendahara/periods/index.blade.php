@@ -13,7 +13,7 @@
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -23,6 +23,19 @@
         </div>
     @endif
 
+    <div class="mb-6">
+        <x-ui.alert variant="info" title="Aturan Pengelolaan Periode" :dismissible="false">
+
+            <ul class="list-disc pl-5 space-y-1">
+                <li>Periode tidak dapat diubah jika sudah memiliki transaksi.</li>
+                <li>Periode tidak dapat diubah jika terdapat transaksi pada sub periode.</li>
+                <li>Periode tidak dapat diubah setelah tanggal berakhir terlewati.</li>
+                <li>Periode hanya dapat ditutup setelah tanggal berakhir.</li>
+                <li>Periode yang telah ditutup tidak dapat diubah kembali.</li>
+            </ul>
+        </x-ui.alert>
+    </div>
+    
     <div class="space-y-6">
         <x-core.basic-tables.core-table title="Daftar Periode" description="Berikut adalah daftar periode yang tersedia.">
             <x-slot name="actions">

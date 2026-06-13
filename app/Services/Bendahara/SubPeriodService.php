@@ -48,7 +48,7 @@ class SubPeriodService
             throw new Exception('Sub periode tidak bisa diubah karena sudah memiliki transaksi.');
         }
 
-        $this->validateSubPeriodDates($data);
+        $this->validateSubPeriodDates($data, $SubPeriod);
 
         $SubPeriod->update([
             'period_id' => $data['period_id'],
@@ -88,9 +88,10 @@ class SubPeriodService
      * @throws Exception if the sub-period dates are outside the parent period's date range.
      * @throws ValidationException
      */
-    private function validateSubPeriodDates(array $data): void
+    private function validateSubPeriodDates(array $data, ?SubPeriod $subPeriod = null): void
     {
         $period = Period::findOrFail($data['period_id']);
+        $subPeriodId = $subPeriod?->id;
 
         $subStartDate = Carbon::parse($data['start_date']);
         $subEndDate = Carbon::parse($data['end_date']);
@@ -108,9 +109,18 @@ class SubPeriodService
             throw new Exception('Tanggal selesai sub periode tidak boleh melebihi periode utama.');
         }
 
+        if (Carbon::parse($subPeriod->end_date)->isPast()) {
+            throw ValidationException::withMessages([
+                'sub_period' => 'Sub periode yang telah berakhir tidak dapat diubah.'
+            ]);
+        }
+
         // cek apakah ada overlap dengna sub period lain pada periode yang sama
         $overlap = SubPeriod::query()
             ->where('period_id', $data['period_id'])
+            ->when($subPeriodId, function ($query) use ($subPeriodId) {
+                $query->where('id', '!=', $subPeriodId);
+            })
             ->where(function ($query) use ($subStartDate, $subEndDate) {
                 $query
                     ->whereBetween('start_date', [$subStartDate, $subEndDate])

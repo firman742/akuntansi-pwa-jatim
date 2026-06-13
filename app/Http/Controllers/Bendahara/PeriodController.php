@@ -10,6 +10,7 @@ use App\Models\SubPeriod;
 use App\Services\Bendahara\PeriodService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class PeriodController extends Controller
@@ -21,7 +22,18 @@ class PeriodController extends Controller
      */
     public function index(): View
     {
-        $periods = Period::withCount('transactions')
+        $periods = Period::with('subPeriods')
+            ->withCount('transactions')
+            ->withCount([
+                'subPeriods as sub_period_transactions_count' => function ($query) {
+                    $query->join(
+                        'transactions',
+                        'transactions.sub_period_id',
+                        '=',
+                        'sub_periods.id'
+                    );
+                }
+            ])
             ->orderBy('is_closed', 'desc')
             ->get();
 
@@ -55,7 +67,8 @@ class PeriodController extends Controller
                 ->route('bendahara.periods.index')
                 ->with('success', 'Periode berhasil ditambahkan');
         } catch (Exception $e) {
-            return back()->withErrors([
+            return back()
+                ->withInput()->withErrors([
                 'period' => $e->getMessage()
             ]);
         }
@@ -87,7 +100,8 @@ class PeriodController extends Controller
                 ->with('success', 'Periode - ' . ($request->name ?? '-') . ' berhasil diubah');
 
         } catch (Exception $e) {
-            return back()->withErrors([
+            return back()
+                ->withInput()->withErrors([
                 'period' => $e->getMessage()
             ]);
         }
@@ -111,7 +125,7 @@ class PeriodController extends Controller
                 ->route('bendahara.periods.index')
                 ->with('success', 'Periode - ' . ($period->name ?? '-') . ' berhasil ditutup');
         } catch (\Exception $e) {
-            return back()->withErrors([
+            return back()->withInput()->withErrors([
                 'period' => $e->getMessage()
             ]);
         }
@@ -137,7 +151,12 @@ class PeriodController extends Controller
         }
     }
 
-    public function getSubPeriods($periodId)
+    /**
+     * Get sub periods by period id
+     * @param string $periodId
+     * @return Collection
+     */
+    public function getSubPeriods(string $periodId): Collection
     {
         return SubPeriod::where('period_id', $periodId)
             ->active()

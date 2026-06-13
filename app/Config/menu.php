@@ -53,8 +53,8 @@ class menu
             self::item(
                 'Pengaturan Sistem',
                 'settings',
-                '/superadmin/configurations',
-                ['superadmin/configurations*'],
+                '/superadmin/configurations/edit',
+                ['superadmin/configurations/edit*'],
             )
         ];
     }

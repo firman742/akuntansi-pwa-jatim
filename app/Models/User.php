@@ -33,7 +33,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable
 {
-    use HasUuids, HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use HasUuids, HasFactory, HasRoles, Notifiable;
 
     protected $table = 'users';
     protected $keyType = 'string';   // ⬅️ WAJIB

@@ -101,16 +101,55 @@
             }
         }
     },
+
+    isExpired(row) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(row.end_date);
+        endDate.setHours(0, 0, 0, 0);
+
+        return endDate < today;
+    },
+
+    getEditLockReason(row) {
+        if (row.is_closed) {
+            return 'Periode sudah ditutup';
+        }
+
+        if (row.transactions_count > 0) {
+            return 'Periode sudah memiliki transaksi';
+        }
+
+        if (row.sub_period_transactions_count > 0) {
+            return 'Terdapat transaksi pada sub periode';
+        }
+
+        if (this.isExpired(row)) {
+            return 'Periode telah berakhir';
+        }
+
+        return null;
+    },
+
     canEdit(row) {
-        return row.transactions_count === 0;
+        return !this.getEditLockReason(row);
     },
 
     canClose(row) {
-        const today = new Date();
-        const endDate = new Date(row.end_date);
+        return !row.is_closed &&
+            this.isExpired(row);
+    },
+    getCloseReason(row) {
+        if (row.is_closed) {
+            return 'Periode sudah ditutup';
+        }
 
-        return row.transactions_count === 0 &&
-            today > endDate;
+        if (!this.isExpired(row)) {
+            return 'Periode hanya dapat ditutup setelah tanggal berakhir';
+        }
+
+        return null;
     },
 }">
     <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -158,10 +197,8 @@
 
                                 <!-- No Urut -->
                                 <td class="px-4 sm:px-6 py-3.5">
-                                    <div class="flex items-center gap-3">
-                                        <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
-                                            x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
-                                    </div>
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
                                 </td>
 
                                 <!-- Nama -->
@@ -170,13 +207,22 @@
                                 </td>
 
                                 <!-- Deskripsi -->
-                                <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="row.description"></span>
+                                </td>
 
                                 <!-- Tanggal Mulai -->
-                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.start_date)"></td>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="formatDate(row.start_date)"></span>
+                                </td>
 
                                 <!-- Tanggal Berakhir -->
-                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.end_date)"></td>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="formatDate(row.end_date)"></span>
+                                </td>
 
                                 <!-- Apakah ditutup -->
                                 <td class="px-4 sm:px-6 py-3.5">
@@ -186,7 +232,10 @@
                                 </td>
 
                                 <!-- Ditutup pada -->
-                                <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.closed_at)"></td>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="formatDate(row.closed_at)"></span>
+                                </td>
 
                                 <!-- Action -->
                                 <td class="px-4 sm:px-3 py-2.5">
@@ -195,45 +244,52 @@
                                         <!-- Close & Edit hanya jika BELUM ditutup -->
                                         <template x-if="!row.is_closed">
                                             <div class="flex items-center gap-2">
+                                                <form x-show="true"
+                                                    :action="canClose(row) ?
+                                                        closeUrl.replace(':id', row.id) :
+                                                        '#'"
+                                                    method="POST"
+                                                    @submit.prevent="
+                                                        if (!canClose(row)) return;
 
-                                                <template x-if="canClose(row)">
-                                                    <!-- Close -->
-                                                    <form :action="closeUrl.replace(':id', row.id)" method="POST"
-                                                        onsubmit="return confirm('Apakah anda yakin MENUTUP periode ini?')">
-                                                        @csrf
-                                                        @method('PATCH')
+                                                        if (confirm('Apakah anda yakin MENUTUP periode ini?')) {
+                                                            $event.target.submit();
+                                                        }
+                                                    ">
+                                                    @csrf
+                                                    @method('PATCH')
 
-                                                        <button type="submit"
-                                                            class="flex h-8 w-8 items-center justify-center rounded-md
-                                                       text-yellow-600 hover:bg-yellow-50
-                                                       dark:text-yellow-400 dark:hover:bg-yellow-500/10"
-                                                            title="Tutup Periode">
-                                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                                stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                                            </svg>
-                                                        </button>
-                                                    </form>
-                                                </template>
-
-                                                <!-- Edit -->
-                                                <template x-if="canEdit(row)">
-                                                    <a :href="editUrl.replace(':id', row.id)"
-                                                        class="flex h-8 w-8 items-center justify-center rounded-md
-                                                    text-blue-500 hover:bg-green-50
-                                                    dark:text-blue-400 dark:hover:bg-green-500/10"
-                                                        title="Edit Periode">
+                                                    <button type="submit" :disabled="!canClose(row)"
+                                                        :title="getCloseReason(row) || 'Tutup Periode'"
+                                                        :class="canClose(row) ?
+                                                            'text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-500/10' :
+                                                            'text-gray-300 cursor-not-allowed dark:text-gray-600'"
+                                                        class="flex h-8 w-8 items-center justify-center rounded-md">
                                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                             stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 stroke-width="2"
-                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                         </svg>
-                                                    </a>
-                                                </template>
+                                                    </button>
+                                                </form>
 
+                                                <!-- Edit -->
+                                                <a :href="canEdit(row) ?
+                                                    editUrl.replace(':id', row.id) :
+                                                    'javascript:void(0)'"
+                                                    :title="getEditLockReason(row) || 'Edit Periode'"
+                                                    :class="canEdit(row) ?
+                                                        'text-blue-500 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10' :
+                                                        'text-gray-300 cursor-not-allowed dark:text-gray-600'"
+                                                    class="flex h-8 w-8 items-center justify-center rounded-md">
+                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </template>
 

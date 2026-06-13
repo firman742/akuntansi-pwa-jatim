@@ -8,6 +8,7 @@ use App\Http\Requests\Bendahara\SubPeriods\UpdateSubPeriodRequest;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Services\Bendahara\SubPeriodService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Exception;
@@ -106,9 +107,13 @@ class SubPeriodController extends Controller
         $subPeriod = SubPeriod::findOrFail($id);
         $periods = Period::where('is_closed', false)->get();
 
-        return view(
-            'pages.menus.bendahara.sub_periods.edit',
-            compact('subPeriod', 'periods')
+        $hasTransaction = $subPeriod->transactions()->exists();
+        $isExpired = now()->startOfDay()->gt(Carbon::parse($subPeriod->end_date)->startOfDay());
+
+        $isLocked = $hasTransaction || $isExpired;
+
+        return view('pages.menus.bendahara.sub_periods.edit',
+            compact('subPeriod', 'periods', 'isLocked', 'hasTransaction', 'isExpired')
         );
     }
 
@@ -155,6 +160,7 @@ class SubPeriodController extends Controller
                 ->with('success', 'Sub Periode berhasil dihapus');
         } catch (Exception $e) {
             return back()
+                ->withInput()
                 ->withErrors([
                     'error' => $e->getMessage()
                 ]);

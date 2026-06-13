@@ -76,7 +76,7 @@
         </div>
 
         {{-- SUMMARY CARDS --}}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 xl:grid-cols-3">
 
             {{-- CARD --}}
             <div
@@ -131,25 +131,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- CARD --}}
-            <div
-                class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
-
-                <div class="flex items-center justify-between">
-
-                    <div>
-                        <span class="text-lg text-gray-500 dark:text-gray-400">
-                            Saldo Bersih
-                        </span>
-
-                        <h4 class="mt-2 text-2xl font-bold text-brand-600">
-                            Rp {{ number_format($netBalance, 0, ',', '.') }}
-                        </h4>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         {{-- ACCOUNTING FLOW --}}

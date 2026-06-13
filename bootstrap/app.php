@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\RoleMiddleware;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -40,6 +42,15 @@ return Application::configure(basePath: dirname(__DIR__))
             $request
         ) {
 
+            if ($e instanceof ValidationException) {
+                return null;
+            }
+        
+            if (! $e instanceof HttpExceptionInterface) {
+                return null;
+            }
+
+            
             $status = method_exists($e, 'getStatusCode')
                 ? $e->getStatusCode()
                 : 500;

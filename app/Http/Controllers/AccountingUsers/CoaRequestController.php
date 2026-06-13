@@ -111,7 +111,7 @@ class CoaRequestController extends Controller
             // Log error jika perlu
             Log::error('Error saat membuat permintaan COA: ' . $e->getMessage());
 
-            return redirect()->back()
+            return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat membuat permintaan COA. Silahkan coba lagi.');
         }
