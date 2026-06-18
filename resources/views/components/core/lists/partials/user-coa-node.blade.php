@@ -8,7 +8,7 @@
     style="padding-left: {{ $indent }}px;">
 
     <label
-        class="flex items-start gap-2.5 cursor-pointer select-none py-0.5 rounded hover:bg-gray-500 dark:hover:bg-white/[0.02] px-1 transition-colors">
+        class="flex items-start gap-2.5 cursor-pointer select-none py-0.5 rounded hover:bg-gray-200 dark:hover:bg-white/[0.02] px-1 transition-colors">
 
         <input type="checkbox" name="coa_ids[]" value="{{ $coa->id }}"
             class="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800" 

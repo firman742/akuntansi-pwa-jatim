@@ -26,7 +26,7 @@
     <div class="mb-6">
         <x-ui.alert variant="info" title="Aturan Pengelolaan Periode" :dismissible="false">
 
-            <ul class="list-disc pl-5 space-y-1">
+            <ul class="list-disc pl-5 space-y-1 text-blue-500">
                 <li>Periode tidak dapat diubah jika sudah memiliki transaksi.</li>
                 <li>Periode tidak dapat diubah jika terdapat transaksi pada sub periode.</li>
                 <li>Periode tidak dapat diubah setelah tanggal berakhir terlewati.</li>

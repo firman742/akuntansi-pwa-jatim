@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Bendahara\Master;
 
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bendahara\RequestCoas\ApproveRequestCoaRequest;
+use App\Http\Requests\Bendahara\RequestCoas\RejectRequestCoaRequest;
 use App\Models\CoaRequest;
 use App\Services\Bendahara\RequestCoaService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class RequestCoaController extends Controller
@@ -67,24 +68,21 @@ class RequestCoaController extends Controller
      * Approve a COA request and convert it to a regular COA
      *
      * @param string $id
-     * @param Request $request
+     * @param ApproveRequestCoaRequest $request
      * @param RequestCoaService $service
      * 
      * @return RedirectResponse
      */
-    public function approve(string $id, Request $request, RequestCoaService $service): RedirectResponse
+    public function approve(string $id, ApproveRequestCoaRequest $request, RequestCoaService $service): RedirectResponse
     {
-        $request->validate([
-            'approval_notes' => ['required', 'string', 'max:1000'],
-        ]);
-
         try {
             $service->approveRequest($id, $request->all());
 
             return redirect()->route('bendahara.master.requests.coas.index')
                 ->with('success', 'COA request approved successfully.');
         } catch (Exception $e) {
-            return redirect()->route('bendahara.master.requests.coas.index')
+            return back()
+                ->withInput()
                 ->with('error', 'Failed to approve COA request: ' . $e->getMessage());
         }
     }
@@ -93,24 +91,21 @@ class RequestCoaController extends Controller
      * Reject a COA request.
      *
      * @param string $id
-     * @param Request $request
+     * @param RejectRequestCoaRequest $request
      * @param RequestCoaService $service
      * 
      * @return RedirectResponse
      */
-    public function reject(string $id, Request $request, RequestCoaService $service): RedirectResponse
+    public function reject(string $id, RejectRequestCoaRequest $request, RequestCoaService $service): RedirectResponse
     {
-        $request->validate([
-            'rejection_reason' => ['required', 'string', 'max:1000'],
-        ]);
-
         try {
             $service->rejectRequest($id, $request->all());
 
             return redirect()->route('bendahara.master.requests.coas.index')
                 ->with('success', 'COA request rejected successfully.');
         } catch (Exception $e) {
-            return redirect()->route('bendahara.master.requests.coas.index')
+            return back()
+                ->withInput()
                 ->with('error', 'Failed to reject COA request: ' . $e->getMessage());
         }
     }

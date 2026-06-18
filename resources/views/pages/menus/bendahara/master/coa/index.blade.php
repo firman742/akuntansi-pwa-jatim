@@ -36,42 +36,37 @@
                     + Buat Akun COA Induk
                 </x-ui.button>
             </a>
-            
+
             <a href="{{ route('bendahara.master.coas.create-child') }}">
                 <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
                     + Buat Akun Sub COA
                 </x-ui.button>
             </a>
+
         </x-slot>
 
         {{-- GRID 1 COLUMN --}}
         <div class="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-1 gap-3 p-3">
             {{-- SEARCH BAR --}}
-            <div class="relative">
-                {{-- ICON --}}
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
+            <x-form.input id="coaSearch" name="name" placeholder="Cari berdasarkan kode atau nama COA..." startIconSearch
+                endIconSearch />
 
-                {{-- INPUT --}}
-                <input type="text" id="coaSearch" placeholder="Cari berdasarkan kode atau nama COA..."
-                    class="dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90 dark:placeholder:text-white/30
-                   h-11 w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12
-                   text-sm text-gray-800 shadow-theme-xs
-                   focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10" />
+            <div class="mt-3 flex justify-end">
 
-                {{-- CLEAR BUTTON --}}
-                <button type="button" id="clearSearch"
-                    class="absolute inset-y-0 right-0 hidden items-center pr-4 text-gray-400 hover:text-red-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <button id="toggleAllGroupsBtn" onclick="toggleAllGroups(this)"
+                    class="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 underline">
+
+                    <span>Sembunyikan Semua</span>
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 rotate-180"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+
                     </svg>
+
                 </button>
+
             </div>
         </div>
 
@@ -84,7 +79,8 @@
                 @endphp
 
                 {{-- CARD TYPE --}}
-                <div class="rounded-xl border bg-white shadow-sm flex flex-col h-fit dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90">
+                <div
+                    class="rounded-xl border bg-white shadow-sm flex flex-col h-fit dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90">
 
                     {{-- HEADER --}}
                     <div class="flex items-center justify-between border-b bg-gray-50 px-4 py-3 dark:bg-white/[0.03]">
@@ -92,8 +88,16 @@
                             {{ $type }}
                         </h2>
 
-                        <button onclick="toggleGroup('{{ $slug }}')" class="text-xs text-blue-500 hover:underline">
-                            Collapse
+                        <button onclick="toggleGroup('{{ $slug }}', this)"
+                            class="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 underline">
+
+                            <span>Sembunyikan</span>
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-4 w-4 transition-transform duration-200 rotate-180" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
                         </button>
                     </div>
 
@@ -117,16 +121,74 @@
 
     {{-- JS --}}
     <script>
-        function toggleGroup(id) {
+        // TOGGLE GROUP
+        function toggleGroup(id, button) {
             const el = document.getElementById('group-' + id);
+
             if (!el) return;
+
             el.classList.toggle('hidden');
+
+            const text = button.querySelector('span');
+            const icon = button.querySelector('svg');
+
+            if (el.classList.contains('hidden')) {
+                text.textContent = 'Tampilkan';
+                icon.classList.remove('rotate-180');
+            } else {
+                text.textContent = 'Sembunyikan';
+                icon.classList.add('rotate-180');
+            }
         }
 
-        function toggleNode(id) {
-            const el = document.getElementById('node-' + id);
-            if (!el) return;
-            el.classList.toggle('hidden');
+        // TOGGLE ALL GROUPS
+        let allGroupsOpened = true;
+
+        function toggleAllGroups(button) {
+
+            const groups = document.querySelectorAll('[id^="group-"]');
+
+            const text = button.querySelector('span');
+            const icon = button.querySelector('svg');
+
+            if (allGroupsOpened) {
+
+                groups.forEach(group => {
+                    group.classList.add('hidden');
+                });
+
+                document.querySelectorAll('[onclick^="toggleGroup"]').forEach(btn => {
+
+                    const span = btn.querySelector('span');
+                    const svg = btn.querySelector('svg');
+
+                    if (span) span.textContent = 'Tampilkan';
+                    if (svg) svg.classList.remove('rotate-180');
+                });
+
+                text.textContent = 'Tampilkan Semua';
+                icon.classList.remove('rotate-180');
+
+            } else {
+
+                groups.forEach(group => {
+                    group.classList.remove('hidden');
+                });
+
+                document.querySelectorAll('[onclick^="toggleGroup"]').forEach(btn => {
+
+                    const span = btn.querySelector('span');
+                    const svg = btn.querySelector('svg');
+
+                    if (span) span.textContent = 'Sembunyikan';
+                    if (svg) svg.classList.add('rotate-180');
+                });
+
+                text.textContent = 'Sembunyikan Semua';
+                icon.classList.add('rotate-180');
+            }
+
+            allGroupsOpened = !allGroupsOpened;
         }
 
         // SEARCH
@@ -134,35 +196,58 @@
         const clearButton = document.getElementById('clearSearch');
 
         searchInput.addEventListener('input', function(e) {
-            const value = e.target.value.toLowerCase().trim();
+            const keyword = e.target.value.toLowerCase().trim();
 
-            // Toggle clear button
-            if (value.length > 0) {
-                clearButton.classList.remove('hidden');
-                clearButton.classList.add('flex');
-            } else {
-                clearButton.classList.add('hidden');
-                clearButton.classList.remove('flex');
+            const nodes = document.querySelectorAll('.coa-node');
+
+            // reset dulu
+            nodes.forEach(node => {
+                node.style.display = '';
+            });
+
+            if (!keyword) {
+                return;
             }
 
-            document.querySelectorAll('.coa-node').forEach(node => {
+            // sembunyikan semua
+            nodes.forEach(node => {
+                node.style.display = 'none';
+            });
+
+            // cari yang match
+            nodes.forEach(node => {
+
                 const match =
-                    node.dataset.name.includes(value) ||
-                    node.dataset.code.includes(value);
+                    node.dataset.name.includes(keyword) ||
+                    node.dataset.code.includes(keyword);
 
-                node.style.display = match ? '' : 'none';
+                if (!match) return;
 
-                // Auto expand parent
-                if (match) {
-                    let parent = node.parentElement;
+                // tampilkan dirinya
+                node.style.display = '';
 
-                    while (parent) {
-                        if (parent.id && parent.id.startsWith('node-')) {
-                            parent.classList.remove('hidden');
-                        }
+                // tampilkan seluruh parent
+                let parentId = node.dataset.parent;
 
-                        parent = parent.parentElement;
+                while (parentId) {
+
+                    const parentNode = document.querySelector(
+                        `[data-id="${parentId}"]`
+                    );
+
+                    if (!parentNode) break;
+
+                    parentNode.style.display = '';
+
+                    const childrenContainer = document.getElementById(
+                        'node-' + parentId
+                    );
+
+                    if (childrenContainer) {
+                        childrenContainer.classList.remove('hidden');
                     }
+
+                    parentId = parentNode.dataset.parent;
                 }
             });
         });
@@ -179,6 +264,7 @@
 
             searchInput.focus();
         });
+
     </script>
 
 @endsection

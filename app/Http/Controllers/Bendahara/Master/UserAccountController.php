@@ -69,16 +69,16 @@ class UserAccountController extends Controller
      */
     public function sync(string $id, UserAccountService $service, SyncUserAccountRequest $request): RedirectResponse
     {
-        try {
+        // try {
             $service->sync($id, $request->validated());
 
             return redirect()->route('bendahara.master.account-users.index')
                 ->with('success', 'Akun pengguna berhasil disinkronkan.');
 
-        } catch (Throwable $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Gagal menyinkronkan akun pengguna: ' . $e->getMessage());
-        }
+        // } catch (Throwable $e) {
+        //     return back()
+        //         ->withInput()
+        //         ->with('error', 'Gagal menyinkronkan akun pengguna: ' . $e->getMessage());
+        // }
     }
 }

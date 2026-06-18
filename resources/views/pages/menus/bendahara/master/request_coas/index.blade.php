@@ -3,7 +3,7 @@
 @section('title', 'Daftar Pengajuan COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Daftar Pengajuan COA')" />
+    <x-common.page-breadcrumb pageTitle="Daftar Pengajuan COA" />
 
     @if (session('success'))
         <div class="mb-6">
@@ -16,7 +16,7 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-danger-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>

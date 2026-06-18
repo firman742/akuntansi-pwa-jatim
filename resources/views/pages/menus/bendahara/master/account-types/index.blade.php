@@ -16,7 +16,7 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-danger-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>

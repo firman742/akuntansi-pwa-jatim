@@ -2,12 +2,14 @@
 
 namespace App\Services\Bendahara;
 
+use App\Enums\ActivityLogAction;
 use App\Models\User;
 use App\Models\UserAccount;
+use App\Services\BaseService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class UserAccountService
+class UserAccountService extends BaseService
 {
     /**
      * Sync the specified resource in storage.
@@ -20,7 +22,13 @@ class UserAccountService
     {
         $user = User::findOrFail($id);
 
-        DB::transaction(function () use ($user, $data) {
+        $oldCoaIds = $user->coas()
+            ->pluck('chart_of_accounts.id')
+            ->toArray();
+
+        $newCoaIds = $data['coa_ids'] ?? [];
+
+        DB::transaction(function () use ($user, $data, $oldCoaIds, $newCoaIds) {
             // hapus relasi lama
             UserAccount::where('user_id', $user->id)->delete();
 
@@ -38,6 +46,25 @@ class UserAccountService
 
                 UserAccount::insert($rows);
             }
+
+            // activity log
+            $this->logger->log(
+                action: ActivityLogAction::SYNC->value,
+                module: 'USER_ACCOUNT',
+                subject: $user,
+                description: "Sinkronisasi akun untuk pengguna {$user->name}",
+                old: [
+                    'coa_ids' => $oldCoaIds,
+                ],
+                new: [
+                    'coa_ids' => $newCoaIds,
+                ],
+                additionalData: [
+                    'user_id' => $user->id,
+                    'added' => array_values(array_diff($newCoaIds, $oldCoaIds)),
+                    'removed' => array_values(array_diff($oldCoaIds, $newCoaIds)),
+                ]
+            );
         });
 
         return $user->fresh('coas');

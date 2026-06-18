@@ -6,55 +6,86 @@
 
     <x-common.page-breadcrumb pageTitle="Detail Pengajuan COA" />
 
+    @if ($errors->any())
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li class="text-red-500">{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+        </div>
+    @endif
+
     <div x-data="{
         approveModal: false,
         rejectModal: false
     }" class="space-y-6">
 
         {{-- HEADER --}}
+
         <div
-            class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm
-            dark:border-white/[0.05] dark:bg-white/[0.03]">
+            class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
 
-            <div class="border-b border-gray-200 p-6
-                dark:border-white/[0.05]">
+            <div class="p-6">
 
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
 
+                    {{-- INFORMASI UTAMA --}}
                     <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Kode Pengajuan
-                        </p>
-
-                        <h2 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-                            {{ $coaRequest->proposed_code }}
-                        </h2>
-
-                        <p class="mt-2 text-gray-600 dark:text-gray-400">
-                            {{ $coaRequest->proposed_name }}
-                        </p>
-                    </div>
-
-                    <div>
-
-                        @php
-                            $coaRequest->status = strtoupper($coaRequest->status);
-                            $statusClass = match ($coaRequest->status) {
-                                'APPROVED' => 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400',
-                                'REJECTED' => 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
-                                default => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400',
-                            };
-                        @endphp
 
                         <div class="flex flex-wrap items-center gap-3">
 
-                            <span class="inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $statusClass }}">
-                                {{ $coaRequest->status }}
+                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                                {{ $coaRequest->proposed_name }}
+                            </h1>
+
+                            <span
+                                class="rounded-lg bg-gray-100 px-3 py-1 text-sm font-medium
+                dark:bg-gray-800 dark:text-gray-300">
+                                {{ $coaRequest->proposed_code }}
                             </span>
 
-                            @if ($coaRequest->status === App\Enums\RequestStatus::PENDING->name)
+                        </div>
+
+                        <p class="mt-2 text-gray-500 dark:text-gray-400">
+                            Pengajuan pembuatan akun COA baru
+                        </p>
+
+                    </div>
+
+                    {{-- STATUS & ACTION --}}
+                    <div class="flex flex-col items-start gap-3 lg:items-end">
+
+                        @php
+                            $coaRequest->status = strtoupper($coaRequest->status);
+
+                            $statusClass = match ($coaRequest->status) {
+                                'APPROVED'
+                                    => 'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500',
+                                'REJECTED'
+                                    => 'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500',
+                                default
+                                    => 'bg-yellow-50 text-yellow-700 border border-yellow-500 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500',
+                            };
+                        @endphp
+
+                        <span class="inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $statusClass }}">
+                            {{ $coaRequest->status }}
+                        </span>
+
+                        @if ($coaRequest->status === App\Enums\RequestStatus::PENDING->name)
+                            <div class="flex flex-wrap gap-2">
+
                                 <button type="button" @click="rejectModal = true"
-                                    class="inline-flex items-center gap-2 rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500">
+                                    class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
 
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
@@ -64,12 +95,12 @@
 
                                     </svg>
 
-                                    Reject
+                                    Tolak
 
                                 </button>
 
                                 <button type="button" @click="approveModal = true"
-                                    class="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-500">
+                                    class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
 
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
@@ -79,12 +110,12 @@
 
                                     </svg>
 
-                                    Approve
+                                    Setujui
 
                                 </button>
-                            @endif
 
-                        </div>
+                            </div>
+                        @endif
 
                     </div>
 
@@ -92,45 +123,47 @@
 
             </div>
 
-            <div class="grid grid-cols-1 gap-6 p-6 md:grid-cols-4">
+            {{-- SUMMARY --}}
+            <div
+                class="grid grid-cols-1 gap-4 border-t border-gray-200 p-6 md:grid-cols-2 lg:grid-cols-4 dark:border-white/[0.05]">
 
-                <div>
-                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <div class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">
                         Pengaju
                     </p>
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
-                        {{ $coaRequest->requester?->name }}
+                    <p class="mt-2 font-semibold text-gray-900 dark:text-white">
+                        {{ $coaRequest->requester?->name ?? '-' }}
                     </p>
                 </div>
 
-                <div>
-                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <div class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">
                         Tanggal Pengajuan
                     </p>
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
+                    <p class="mt-2 font-semibold text-gray-900 dark:text-white">
                         {{ $coaRequest->created_at?->format('d M Y H:i') }}
                     </p>
                 </div>
 
-                <div>
-                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <div class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">
                         Tipe Akun
                     </p>
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
-                        {{ $coaRequest->accountType?->name }}
+                    <p class="mt-2 font-semibold text-gray-900 dark:text-white">
+                        {{ $coaRequest->accountType?->name ?? '-' }}
                     </p>
                 </div>
 
-                <div>
-                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <div class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">
                         Normal Balance
                     </p>
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
-                        {{ $coaRequest->normal_balance }}
+                    <p class="mt-2 font-semibold text-gray-900 dark:text-white">
+                        {{ $coaRequest->normal_balance ?? '-' }}
                     </p>
                 </div>
 
@@ -138,75 +171,61 @@
 
         </div>
 
-        {{-- INFORMASI COA --}}
-        <div
-            class="rounded-2xl border border-gray-200 bg-white shadow-sm
-            dark:border-white/[0.05] dark:bg-white/[0.03]">
+        {{-- DETAIL COA --}}
 
-            <div class="border-b border-gray-200 px-6 py-4
-                dark:border-white/[0.05]">
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
+
+            <div class="border-b border-gray-200 px-6 py-4 dark:border-white/[0.05]">
 
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    Informasi COA
+                    Detail COA Yang Diajukan
                 </h3>
 
             </div>
 
-            <div class="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
+            <div class="divide-y divide-gray-100 p-6 dark:divide-white/[0.05]">
 
-                <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Nama COA Yang Diajukan
-                    </label>
-
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
+                <div class="flex flex-col justify-between gap-2 py-4 md:flex-row">
+                    <span class="text-gray-500">Nama COA</span>
+                    <span class="font-medium text-gray-900 dark:text-white">
                         {{ $coaRequest->proposed_name }}
-                    </p>
+                    </span>
                 </div>
 
-                <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Kode COA
-                    </label>
-
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
+                <div class="flex flex-col justify-between gap-2 py-4 md:flex-row">
+                    <span class="text-gray-500">Kode COA</span>
+                    <span class="font-medium text-gray-900 dark:text-white">
                         {{ $coaRequest->proposed_code }}
-                    </p>
+                    </span>
                 </div>
 
-                <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Parent COA
-                    </label>
+                <div class="flex flex-col justify-between gap-2 py-4 md:flex-row">
+                    <span class="text-gray-500">Parent COA</span>
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
+                    <span class="font-medium text-gray-900 dark:text-white">
                         {{ $coaRequest->parentCoa?->code }}
                         -
                         {{ $coaRequest->parentCoa?->name ?? '-' }}
-                    </p>
+                    </span>
                 </div>
 
-                <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Sub Periode
-                    </label>
+                <div class="flex flex-col justify-between gap-2 py-4 md:flex-row">
+                    <span class="text-gray-500">Sub Periode</span>
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
+                    <span class="font-medium text-gray-900 dark:text-white">
                         {{ $coaRequest->subPeriod?->name ?? '-' }}
-                    </p>
+                    </span>
                 </div>
 
             </div>
 
         </div>
 
-        {{-- DESKRIPSI --}}
-        <div
-            class="rounded-2xl border border-gray-200 bg-white shadow-sm
-            dark:border-white/[0.05] dark:bg-white/[0.03]">
+        {{-- ALASAN PENGAJUAN --}}
 
-            <div class="border-b border-gray-200 px-6 py-4
-                dark:border-white/[0.05]">
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
+
+            <div class="border-b border-gray-200 px-6 py-4 dark:border-white/[0.05]">
 
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                     Alasan Pengajuan
@@ -216,72 +235,116 @@
 
             <div class="p-6">
 
-                <p class="whitespace-pre-line text-gray-700 dark:text-gray-300">
-                    {{ $coaRequest->description ?: '-' }}
-                </p>
+                <div class="rounded-xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-500/20 dark:bg-blue-500/10">
+
+                    <p class="whitespace-pre-line text-blue-900 dark:text-blue-200">
+                        {{ $coaRequest->description ?: 'Tidak ada alasan pengajuan.' }}
+                    </p>
+
+                </div>
 
             </div>
-
         </div>
 
-        {{-- APPROVAL --}}
+
+        {{-- APPROVAL INFORMATION --}}
         <div
-            class="rounded-2xl border border-gray-200 bg-white shadow-sm
-            dark:border-white/[0.05] dark:bg-white/[0.03]">
+            class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
 
-            <div class="border-b border-gray-200 px-6 py-4
-                dark:border-white/[0.05]">
-
+            <div class="border-b border-gray-200 px-6 py-4 dark:border-white/[0.05]">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                     Informasi Persetujuan
                 </h3>
-
             </div>
 
-            <div class="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
+            <div class="space-y-6 p-6">
 
+                {{-- STATUS --}}
                 <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Approver
+                    <label class="mb-2 block text-sm text-gray-500 dark:text-gray-400">
+                        Status Request
                     </label>
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
-                        {{ $coaRequest->approver?->name ?? '-' }}
-                    </p>
+                    <span @class([
+                        'inline-flex rounded-full px-3 py-1 text-sm font-medium',
+                        'bg-yellow-50 text-yellow-700 border border-yellow-500 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500' => $coaRequest->status === 'PENDING',
+                        'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500' => $coaRequest->status === 'APPROVED',
+                        'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500' => $coaRequest->status === 'REJECTED',
+                    ])>
+                        {{ $coaRequest->status }}
+                    </span>
                 </div>
 
-                <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Tanggal Approval
-                    </label>
+                {{-- APPROVAL / REJECTION DETAIL --}}
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                    <p class="mt-1 font-medium text-gray-900 dark:text-white">
-                        {{ $coaRequest->approved_at?->format('d M Y H:i') ?? '-' }}
-                    </p>
+                    <div>
+                        <label class="text-sm text-gray-500 dark:text-gray-400">
+                            Diproses Oleh
+                        </label>
+
+                        <p class="mt-1 font-medium text-gray-900 dark:text-white">
+                            {{ $coaRequest->approver?->name ?? '-' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-500 dark:text-gray-400">
+                            Tanggal Diproses
+                        </label>
+
+                        <p class="mt-1 font-medium text-gray-900 dark:text-white">
+                            {{ $coaRequest->approved_at?->format('d M Y H:i') ?? ($coaRequest->rejected_at?->format('d M Y H:i') ?? '-') }}
+                        </p>
+                    </div>
+
                 </div>
 
-                <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Catatan Approval
-                    </label>
+                {{-- APPROVED --}}
+                @if ($coaRequest->status === 'APPROVED')
+                    <div
+                        class="rounded-xl border border-green-200 bg-green-50 p-4
+                dark:border-green-500/20 dark:bg-green-500/10">
 
-                    <p class="mt-1 text-gray-900 dark:text-white">
-                        {{ $coaRequest->approval_notes ?? '-' }}
-                    </p>
-                </div>
+                        <h4 class="mb-2 font-medium text-green-700 dark:text-green-400">
+                            Catatan Persetujuan
+                        </h4>
 
-                <div>
-                    <label class="text-sm text-gray-500 dark:text-gray-400">
-                        Alasan Penolakan
-                    </label>
+                        <p class="text-sm text-green-800 dark:text-green-300">
+                            {{ $coaRequest->approval_notes ?: 'Tidak ada catatan.' }}
+                        </p>
+                    </div>
+                @endif
 
-                    <p class="mt-1 text-gray-900 dark:text-white">
-                        {{ $coaRequest->rejection_reason ?? '-' }}
-                    </p>
-                </div>
+                {{-- REJECTED --}}
+                @if ($coaRequest->status === 'REJECTED')
+                    <div
+                        class="rounded-xl border border-red-200 bg-red-50 p-4
+                dark:border-red-500/20 dark:bg-red-500/10">
+
+                        <h4 class="mb-2 font-medium text-red-700 dark:text-red-400">
+                            Alasan Penolakan
+                        </h4>
+
+                        <p class="text-sm text-red-800 dark:text-red-300">
+                            {{ $coaRequest->rejection_reason ?: 'Tidak ada alasan penolakan.' }}
+                        </p>
+                    </div>
+                @endif
+
+                {{-- PENDING --}}
+                @if ($coaRequest->status === 'PENDING')
+                    <div
+                        class="rounded-xl border border-yellow-200 bg-yellow-50 p-4
+                dark:border-yellow-500/20 dark:bg-yellow-500/10">
+
+                        <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                            Permintaan COA masih menunggu proses persetujuan.
+                        </p>
+                    </div>
+                @endif
 
             </div>
-
         </div>
 
         {{-- ACTION --}}
@@ -301,10 +364,10 @@
 
                 <div class="flex items-center justify-center ">
                     <div @click.away="approveModal = false" x-transition
-                        class="w-full max-w-lg sm:max-w-xl lg:max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
+                        class="w-full max-w-lg sm:max-w-xl lg:max-w-2xl overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-2xl dark:bg-gray-900 dark:border-white">
 
                         {{-- Header --}}
-                        <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-6 py-5 dark:border-white">
 
                             <div class="flex items-center gap-3">
 
@@ -402,20 +465,9 @@
                             </dl>
 
                             <div class="grid grid-cols-1">
-                                <div>
-
-                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-
-                                        Catatan Approval
-
-                                    </label>
-
-                                    <textarea name="approval_notes" form="approve-form" rows="4"
-                                        placeholder="Contoh: COA telah diverifikasi dan sesuai kebutuhan operasional."
-                                        class="w-full rounded-lg border border-gray-300 px-4 py-3
-                                    dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
-
-                                </div>
+                                <x-form.text-area name="approval_notes" form="approve-form" label="Catatan Approval"
+                                    placeholder="Contoh: COA telah diverifikasi dan sesuai kebutuhan operasional...."
+                                    rows="4" required />
                             </div>
 
                         </div>
@@ -457,17 +509,17 @@
                 class="fixed inset-0 z-99999 flex items-center justify-center bg-black/60 p-4" style="display:none;">
 
                 <div @click.away="rejectModal = false"
-                    class="w-full max-w-lg sm:max-w-xl lg:max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
+                    class="w-full max-w-lg sm:max-w-xl lg:max-w-2xl overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-2xl dark:bg-gray-900 dark:border-white">
 
                     {{-- Header --}}
-                    <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-800">
+                    <div class="border-b border-gray-200 px-6 py-5 dark:border-white">
 
                         <div class="flex items-center gap-3">
 
                             <div
                                 class="flex h-12 w-12 items-center justify-center rounded-full
-                    bg-red-100 text-red-600
-                    dark:bg-red-500/20 dark:text-red-400">
+                                bg-red-100 text-red-600
+                                dark:bg-red-500/20 dark:text-red-400">
 
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
@@ -501,34 +553,21 @@
                         @csrf
 
                         <div class="p-6">
-
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-
-                                Alasan Penolakan <span class="text-red-500">*</span>
-
-                            </label>
-
-                            <textarea name="rejection_reason" rows="5" required placeholder="Jelaskan alasan penolakan..."
-                                class="w-full rounded-lg border border-gray-300 px-4 py-3
-                    dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
-
+                            <x-form.text-area name="rejection_reason" form="approve-form" label="Alasan Penolakan"
+                                placeholder="Jelaskan alasan penolakan...." rows="4" required />
                         </div>
 
                         {{-- Footer --}}
                         <div class="flex justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-800">
 
                             <button type="button" @click="rejectModal = false"
-                                class="rounded-lg border border-gray-300 px-4 py-2">
-
+                                class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
                                 Batal
-
                             </button>
 
                             <button type="submit"
                                 class="rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700">
-
                                 Tolak Pengajuan
-
                             </button>
 
                         </div>

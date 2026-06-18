@@ -3,11 +3,14 @@
     'name',
     'label' => null,
     'type' => 'text',
+    'xModel' => null,
     'placeholder' => '',
     'value' => null,
     'required' => false,
     'readonly' => false,
     'disabled' => false,
+    'startIconSearch' => false,
+    'endIconSearch' => false,
 ])
 
 <div>
@@ -15,30 +18,51 @@
         <label for="{{ $id ?? $name }}" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
             {{ $label }}
 
-                @if ($required)
-                    <span class="text-error-500">*</span>
-                @endif
+            @if ($required)
+                <span class="text-error-500">*</span>
+            @endif
         </label>
     @endif
 
     <div class="relative">
+        @if ($startIconSearch)
+            {{-- ICON --}}
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        @endif
+
         <input 
             id="{{ $id ?? $name }}" 
             name="{{ $name }}" 
             type="{{ $type }}"
             value="{{ old($name, $value) }}" 
             placeholder="{{ $placeholder }}" 
+            x-model="{{ $xModel }}"
             @required($required) 
             @readonly($readonly)
             @disabled($disabled)
             {{ $attributes->merge([
-                'class' =>
-                    'w-full rounded-lg bg-transparent px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 h-11 text-gray-800 placeholder:text-gray-400 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 border ' .
-                    ($errors->has($name)
-                        ? 'border-error-300 focus:border-error-300 focus:ring-error-500/10 dark:border-error-700 dark:focus:border-error-800'
-                        : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'
-                    ),
-            ]) }} />
+                'class' => \Illuminate\Support\Arr::toCssClasses([
+                    'w-full rounded-lg px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 h-11 text-gray-800 placeholder:text-gray-400 dark:text-white/90 dark:placeholder:text-white/30 border',
+        
+                    'pl-12' => $startIconSearch,
+                    'pr-12' => $endIconSearch,
+        
+                    'border-error-300 focus:border-error-300 focus:ring-error-500/10 dark:border-error-700 dark:focus:border-error-800'
+                        => $errors->has($name),
+        
+                    'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'
+                        => !$errors->has($name),
+                    'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' => $readonly || $disabled,
+                    'bg-transparent dark:bg-gray-900' => !$readonly && !$disabled,
+                ]),
+            ]) }} 
+        />
 
         @error($name)
             <span class="absolute top-1/2 right-3.5 -translate-y-1/2">
@@ -49,6 +73,17 @@
                 </svg>
             </span>
         @enderror
+
+        @if ($endIconSearch)
+            {{-- CLEAR BUTTON --}}
+            <button type="button" id="clearSearch"
+                class="absolute inset-y-0 right-0 hidden items-center pr-4 text-gray-400 hover:text-red-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        @endif
     </div>
 
     @error($name)

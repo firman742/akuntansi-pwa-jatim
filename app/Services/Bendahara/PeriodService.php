@@ -2,18 +2,20 @@
 
 namespace App\Services\Bendahara;
 
+use App\Enums\ActivityLogAction;
 use App\Models\ChartOfAccount;
 use App\Models\ClosingBalance;
 use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\OpeningBalance;
 use App\Models\Period;
+use App\Services\BaseService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PeriodService
+class PeriodService extends BaseService
 {
     /**
      * Create a new period.
@@ -46,6 +48,20 @@ class PeriodService
             'end_date' => $data['end_date'],
             'created_by' => Auth::id(),
         ]);
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::CREATED->value,
+            module: "PERIOD",
+            subject: $period,
+            description: "Periode {$period->name} berhasil dibuat.",
+            old: [],
+            new: $period->toArray(),
+            additionalData: [
+                'start_date' => $period->start_date->toDateString(),
+                'end_date' => $period->end_date->toDateString(),
+            ]
+        );
 
         return $period;
     }
@@ -87,12 +103,29 @@ class PeriodService
             );
         }
 
+        $oldPeriod = $period->replicate();
+        
         $period->update([
             'name' => $data['name'],
             'description' => $data['description'],
             'start_date' => $data['start_date'],
             'end_date' => $data['end_date'],
         ]);
+
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::UPDATED->value,
+            module: "PERIOD",
+            subject: $period,
+            description: "Periode {$period->name} berhasil diubah.",
+            old: $oldPeriod->toArray(),
+            new: $period->toArray(),
+            additionalData: [
+                'start_date' => $period->start_date->toDateString(),
+                'end_date' => $period->end_date->toDateString(),
+            ]
+        );
 
         return $period;
     }
@@ -109,6 +142,20 @@ class PeriodService
         if ($period->is_closed) {
             throw new Exception('Periode sudah ditutup dan tidak dapat dihapus.');
         }
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::DELETED->value,
+            module: "PERIOD",
+            subject: $period,
+            description: "Periode {$period->name} berhasil dihapus.",
+            old: $period->toArray(),
+            new: [],
+            additionalData: [
+                'start_date' => $period->start_date->toDateString(),
+                'end_date' => $period->end_date->toDateString(),
+            ]
+        );
 
         $period->delete();
     }
@@ -197,6 +244,20 @@ class PeriodService
                 'closed_at' => now(),
                 'closed_by' => Auth::id(),
             ]);
+
+            // activity log
+            $this->logger->log(
+                action: ActivityLogAction::CLOSED->value,
+                module: "PERIOD",
+                subject: $period,
+                description: "Periode {$period->name} berhasil ditutup.",
+                old: [],
+                new: $period->toArray(),
+                additionalData: [
+                    'start_date' => $period->start_date->toDateString(),
+                    'end_date' => $period->end_date->toDateString(),
+                ]
+            );
         });
     }
 }

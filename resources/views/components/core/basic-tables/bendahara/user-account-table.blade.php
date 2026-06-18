@@ -161,9 +161,7 @@
                                 {{-- COA debet Count --}}
                                 <td class="px-3 py-4 sm:px-6">
                                     <span
-                                        class="inline-flex items-center rounded-full
-                                               bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700
-                                               dark:bg-blue-500/15 dark:text-blue-500">
+                                        class="inline-flex items-center rounded-full px-3 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-500 dark:bg-blue-500/15 dark:text-blue-500 dark:border-blue-500">
 
                                         <span x-text="row.debit_coas_count ?? 0"></span>
                                         <span class="ml-1">Akun</span>
@@ -173,9 +171,7 @@
                                 {{-- COA credit Count --}}
                                 <td class="px-3 py-4 sm:px-6">
                                     <span
-                                        class="inline-flex items-center rounded-full
-                                               bg-green-50 px-3 py-1 text-xs font-medium text-green-700
-                                               dark:bg-green-500/15 dark:text-green-500">
+                                        class="inline-flex items-center rounded-full px-3 py-1 text-xs bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500">
 
                                         <span x-text="row.credit_coas_count ?? 0"></span>
                                         <span class="ml-1">Akun</span>
@@ -187,7 +183,7 @@
                                     <a :href="editUrl.replace(':id', row.id)"
                                         class="inline-flex items-center rounded-lg
                                                border border-brand-300 px-3 py-2 text-sm font-medium bg-blue-500
-                                               text-white transition hover:bg-blue-100
+                                               text-white transition hover:bg-blue-400
                                                dark:border-brand-700 dark:text-white-90 dark:hover:bg-brand-500/10">
                                         Hubungkan COA
 

@@ -123,7 +123,7 @@ class COAController extends Controller
             return redirect()->route('bendahara.master.coas.index')
                 ->with('success', 'Chart of Account berhasil dibuat.');
         } catch (Exception $e) {
-            return redirect()->back()
+            return back()
                 ->withInput()
                 ->with('error', 'Gagal membuat Chart of Account: ' . $e->getMessage());
         }
@@ -177,7 +177,7 @@ class COAController extends Controller
             return redirect()->route('bendahara.master.coas.index')
                 ->with('success', 'Chart of Account berhasil diperbarui.');
         } catch (Exception $e) {
-            return redirect()->back()
+            return back()
                 ->withInput()
                 ->with('error', 'Gagal memperbarui Chart of Account: ' . $e->getMessage());
         }
@@ -199,7 +199,7 @@ class COAController extends Controller
             return redirect()->route('bendahara.master.coas.index')
                 ->with('success', 'Chart of Account berhasil dihapus.');
         } catch (Exception $e) {
-            return redirect()->back()
+            return back()
                 ->with('error', 'Gagal menghapus Chart of Account: ' . $e->getMessage());
         }
     }

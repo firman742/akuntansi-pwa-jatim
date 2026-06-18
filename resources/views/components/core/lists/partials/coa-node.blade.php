@@ -2,7 +2,12 @@
     $hasChildren = $coa->children->count() > 0;
 @endphp
 
-<div class="coa-node border-l pl-3 py-1 ml-{{ $level * 4 }}" data-name="{{ strtolower($coa->name) }}"
+<div
+    id="coa-item-{{ $coa->id }}"
+    class="coa-node border-l pl-3 py-1 ml-{{ $level * 4 }}"
+    data-id="{{ $coa->id }}"
+    data-parent="{{ $coa->parent_id }}"
+    data-name="{{ strtolower($coa->name) }}"
     data-code="{{ strtolower($coa->code) }}">
 
     <div class="flex items-center justify-between rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/[0.07]">
@@ -30,8 +35,10 @@
         <div class="flex items-center gap-2">
 
             <span
-                class="text-xs px-2 py-1 rounded-full
-                {{ $coa->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium
+                {{ $coa->is_active ? 
+                    'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500' : 
+                    'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-' }}">
                 {{ $coa->is_active ? 'Active' : 'Inactive' }}
             </span>
 

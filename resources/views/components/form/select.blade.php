@@ -4,10 +4,12 @@
     'label' => null,
     'placeholder' => 'Pilih Data',
     'value' => null,
+    'xModel' => null,
     'required' => false,
     'disabled' => false,
     'minDate' => null,
     'maxDate' => null,
+    'alpineDisabled' => null,
 ])
 
 <div>
@@ -24,14 +26,30 @@
     <div x-data="{
         isOptionSelected: '{{ old($name, $value) }}' !== ''
     }" class="relative z-20 bg-transparent">
-        <select id="{{ $id ?? $name }}" name="{{ $name }}" @disabled($disabled) @required($required)
+        <select 
+            id="{{ $id ?? $name }}" 
+            name="{{ $name }}"
+            @if ($xModel) 
+                x-model="{{ $xModel }}" 
+            @endif 
+            @disabled($disabled)
+            @required($required) 
+            
+            @if ($alpineDisabled) 
+                x-bind:disabled="{{ $alpineDisabled }}" 
+            @endif
             @change="isOptionSelected = true"
-            {{ $attributes->merge([
-                'class' =>
-                    'h-11 w-full appearance-none rounded-lg bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 placeholder:text-gray-400 border ' .
-                    ($errors->has($name)
-                        ? 'border-error-300 focus:border-error-300 focus:ring-error-500/10 dark:border-error-700 dark:focus:border-error-800'
-                        : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'),
+            @if ($alpineDisabled) :class="{
+                'bg-gray-100 dark:bg-gray-800 cursor-not-allowed': {{ $alpineDisabled }},
+                'bg-transparent dark:bg-gray-900': !{{ $alpineDisabled }}
+            }" @endif
+                {{ $attributes->merge([
+                    'class' =>
+                        'h-11 w-full appearance-none rounded-lg px-4 py-2.5 pr-11 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 border dark:text-white/90 placeholder:text-gray-400 ' .
+                        ($disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed ' : 'bg-transparent dark:bg-gray-900 ') .
+                        ($errors->has($name)
+                            ? 'border-error-300 focus:border-error-300 focus:ring-error-500/10 dark:border-error-700 dark:focus:border-error-800'
+                            : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800'),
             ]) }}>
             <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
                 {{ $placeholder }}

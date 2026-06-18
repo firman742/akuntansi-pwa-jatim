@@ -10,9 +10,7 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>
-                            <span class="text-gray-500 dark:text-gray-400">{{ $error }}</span>
-                        </li>
+                        <li class="text-red-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -105,17 +103,19 @@
             ">
                 {{-- Parent Akun --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Akun Induk (Opsional)
-                    </label>
-                    <select name="parent_id" x-model="parentId"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <x-form.select 
+                        id="parent_id" 
+                        name="parent_id"
+                        xModel="parentId"
+                        label="Parent Akun COA" 
+                        placeholder="Pilih Tipe Akun" 
+                        required>
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(old('parent_id') == $parent->id)>
                                 {{ $parent->code }} - {{ $parent->name }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-form.select>
                     <p class="mt-1 text-xs text-amber-600">
                         Child account wajib memiliki parent account.
                     </p>
@@ -123,12 +123,12 @@
 
                 {{-- Kode Akun Otomatis --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Kode Akun (Otomatis)
-                    </label>
-
-                    <input type="text" x-model="code" readonly disabled
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white/70 cursor-not-allowed" />
+                    <x-form.input 
+                        id="code" 
+                        name="code" 
+                        xModel="code"
+                        label="Kode Akun (Otomatis)"
+                        readonly disabled />
 
                     {{-- Hidden fields untuk backend --}}
                     <input type="hidden" name="code" :value="code">
@@ -143,33 +143,30 @@
 
                 {{-- Nama Akun --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Nama Akun COA
-                    </label>
-                    <input type="text" name="name"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('name') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <x-form.input 
+                        id="name" 
+                        name="name" 
+                        xModel="name"
+                        label="Nama Akun COA"
+                        required />
                 </div>
 
                 {{-- Tipe Akun --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Tipe Akun
-                    </label>
-
-                    <select x-model="accountTypeId" :readonly="parentId" :disabled="parentId"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-
-                        <option value="">-- Pilih Tipe Akun --</option>
-
+                    <x-form.select 
+                        id="accountTypeId" 
+                        name="accountTypeId"
+                        xModel="accountTypeId"
+                        label="Tipe Akun" 
+                        placeholder="Pilih Tipe Akun" 
+                        alpineDisabled="parentId"
+                        >
                         @foreach ($accountTypes as $type)
                             <option value="{{ $type->id }}">
                                 {{ $type->name }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-form.select>
 
                     <input type="hidden" name="account_type_id" :value="accountTypeId">
 
@@ -182,19 +179,20 @@
 
                 {{-- Normal Balance --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Normal Balance
-                    </label>
-
-                    <select x-model="normalBalance" :readonly="parentId" :disabled="parentId"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-
+                    <x-form.select 
+                        id="normalBalance" 
+                        name="normalBalance"
+                        xModel="normalBalance"
+                        label="Normal Balance" 
+                        placeholder="Pilih Normal Balance" 
+                        alpineDisabled="parentId"
+                        >
                         @foreach ($normalBalances as $balance)
                             <option value="{{ $balance }}">
                                 {{ $balance }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-form.select>
 
                     <input type="hidden" name="normal_balance" :value="normalBalance">
 
@@ -207,26 +205,7 @@
 
                 {{-- Aktif --}}
                 <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Aktifkan Akun
-                    </label>
-                    <div x-data="{ switcherToggle: true }">
-                        <input type="hidden" name="is_active" value="0">
-                        <label
-                            class="flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700 select-none dark:text-gray-400">
-                            <div class="relative">
-                                <input type="checkbox" name="is_active" value="1" class="sr-only"
-                                    x-model="switcherToggle" />
-                                <div class="block h-6 w-11 rounded-full transition"
-                                    :class="switcherToggle ? 'bg-brand-500 dark:bg-brand-500' : 'bg-gray-200 dark:bg-white/10'">
-                                </div>
-                                <div class="shadow-theme-sm absolute top-0.5 left-0.5 h-5 w-5
-                                    rounded-full bg-white transition-transform duration-300"
-                                    :class="switcherToggle ? 'translate-x-full' : 'translate-x-0'"></div>
-                            </div>
-                            <span x-text="switcherToggle ? 'Aktif' : 'Nonaktif'"></span>
-                        </label>
-                    </div>
+                    <x-form.toggle-switch name="is_active" label="Aktifkan Akun COA" :value="true" onText="Akun Aktif" offText="Akun Tidak Aktif" />
                 </div>
             </div>
 

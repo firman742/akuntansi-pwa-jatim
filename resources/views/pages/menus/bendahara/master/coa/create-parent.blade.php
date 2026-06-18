@@ -10,7 +10,7 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                    <li class="text-red-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -65,10 +65,10 @@
             <input type="hidden" name="level" :value="level">
             <input type="hidden" name="order" :value="order">
 
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {{-- LEFT SIDE --}}
-                <div class="xl:col-span-2 space-y-6">
+                <div class="grid-row">
 
                     {{-- FORM CARD --}}
                     <x-common.component-card title="Buat Akun COA Induk">
@@ -77,128 +77,63 @@
 
                             {{-- Nama Akun --}}
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Nama Akun COA
-                                </label>
-
-                                <input type="text" name="name" value="{{ old('name') }}"
-                                    placeholder="Contoh: Kas, Bank, Pendapatan"
-                                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border
-                                    @error('name')
-                                        border-error-300 focus:border-error-300
-                                    @else
-                                        border-gray-300
-                                    @enderror
-                                    bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:text-white/90 dark:placeholder:text-white/30" />
-
-                                @error('name')
-                                    <p class="mt-1 text-sm text-error-500">
-                                        {{ $message }}
-                                    </p>
-                                @enderror
+                                <x-form.input 
+                                    id="name" 
+                                    name="name" 
+                                    label="Nama Akun COA"
+                                    placeholder="Contoh: Kas, Bank, Pendapatan" 
+                                    value="{{ old('name') }}" 
+                                    required />
                             </div>
 
                             {{-- Tipe Akun --}}
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                    Tipe Akun
-                                </label>
-
-                                <select name="account_type_id"
-                                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-                                    <option value="">
-                                        -- Pilih Tipe Akun --
-                                    </option>
-
+                                <x-form.select 
+                                    id="account_type_id" 
+                                    name="account_type_id" 
+                                    label="Tipe Akun" 
+                                    placeholder="Pilih Tipe Akun" 
+                                    required>
                                     @foreach ($accountTypes as $type)
                                         <option value="{{ $type->id }}" @selected(old('account_type_id') == $type->id)>
                                             {{ $type->name }}
                                         </option>
                                     @endforeach
-                                </select>
-
-                                @error('account_type_id')
-                                    <p class="mt-1 text-sm text-error-500">
-                                        {{ $message }}
-                                    </p>
-                                @enderror
+                                </x-form.select>
                             </div>
 
                             {{-- Normal Balance --}}
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Normal Balance
-                                </label>
-
-                                <select name="normal_balance"
-                                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+                                <x-form.select 
+                                    id="normal_balance" 
+                                    name="normal_balance" 
+                                    label="Normal Balance" 
+                                    placeholder="Pilih Normal Balance" 
+                                    required>
                                     @foreach ($normalBalances as $balance)
                                         <option value="{{ $balance }}" @selected(old('normal_balance') == $balance)
                                             class="dark:bg-white/[0.03] dark:text-white/90 dark:border-gray-700">
                                             {{ $balance }}
                                         </option>
                                     @endforeach
-                                </select>
-
-                                @error('normal_balance')
-                                    <p class="mt-1 text-sm text-error-500">
-                                        {{ $message }}
-                                    </p>
-                                @enderror
+                                </x-form.select>
                             </div>
 
                             {{-- Deskripsi --}}
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Deskripsi
-                                </label>
-
-                                <textarea name="description" rows="2" placeholder="Tambahkan deskripsi akun jika diperlukan..."
-                                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:text-white/90 dark:placeholder:text-white/30">{{ old('description') }}</textarea>
+                                <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...." rows="3" />
                             </div>
 
                             {{-- Status --}}
                             <div>
-                                <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Aktifkan Akun
-                                </label>
-
-                                <div x-data="{ active: true }">
-
-                                    <input type="hidden" name="is_active" value="0">
-
-                                    <label class="inline-flex cursor-pointer items-center gap-3">
-                                        <div class="relative">
-                                            <input type="checkbox" class="peer sr-only" x-model="active" name="is_active"
-                                                value="1">
-                                            <div class="h-6 w-11 rounded-full transition"
-                                                :class="active ? 'bg-brand-500 dark:bg-brand-500' :
-                                                    'bg-gray-200 dark:bg-white/10'">
-                                            </div>
-
-                                            <div class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-300"
-                                                :class="active ? 'translate-x-full' : 'translate-x-0'">
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                                                x-text="active ? 'Akun Aktif' : 'Akun Nonaktif'">
-                                            </p>
-
-                                            <p class="text-xs text-gray-500">
-                                                Status penggunaan akun dalam transaksi
-                                            </p>
-                                        </div>
-                                    </label>
-                                </div>
+                                <x-form.toggle-switch name="is_active" label="Aktifkan Akun COA" :value="true" additionalAttributes="Status penggunaan akun dalam transaksi" onText="Akun Aktif" offText="Akun Tidak Aktif" />
                             </div>
                         </div>
                     </x-common.component-card>
                 </div>
 
                 {{-- RIGHT SIDE --}}
-                <div class="space-y-6">
+                <div class="grid-row">
 
                     {{-- STRUCTURE CARD --}}
                     <x-common.component-card title="Struktur COA">

@@ -2,6 +2,7 @@
 
 namespace App\Services\Bendahara;
 
+use App\Enums\ActivityLogAction;
 use App\Enums\RequestStatus;
 use App\Models\ChartOfAccount;
 use App\Models\CoaRequest;
@@ -50,7 +51,7 @@ class RequestCoaService extends BaseService
 
         // Log aktivitas approval
         $this->logger->log(
-            action: 'APPROVAL',
+            action: ActivityLogAction::APPROVED->value,
             module: 'COA_REQUEST',
             subject: $requestCoa,
             description: "Approved COA request ID: {$requestCoa->id}, created COA ID: {$coa->id}",
@@ -92,7 +93,7 @@ class RequestCoaService extends BaseService
 
         // Log aktivitas rejection
         $this->logger->log(
-            action: 'REJECTION',
+            action: ActivityLogAction::REJECT->value,
             module: 'COA_REQUEST',
             subject: $requestCoa,
             description: "Rejected COA request ID: {$requestCoa->id}",

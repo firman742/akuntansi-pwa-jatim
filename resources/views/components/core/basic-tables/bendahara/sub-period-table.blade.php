@@ -60,13 +60,12 @@
         }
     },
     getStatusClass(status) {
-        return status ?
-            'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-500' :
-            'bg-gray-100 text-gray-600 dark:bg-gray-500/15 dark:text-gray-400';
+        return status == 1 ?
+            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500' :
+            'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500';
     },
-
     getStatusLabel(status) {
-        return status ? 'Aktif' : 'Non Aktif';
+        return status == 1 ? 'Aktif' : 'Tidak Aktif';
     },
 
     formatDate(date) {
@@ -146,7 +145,7 @@
                             Status</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Action</th>
+                            Aksi</th>
 
                     </tr>
 
@@ -191,7 +190,7 @@
 
                                 <td class="px-4 sm:px-6 py-3.5">
 
-                                    <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                                    <span class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
                                         :class="getStatusClass(row.is_active)" x-text="getStatusLabel(row.is_active)">
                                     </span>
 
@@ -203,8 +202,8 @@
                                         <!-- Edit -->
                                         <a :href="canEdit(row) ? editUrl.replace(':id', row.id) : 'javascript:void(0)'"
                                             :class="canEdit(row) ?
-                                                'text-blue-500 hover:bg-blue-50' :
-                                                'text-gray-300 cursor-not-allowed'"
+                                                'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10' :
+                                                'text-gray-300 cursor-not-allowed dark:text-gray-600'"
                                             :title="getLockReason(row) || 'Edit Sub Periode'">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">

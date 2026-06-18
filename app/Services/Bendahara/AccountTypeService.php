@@ -2,11 +2,13 @@
 
 namespace App\Services\Bendahara;
 
+use App\Enums\ActivityLogAction;
 use App\Models\AccountType;
 use App\Models\ChartOfAccount;
+use App\Services\BaseService;
 use Exception;
 
-class AccountTypeService
+class AccountTypeService extends BaseService
 {
     /**
      * Create a new Account type.
@@ -17,7 +19,20 @@ class AccountTypeService
      */
     public function store(array $data): AccountType
     {
-        return AccountType::create($data);
+        $accountType = AccountType::create($data);
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::CREATED->value,
+            module: "ACCOUNT_TYPE",
+            subject: $accountType,
+            description: "Tipe akun {$accountType->name} berhasil dibuat.",
+            old: [],
+            new: $accountType->toArray(),
+            additionalData: []
+        );
+
+        return $accountType;
     }
 
 
@@ -32,8 +47,20 @@ class AccountTypeService
     public function update(string $id, array $data): AccountType
     {
         $accountType = AccountType::findOrFail($id);
+        $accountTypeOld = $accountType->replicate();
 
         $accountType->update($data);
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::UPDATED->value,
+            module: "ACCOUNT_TYPE",
+            subject: $accountType,
+            description: "Tipe akun {$accountType->name} berhasil diperbarui.",
+            old: $accountTypeOld->toArray(),
+            new: $accountType->toArray(),
+            additionalData: []
+        );
 
         return $accountType;
     }
@@ -55,6 +82,17 @@ class AccountTypeService
         if ($inUse) {
             throw new Exception('Tipe akun tidak dapat dihapus karena masih digunakan pada COA.');
         }
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::DELETED->value,
+            module: "ACCOUNT_TYPE",
+            subject: $accountType,
+            description: "Tipe akun {$accountType->name} berhasil dihapus.",
+            old: $accountType->toArray(),
+            new: [],
+            additionalData: []
+        );
 
         $accountType->delete();
     }

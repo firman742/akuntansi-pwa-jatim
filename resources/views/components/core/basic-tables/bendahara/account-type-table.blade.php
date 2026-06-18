@@ -59,16 +59,26 @@
 
     getStatusClass(status) {
         return status == 1 ?
-            'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-500' :
-            'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-500';
+            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500' :
+            'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500';
     },
     getStatusLabel(status) {
         return status == 1 ? 'Aktif' : 'Tidak Aktif';
     },
+    canDelete(row) {
+        return row.chart_of_accounts_count === 0;
+    },
+    getLockReason(row) {
+        if (row.chart_of_accounts_count > 0) {
+            return 'Tidak dapat dihapus dikarenakan telah memiliki data COA';
+        }
+
+        return null;
+    },
 
 }">
 
-    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
         <!-- Table -->
         <div class="max-w-full overflow-x-auto">
             <table class="w-full">
@@ -77,19 +87,7 @@
                     <tr>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            <div class="flex items-center gap-3">
-                                {{-- <div @click="handleSelectAll()"
-                                    class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-md border-[1.25px]"
-                                    :class="selectAll ? 'border-blue-500 dark:border-blue-500 bg-blue-500' :
-                                        'bg-white dark:bg-white/0 border-gray-300 dark:border-gray-700'">
-                                    <svg :class="selectAll ? 'block' : 'hidden'" width="14" height="14"
-                                        viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M11.6668 3.5L5.25016 9.91667L2.3335 7" stroke="white"
-                                            stroke-width="1.94437" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </div> --}}
-                                <span class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">No</span>
-                            </div>
+                            No
                         </th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
@@ -102,72 +100,87 @@
                             Status</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Action</th>
+                            Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
                             <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
+                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                                 <!-- No Urut -->
-                                <td class="px-3 py-2 text-xs sm:px-6 sm:py-4 sm:text-sm text-gray-600 dark:text-gray-400">
-                                    <div class="flex items-center gap-3">
-                                        <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
-                                            x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
-                                    </div>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
                                 </td>
 
                                 <!-- Nama -->
-                                <td class="px-3 py-2 text-xs sm:px-6 sm:py-4 sm:text-sm text-gray-600 dark:text-gray-400">
+                                <td class="px-4 sm:px-6 py-3.5">
                                     <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.name"></span>
                                 </td>
 
                                 <!-- Deskripsi -->
-                                <td class="px-3 py-2 text-xs sm:px-6 sm:py-4 sm:text-sm text-gray-600 dark:text-gray-400"
-                                    x-text="row.description ?? '-'">
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-light text-gray-500 dark:text-gray-400"
+                                        x-text="row.description ?? '-'"></span>
                                 </td>
 
                                 <!-- Status -->
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="inline-block rounded-full px-2 py-0.5 text-theme-xs font-medium"
+                                <td class="px-4 sm:px-6 py-3.5 text-center">
+                                    <span class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
                                         :class="getStatusClass(row.is_active)" x-text="getStatusLabel(row.is_active)">
                                     </span>
                                 </td>
 
                                 <!-- Action -->
-                                <td class="px-3 py-2 text-xs sm:px-6 sm:py-4 sm:text-sm text-gray-600 dark:text-gray-400">
+                                <td class="px-4 sm:px-6 py-3.5">
                                     <div class="flex items-center gap-3">
                                         <!-- Edit -->
                                         <a :href="editUrl.replace(':id', row.id)"
                                             class="flex h-8 w-8 items-center justify-center rounded-md
                                         text-blue-500 hover:bg-green-50
                                         dark:text-blue-400 dark:hover:bg-green-500/10"
-                                            title="Edi Tipe Akun">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            title="Edit Tipe Akun">
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </a>
 
-                                        <!-- Delete -->
-                                        <form :action="destroyUrl.replace(':id', row.id)" method="POST"
-                                            onsubmit="return confirm('Yakin hapus tipe akun ini?')" class="inline-flex">
+                                        <!-- Delete SELALU tampil -->
+                                        <form x-show="true"
+                                            :action="canDelete(row) ?
+                                                destroyUrl.replace(':id', row.id) :
+                                                '#'"
+                                            method="POST"
+                                            @submit.prevent="
+                                                if (!canDelete(row)) {
+                                                    return;
+                                                }
+
+                                                if (confirm('Yakin hapus Tipe Akun ini?')) {
+                                                    $event.target.submit();
+                                                }
+                                            ">
                                             @csrf
                                             @method('DELETE')
 
-                                            <button type="submit"
-                                                class="flex h-8 w-8 items-center justify-center rounded-md
-                                            text-red-600 hover:bg-red-50
-                                            dark:text-red-400 dark:hover:bg-red-500/10"
-                                                title="Hapus Tipe Akun">
+                                            <button type="submit" :disabled="!canDelete(row)"
+                                                :title="getLockReason(row) || 'Hapus Tipe Akun'"
+                                                :class="canDelete(row) ?
+                                                    'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10' :
+                                                    'text-gray-300 cursor-not-allowed dark:text-gray-600'"
+                                                class="flex h-8 w-8 items-center justify-center rounded-md">
+
                                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
-                                            a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
-                                            m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862 a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6 m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
+
                                             </button>
                                         </form>
                                     </div>
@@ -175,11 +188,25 @@
                             </tr>
                         </template>
                     </template>
+                    {{-- Jika data kosong --}}
                     <template x-if="paginatedData.length === 0">
                         <tr>
-                            <td colspan="5"
-                                class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                                Tidak ada data untuk ditampilkan.
+                            <td colspan="9" class="px-6 py-10 text-center">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                                    </svg>
+
+                                    <p class="text-sm font-medium text-gray-500">
+                                        Belum ada data tipe akun
+                                    </p>
+
+                                    <p class="text-xs text-gray-400">
+                                        Data yang tersedia akan tampil di tabel ini
+                                    </p>
+                                </div>
                             </td>
                         </tr>
                     </template>

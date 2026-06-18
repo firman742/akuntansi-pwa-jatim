@@ -3,6 +3,7 @@
     'name',
     'label' => null,
     'placeholder' => '',
+    'form' => null,
     'value' => null,
     'rows' => 6,
     'required' => false,
@@ -22,7 +23,7 @@
     @endif
 
     <div class="relative">
-        <textarea id="{{ $id ?? $name }}" name="{{ $name }}" rows="{{ $rows }}" placeholder="{{ $placeholder }}"
+        <textarea id="{{ $id ?? $name }}" name="{{ $name }}" form="{{ $form }}" rows="{{ $rows }}" placeholder="{{ $placeholder }}"
             @required($required) @readonly($readonly) @disabled($disabled)
             {{ $attributes->merge([
                 'class' =>

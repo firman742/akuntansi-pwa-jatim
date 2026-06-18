@@ -7,12 +7,14 @@ enum ActivityLogAction: string
     case CREATED = 'created';
     case UPDATED = 'updated';
     case DELETED = 'deleted';
+    case CLOSED = 'closed';
     case VIEWED = 'viewed';
     case RESTORED = 'restored';
     case FORCE_DELETED = 'force_deleted';
     case APPROVED = 'approved';
     case REJECT = 'reject';
     case ERROR = 'error';
+    case SYNC = 'sync';
 
     /**
      * Label untuk UI
@@ -23,12 +25,14 @@ enum ActivityLogAction: string
             self::CREATED => 'Dibuat',
             self::UPDATED => 'Diperbarui',
             self::DELETED => 'Dihapus',
+            self::CLOSED => 'Ditutup',
             self::VIEWED => 'Dilihat',
             self::RESTORED => 'Dipulihkan',
             self::FORCE_DELETED => 'Dihapus Permanen',
             self::APPROVED => 'Disetujui',
             self::REJECT => 'Ditolak',
-            self::ERROR => 'error'
+            self::ERROR => 'error',
+            self::SYNC => 'Sinkronisasi',
         };
     }
     

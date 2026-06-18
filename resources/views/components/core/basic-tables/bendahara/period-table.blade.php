@@ -73,12 +73,12 @@
         }
     },
     getStatusClass(status) {
-        return status == 1 ?
-            'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-500' :
-            'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-500';
+        return status == 0 ?
+            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500' :
+            'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500';
     },
     getStatusLabel(status) {
-        return status == 1 ? 'Ditutup' : 'Aktif';
+        return status == 0 ? 'Aktif' : 'Ditutup';
     },
 
     formatDate(date) {

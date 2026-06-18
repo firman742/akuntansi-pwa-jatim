@@ -20,7 +20,8 @@ class AccountTypeController extends Controller
      */
     public function index(): View
     {
-        $accountTypes = AccountType::all();
+        $accountTypes = AccountType::withCount('chartOfAccounts')->get();
+
         return view('pages.menus.bendahara.master.account-types.index', compact('accountTypes'));
     }
 

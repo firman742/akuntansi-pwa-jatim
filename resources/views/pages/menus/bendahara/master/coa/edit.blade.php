@@ -10,9 +10,7 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>
-                            <span class="text-gray-500 dark:text-gray-400">{{ $error }}</span>
-                        </li>
+                        <li class="text-red-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -44,6 +42,8 @@
                 level: {{ old('level', $coa->level) }},
                 order: {{ old('order', $coa->order) }},
                 oldParentId: '{{ old('parent_id', $coa->parent_id) }}',
+                accountTypeId: '{{ old('account_type_id', $coa->account_type_id) }}',
+                normalBalance: '{{ old('normal_balance', $coa->normal_balance) }}',
             
                 async fetchCode() {
                     if (this.isLocked) return;
@@ -76,21 +76,20 @@
 
                 {{-- PARENT --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Parent Akun (Opsional)
-                    </label>
-
-                    <select name="parent_id" x-model="parentId" :disabled="isLocked"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
-
-                        <option value="">-- Tidak Ada --</option>
-
+                    <x-form.select 
+                        id="parent_id" 
+                        name="parent_id"
+                        xModel="parentId"
+                        label="Parent Akun (Opsional)" 
+                        placeholder="Pilih AKun Parent" 
+                        alpineDisabled="isLocked"
+                        >
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(old('parent_id', $coa->parent_id) == $parent->id)>
                                 {{ $parent->code }} - {{ $parent->name }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-form.select>
 
                     @if ($isLocked)
                         <p class="mt-1 text-xs text-gray-500">
@@ -101,12 +100,12 @@
 
                 {{-- CODE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Kode Akun (Otomatis)
-                    </label>
-
-                    <input type="text" x-model="code" readonly
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white/70 cursor-not-allowed">
+                    <x-form.input 
+                        id="code" 
+                        name="code" 
+                        xModel="code"
+                        label="Kode Akun (Otomatis)"
+                        readonly disabled />
 
                     <input type="hidden" name="code" :value="code">
                     <input type="hidden" name="level" :value="level">
@@ -119,91 +118,64 @@
 
                 {{-- NAME (editable always) --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Nama Akun COA
-                    </label>
-
-                    <input type="text" name="name" value="{{ old('name', $coa->name) }}"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border @error('name') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
-
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <x-form.input 
+                        id="name" 
+                        name="name" 
+                        xModel="name"
+                        type="text"
+                        value="{{ $coa->name }}"
+                        label="Nama Akun COA"
+                        required />
                 </div>
 
                 {{-- ACCOUNT TYPE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Tipe Akun
-                    </label>
-
-                    <select name="account_type_id" :disabled="isLocked"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
-
-                        <option value="">-- Pilih Tipe Akun --</option>
-
+                    <x-form.select 
+                        id="account_type_id" 
+                        name="account_type_id"
+                        xModel="accountTypeId"
+                        label="Tipe Akun" 
+                        placeholder="Pilih Tipe Akun" 
+                        alpineDisabled="isLocked"
+                        >
                         @foreach ($accountTypes as $type)
                             <option value="{{ $type->id }}" @selected(old('account_type_id', $coa->account_type_id) == $type->id)>
                                 {{ $type->name }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-form.select>
+                    <input type="hidden" name="account_type_id" x-model="accountTypeId">
                 </div>
 
                 {{-- NORMAL BALANCE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Normal Balance
-                    </label>
-
-                    <select name="normal_balance" :disabled="isLocked"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 {{ $isLocked ? 'bg-gray-100 cursor-not-allowed opacity-60' : '' }}">
-
+                    <x-form.select 
+                        id="normal_balance" 
+                        name="normal_balance"
+                        xModel="normalBalance"
+                        label="Normal Balance" 
+                        placeholder="Pilih Normal Balance" 
+                        alpineDisabled="isLocked"
+                        >
                         @foreach ($normalBalances as $balance)
                             <option value="{{ $balance->value }}" @selected(old('normal_balance', $coa->normal_balance) === $balance->value)>
                                 {{ $balance->label() }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-form.select>
+                    <input type="hidden" name="normal_balance" x-model="normalBalance">
                 </div>
 
                 {{-- DESCRIPTION --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Deskripsi
-                    </label>
-
-                    <textarea name="description" rows="4"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('description', $coa->description) }}</textarea>
+                    <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...." value="{{ $coa->description }}"
+                            rows="4" />
                 </div>
 
                 {{-- ACTIVE --}}
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Status Aktif
-                    </label>
-
-                    <div x-data="{ toggle: {{ $coa->is_active ? 'true' : 'false' }} }">
-                        <input type="hidden" name="is_active" value="0">
-
-                        <label class="flex items-center gap-3 cursor-pointer select-none">
-
-                            <div class="relative">
-                                <input type="checkbox" name="is_active" value="1" class="sr-only" x-model="toggle">
-
-                                <div class="h-6 w-11 rounded-full transition"
-                                    :class="toggle ? 'bg-green-500' : 'bg-gray-300'"></div>
-
-                                <div class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform"
-                                    :class="toggle ? 'translate-x-full' : ''"></div>
-                            </div>
-
-                            <span class="text-sm text-gray-700 dark:text-gray-400"
-                                x-text="toggle ? 'Aktif' : 'Nonaktif'"></span>
-                        </label>
-                    </div>
+                    <x-form.toggle-switch name="is_active" label="Status Aktif" :value="true" />
                 </div>
-
             </div>
 
             {{-- ACTION --}}

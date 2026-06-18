@@ -2,13 +2,15 @@
 
 namespace App\Services\Bendahara;
 
+use App\Enums\ActivityLogAction;
 use App\Models\Period;
 use App\Models\SubPeriod;
+use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Validation\ValidationException;
 
-class SubPeriodService
+class SubPeriodService extends BaseService
 {
     /**
      * Store a newly created sub-period in storage. This method validates that the sub-period's date range falls within the parent period's date range before creating the record.
@@ -19,7 +21,6 @@ class SubPeriodService
     public function store(array $data): SubPeriod
     {
         $this->validateSubPeriodDates($data);
-
         $SubPeriod = SubPeriod::create([
             'period_id' => $data['period_id'],
             'name' => $data['name'],
@@ -28,6 +29,22 @@ class SubPeriodService
             'end_date' => $data['end_date'],
             'is_active' => (bool) ($data['is_active'] ?? false),
         ]);
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::CREATED->value,
+            module: "SUB_PERIOD",
+            subject: $SubPeriod,
+            description: "Sub periode {$SubPeriod->name} berhasil dibuat.",
+            old: [],
+            new: $SubPeriod->toArray(),
+            additionalData: [
+                'period_id' => $data['period_id'],
+                'start_date' => $data['start_date'],
+                'end_date' => $data['end_date'],
+                'is_active' => (bool) ($data['is_active'] ?? false),
+            ]
+        );
 
         return $SubPeriod;
     }
@@ -50,6 +67,8 @@ class SubPeriodService
 
         $this->validateSubPeriodDates($data, $SubPeriod);
 
+        $oldSubPeriodData = $SubPeriod->toArray();
+
         $SubPeriod->update([
             'period_id' => $data['period_id'],
             'name' => $data['name'],
@@ -58,6 +77,22 @@ class SubPeriodService
             'end_date' => $data['end_date'],
             'is_active' => (bool) ($data['is_active'] ?? false),
         ]);
+
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::UPDATED->value,
+            module: "SUB_PERIOD",
+            subject: $SubPeriod,
+            description: "Sub periode {$SubPeriod->name} berhasil diperbarui.",
+            old: $oldSubPeriodData,
+            new: $SubPeriod->toArray(),
+            additionalData: [
+                'period_id' => $data['period_id'],
+                'start_date' => $data['start_date'],
+                'end_date' => $data['end_date'],
+                'is_active' => (bool) ($data['is_active'] ?? false),
+            ]
+        );
 
         return $SubPeriod;
     }
@@ -78,6 +113,22 @@ class SubPeriodService
             throw new Exception('Sub periode tidak dapat dihapus karena memiliki transaksi atau jurnal terkait.');
         }
 
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::DELETED->value,
+            module: "SUB_PERIOD",
+            subject: $subPeriod,
+            description: "Sub periode {$subPeriod->name} berhasil dihapus.",
+            old: $subPeriod->toArray(),
+            new: [],
+            additionalData: [
+                'period_id' => $subPeriod->period_id,
+                'start_date' => $subPeriod->start_date,
+                'end_date' => $subPeriod->end_date,
+                'is_active' => $subPeriod->is_active,
+            ]
+        );
+
         $subPeriod->delete();
     }
 
@@ -91,6 +142,7 @@ class SubPeriodService
     private function validateSubPeriodDates(array $data, ?SubPeriod $subPeriod = null): void
     {
         $period = Period::findOrFail($data['period_id']);
+
         $subPeriodId = $subPeriod?->id;
 
         $subStartDate = Carbon::parse($data['start_date']);
@@ -99,23 +151,27 @@ class SubPeriodService
         $periodStartDate = Carbon::parse($period->start_date);
         $periodEndDate = Carbon::parse($period->end_date);
 
-        // start_date tidak boleh sebelum period start_date
         if ($subStartDate->lt($periodStartDate)) {
-            throw new Exception('Tanggal mulai sub periode tidak boleh sebelum periode utama.');
+            throw new Exception(
+                'Tanggal mulai sub periode tidak boleh sebelum periode utama.'
+            );
         }
 
-        // end_date tidak boleh melebihi period end_date
         if ($subEndDate->gt($periodEndDate)) {
-            throw new Exception('Tanggal selesai sub periode tidak boleh melebihi periode utama.');
+            throw new Exception(
+                'Tanggal selesai sub periode tidak boleh melebihi periode utama.'
+            );
         }
 
-        if (Carbon::parse($subPeriod->end_date)->isPast()) {
-            throw ValidationException::withMessages([
-                'sub_period' => 'Sub periode yang telah berakhir tidak dapat diubah.'
-            ]);
+        if (
+            $subPeriod &&
+            $subPeriod->end_date->isPast()
+        ) {
+            throw new Exception(
+                'Sub periode sudah berakhir dan tidak dapat diubah.'
+            );
         }
 
-        // cek apakah ada overlap dengna sub period lain pada periode yang sama
         $overlap = SubPeriod::query()
             ->where('period_id', $data['period_id'])
             ->when($subPeriodId, function ($query) use ($subPeriodId) {
@@ -133,11 +189,9 @@ class SubPeriodService
             ->exists();
 
         if ($overlap) {
-            throw ValidationException::withMessages([
-                'start_date' => [
-                    'Rentang tanggal sub periode bertabrakan dengan sub periode yang sudah ada.'
-                ]
-            ]);
+            throw new Exception(
+                'Sub periode tidak dapat dibuat karena rentang tanggal bertabrakan dengan sub periode lain pada periode yang sama.'
+            );
         }
     }
 }

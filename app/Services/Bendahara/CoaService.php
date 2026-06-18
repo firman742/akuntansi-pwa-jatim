@@ -2,11 +2,13 @@
 
 namespace App\Services\Bendahara;
 
+use App\Enums\ActivityLogAction;
 use App\Models\ChartOfAccount;
+use App\Services\BaseService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 
-class CoaService
+class CoaService extends BaseService
 {
     /**
      * Create a new Account type.
@@ -33,6 +35,21 @@ class CoaService
             'created_by' => Auth::id(),
         ]);
 
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::CREATED->value,
+            module: "CHART_OF_ACCOUNT",
+            subject: $coa,
+            description: "COA {$coa->name} berhasil dibuat.",
+            old: [],
+            new: $coa->toArray(),
+            additionalData: [
+                'parent_id' => $data['parent_id'] ?? null,
+                'account_type_id' => $data['account_type_id'],
+                'normal_balance' => $data['normal_balance'],
+                'is_active' => $data['is_active'] ?? true,
+            ]
+        );
 
         return $coa;
     }
@@ -49,6 +66,7 @@ class CoaService
     public function update(string $id, array $data): ChartOfAccount
     {
         $coa = ChartOfAccount::findOrFail($id);
+        $oldCOA = $coa->toArray();
 
         // cek apakah coa sudah dipakai
         $isUsed = $coa->transactionLines()->exists() || $coa->journalDetails()->exists() || $coa->userAccounts()->exists();
@@ -86,6 +104,22 @@ class CoaService
             'updated_by' => Auth::id(),
         ]);
 
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::UPDATED->value,
+            module: "CHART_OF_ACCOUNT",
+            subject: $coa,
+            description: "COA {$coa->name} berhasil diperbarui.",
+            old: $oldCOA,
+            new: $coa->toArray(),
+            additionalData: [
+                'parent_id' => $data['parent_id'] ?? null,
+                'account_type_id' => $data['account_type_id'],
+                'normal_balance' => $data['normal_balance'],
+                'is_active' => $data['is_active'] ?? false,
+            ]
+        );
+
         return $coa->fresh();
     }
 
@@ -112,6 +146,17 @@ class CoaService
             );
         }
 
+        // activity log
+        $this->logger->log(
+            action: ActivityLogAction::DELETED->value,
+            module: "CHART_OF_ACCOUNT",
+            subject: $coa,
+            description: "COA {$coa->name} berhasil dihapus.",
+            old: $coa->toArray(),
+            new: [],
+            additionalData: []
+        );
+        
         $coa->delete();
     }
 

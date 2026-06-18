@@ -7,6 +7,7 @@
     'offText' => 'Nonaktif',
     'required' => false,
     'disabled' => false,
+    'additionalAttributes' => null,
 ])
 
 @php
@@ -52,11 +53,19 @@
                 </div>
             </div>
 
-            <span
-                x-text="switcherToggle
-                    ? '{{ $onText }}'
-                    : '{{ $offText }}'">
-            </span>
+            <div>
+                <span
+                    x-text="switcherToggle
+                        ? '{{ $onText }}'
+                        : '{{ $offText }}'">
+                </span>
+
+                @if ($additionalAttributes)
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {{ $additionalAttributes }}
+                    </p>
+                @endif
+            </div>
         </label>
 
         @error($name)
