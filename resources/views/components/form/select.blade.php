@@ -1,6 +1,6 @@
 @props([
     'id' => null,
-    'name',
+    'name' => null,
     'label' => null,
     'placeholder' => 'Pilih Data',
     'value' => null,

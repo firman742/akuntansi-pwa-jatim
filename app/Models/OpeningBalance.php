@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $created_by
  * @property string $balance_type
  * @property float $amount
+ * @property bool $is_correction
+ * @property string|null $correction_reason
  *
  * @property ChartOfAccount $chartOfAccount
  * @property Period $period
@@ -36,6 +38,12 @@ class OpeningBalance extends Model
         'created_by',
         'balance_type',
         'amount',
+        'is_correction',
+        'correction_reason',
+    ];
+
+    protected $casts = [
+        'is_correction' => 'boolean',
     ];
 
     /**

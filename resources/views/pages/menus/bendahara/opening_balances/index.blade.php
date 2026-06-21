@@ -3,86 +3,80 @@
 @section('title', 'Saldo Awal')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Saldo Awal" />
+    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Kelola Saldo Awal" pageDescription="Buat dan kelola saldo awal berdasarkan periode"
+        pageIcon="money" />
 
-    {{-- FILTER & ACTION CARD --}}
-    <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <form method="GET" class="space-y-6">
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+        </div>
+    @endif
 
-            {{-- FILTER SECTION --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+    @if ($errors->any())
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li class="text-danger-500">{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        </div>
+    @endif
 
-                {{-- PERIOD --}}
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Periode
-                    </label>
-                    <select name="period_id" id="filter_period"
-                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-                               focus:border-primary focus:bg-white focus:ring-primary transition">
-                        <option value="">Semua</option>
-                        @foreach ($periods as $period)
-                            <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
-                                {{ $period->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- SUB PERIOD --}}
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Sub Periode
-                    </label>
-                    <select name="sub_period_id" id="filter_sub_period"
-                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-                               focus:border-primary focus:bg-white focus:ring-primary transition">
-                        <option value="">Semua</option>
-                        @foreach ($subPeriods as $sub)
-                            <option value="{{ $sub->id }}" @selected(request('sub_period_id') == $sub->id)>
-                                {{ $sub->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- FILTER ACTION --}}
-                <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
-                    <x-ui.button type="submit" variant="primary"
-                        class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
-                        Tampilkan
-                    </x-ui.button>
-
-                    <a href="{{ route('bendahara.opening-balances.index') }}" class="flex-1">
-                        <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
-                            Reset
-                        </x-ui.button>
-                    </a>
-                </div>
-            </div>
-        </form>
-    </div>
 
     {{-- TABLE --}}
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Kelola Saldo Awal" description="Buat dan kelola saldo awal berdasarkan periode">
-            <x-slot name="actions">
-
-                <a href="{{ route('bendahara.opening-balances.create') }}">
-                    <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
-                        + Manual
-                    </x-ui.button>
-                </a>
-
-                {{-- <a href="{{ route('bendahara.opening-balances.create-bulk') }}">
-                    <x-ui.button variant="outline" class="rounded-xl px-4 py-2">
-                        + Multi Periode
-                    </x-ui.button>
-                </a> --}}
-
+        <x-core.basic-tables.core-table resetUrl="{{ route('bendahara.opening-balances.index') }}">
+            {{-- SLOT search --}}
+            <x-slot name="search">
+                    <x-form.input
+                    id="coaSearch"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Cari berdasarkan Akun atau kode COA..."
+                    startIconSearch
+                    endIconSearch
+                />
             </x-slot>
 
-            {{-- TABLE COMPONENT LU --}}
+            {{-- SLOT filter --}}
+            <x-slot name="filters">
+                <x-form.select 
+                    id="filter_period" 
+                    name="period_id" 
+                    label="Periode" 
+                    placeholder="Pilih Periode">
+                    @foreach ($periods as $period)
+                        <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
+                            {{ $period->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+
+                <x-form.select 
+                    id="filter_sub_period" 
+                    name="sub_period_id" 
+                    label="Sub Periode"
+                    placeholder="Pilih Sub Periode">
+                    @foreach ($subPeriods as $sub)
+                        <option value="{{ $sub->id }}" @selected(request('sub_period_id') == $sub->id)>
+                            {{ $sub->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+            </x-slot>
+
+            {{-- SLOT actions --}}
+            <x-slot name="actions">
+                {{-- CREATE MANUAL --}}
+                <a href="{{ route('bendahara.opening-balances.create') }}">
+                    <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
+                        + Buat Saldo Awal
+                    </x-ui.button>
+                </a>
+            </x-slot>
+
             <x-core.basic-tables.bendahara.opening-balance-table :openingBalances="$openingBalances" :periods="$periods" :periodId="$periodId"
                 :subPeriods="$subPeriods" :subPeriodId="$subPeriodId" />
 
@@ -93,6 +87,10 @@
     <script>
         const periodFilter = document.getElementById('filter_period');
         const subPeriodFilter = document.getElementById('filter_sub_period');
+        const searchInput = document.getElementById('coaSearch');
+
+        let timeout = null;
+
 
         periodFilter.addEventListener('change', async function() {
             let periodId = this.value;
@@ -114,6 +112,22 @@
                     <option value="${sub.id}">${sub.name}</option>
                 `;
             });
+        });
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const searchValue = this.value;
+                const urlParams = new URLSearchParams(window.location.search);
+
+                if (searchValue) {
+                    urlParams.set('search', searchValue);
+                } else {
+                    urlParams.delete('search');
+                }
+
+                window.location.search = urlParams.toString();
+            }, 500);
         });
     </script>
 @endsection

@@ -1,7 +1,9 @@
 @props([
     'id' => null,
-    'name',
+    'name' => null,
+    'form' => null,
     'label' => null,
+    'colorLabel' => 'gray',
     'type' => 'text',
     'xModel' => null,
     'placeholder' => '',
@@ -15,7 +17,7 @@
 
 <div>
     @if ($label)
-        <label for="{{ $id ?? $name }}" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        <label for="{{ $id ?? $name }}" class="mb-1.5 block text-sm font-medium text-{{ $colorLabel }}-700 dark:text-{{ $colorLabel }}-400">
             {{ $label }}
 
             @if ($required)
@@ -39,10 +41,11 @@
         <input 
             id="{{ $id ?? $name }}" 
             name="{{ $name }}" 
+            form="{{ $form }}"
             type="{{ $type }}"
-            value="{{ old($name, $value) }}" 
+            value="{{ $value }}" 
             placeholder="{{ $placeholder }}" 
-            x-model="{{ $xModel }}"
+            {{ $xModel ? "x-model={$xModel}" : '' }}
             @required($required) 
             @readonly($readonly)
             @disabled($disabled)

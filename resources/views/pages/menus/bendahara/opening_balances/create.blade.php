@@ -3,7 +3,11 @@
 @section('title', 'Neraca Saldo Awal - Buat Manual')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Neraca Saldo Awal - Buat Manual" />
+    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Buat Manual Saldo Awal" pageDescription="Buat saldo awal untuk akun tertentu dari periode sebelumnya"
+            pageIcon="money" 
+            parentTitle="Saldo Awal"
+            :parentRoute="route('bendahara.opening-balances.index')"
+            currentTitle="Buat Manual" />
 
     @if ($errors->any())
         <div class="mb-6">
@@ -62,35 +66,38 @@
         {{-- Form Seleksi (Input periode, sub periode, coa seperti kode sebelumnya) --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
-                <label class="block text-sm font-medium mb-2">Periode</label>
-                <select id="select_period"
-                    class="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm dark:border-gray-700 dark:bg-dark-900">
-                    <option value="">-- Pilih Periode --</option>
+                <x-form.select 
+                    id="select_period" 
+                    name="period_id" 
+                    label="Periode" 
+                    placeholder="-- Pilih Periode --">
                     @foreach ($periods as $period)
                         <option value="{{ $period->id }}">{{ $period->name }}</option>
                     @endforeach
-                </select>
+                </x-form.select>
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-2">Sub Periode</label>
-                <select id="select_sub_period"
-                    class="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm dark:border-gray-700 dark:bg-dark-900">
-                    <option value="">-- Pilih Sub Periode --</option>
-                </select>
+                <x-form.select 
+                    id="select_sub_period" 
+                    name="sub_period_id" 
+                    label="Sub Periode" 
+                    placeholder="-- Pilih Sub Periode --">
+                </x-form.select>
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-2">Akun (COA)</label>
-                <select id="select_coa"
-                    class="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm dark:border-gray-700 dark:bg-dark-900">
-                    <option value="">-- Pilih Akun --</option>
+                <x-form.select 
+                    id="select_coa" 
+                    name="coa_id" 
+                    label="Akun (COA)" 
+                    placeholder="-- Pilih Akun --">
                     @foreach ($coaLists as $coa)
                         <option value="{{ $coa->id }}" data-balance="{{ $coa->normal_balance }}">
                             {{ $coa->code }} — {{ $coa->name }}
                         </option>
                     @endforeach
-                </select>
+                </x-form.select>
             </div>
         </div>
 
@@ -113,37 +120,42 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {{-- SALDO SISA (DARI PERIODE LALU) --}}
                     <div>
-                        <label class="block text-sm font-medium mb-2 text-blue-500 dark:text-blue-400">
-                            Saldo Sisa (Periode Sebelumnya)
-                        </label>
-                        <div class="relative">
-                            <input type="text" id="amount_display" readonly
-                                class="h-11 w-full rounded-lg border border-gray-200 bg-gray-100 px-4 text-sm cursor-not-allowed dark:bg-white/5"
-                                placeholder="Rp 0">
-                            <input type="hidden" name="amount" id="amount_hidden">
-                        </div>
+                        <x-form.input 
+                            id="amount_display" 
+                            name=""
+                            label="Saldo Sisa (Periode Sebelumnya)"
+                            colorLabel="blue"
+                            placeholder="Rp 0" 
+                            readonly />
+
+                        <input type="hidden" name="amount" id="amount_hidden">
+                        
                         <p class="mt-1 text-xs text-gray-500 italic">* Diambil otomatis dari closing balance terakhir</p>
                     </div>
 
                     {{-- SALDO TAMBAHAN --}}
                     <div>
-                        <label class="block text-sm font-medium mb-2 text-green-600 dark:text-green-400">
-                            Saldo Tambahan (Baru)
-                        </label>
-                        <input type="text" id="additional_display"
-                            class="h-11 w-full rounded-lg border border-blue-300 px-4 text-sm focus:ring-2 focus:ring-blue-500 dark:bg-dark-900"
-                            placeholder="Masukkan nominal tambahan jika ada" required>
+                        <x-form.input 
+                            id="additional_display" 
+                            name=""
+                            label="Saldo Tambahan (Jika Ada)"
+                            colorLabel="green"
+                            placeholder="Masukkan nominal tambahan jika ada" 
+                        />
+
                         <input type="hidden" name="additional_amount" id="additional_hidden" value="0">
                     </div>
 
                     {{-- TIPE SALDO --}}
                     <div>
-                        <label class="block text-sm font-medium mb-2">Tipe Saldo</label>
-                        <select name="balance_type" id="final_balance_type"
-                            class="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm dark:bg-dark-900" readonly>
+                        <x-form.select 
+                            id="final_balance_type" 
+                            name="balance_type" 
+                            label="Tipe Saldo">
                             <option value="DEBIT">DEBIT</option>
                             <option value="CREDIT">KREDIT</option>
-                        </select>
+                        </x-form.select>
+
                     </div>
 
                     {{-- TOTAL PREVIEW --}}

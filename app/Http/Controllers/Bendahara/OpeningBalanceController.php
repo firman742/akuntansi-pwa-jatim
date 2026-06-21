@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bendahara\OpeningBalances\CorrectionOpeningBalanceRequest;
 use App\Http\Requests\Bendahara\OpeningBalances\StoreOpeningBalanceRequest;
+use App\Http\Requests\Bendahara\OpeningBalances\UpdateOpeningBalanceRequest;
 use App\Models\ClosingBalance;
 use App\Models\SubPeriod;
 use App\Services\Bendahara\OpeningBalanceService;
@@ -16,13 +18,16 @@ class OpeningBalanceController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * @param OpeningBalanceService $service
+     * @return View
      */
     public function index(OpeningBalanceService $service): View
     {
         $periodId = request('period_id');
         $subPeriodId = request('sub_period_id');
+        $search = request('search');
 
-        $data = $service->getIndexData($periodId, $subPeriodId);
+        $data = $service->getIndexData($periodId, $subPeriodId, $search);
 
         return view('pages.menus.bendahara.opening_balances.index',
             array_merge($data, [
@@ -69,17 +74,27 @@ class OpeningBalanceController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param string $id
+     * @param OpeningBalanceService $service
      * @return View
      */
-    public function edit(string $id): View
+    public function edit(string $id, OpeningBalanceService $service): View
     {
-        $openingBalance = ClosingBalance::findOrFail($id);
-
-        return view('pages.menus.bendahara.opening_balances.edit', compact('openingBalance'));
+        return view('pages.menus.bendahara.opening_balances.edit',
+            $service->getEditData($id)
+        );
     }
 
 
-    public function update(string $id, OpeningBalanceService $service, StoreOpeningBalanceRequest $request): RedirectResponse
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param string $id
+     * @param OpeningBalanceService $service
+     * @param UpdateOpeningBalanceRequest $request
+     * @return RedirectResponse
+     * @throws Exception
+     */
+    public function update(string $id, OpeningBalanceService $service, UpdateOpeningBalanceRequest $request): RedirectResponse
     {
         try {
             $service->update($id, $request->validated());
@@ -88,6 +103,27 @@ class OpeningBalanceController extends Controller
                 ->with('success', 'Opening balance berhasil diperbarui.');
         } catch (Exception $e) {
             return back()->withErrors(['error' => 'Gagal update: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Koreksi opening balance untuk periode sebelumnya
+     *
+     * @param string $id
+     * @param OpeningBalanceService $service
+     * @param CorrectionOpeningBalanceRequest $request
+     * @return RedirectResponse
+     * @throws Exception
+     */
+    public function correction(string $id, OpeningBalanceService $service, CorrectionOpeningBalanceRequest $request): RedirectResponse
+    {
+        try {
+            $service->correction($id, $request->validated());
+
+            return redirect()->route('bendahara.opening-balances.index')
+                ->with('success', 'Opening balance berhasil dikoreksi.');
+        } catch (Exception $e) {
+            return back()->withErrors(['error' => 'Gagal koreksi: ' . $e->getMessage()])->withInput();
         }
     }
 

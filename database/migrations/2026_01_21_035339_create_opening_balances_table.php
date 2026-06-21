@@ -20,6 +20,8 @@ return new class extends Migration
             $table->uuid('created_by')->nullable();
             $table->enum('balance_type', NormalBalanceEnum::values());
             $table->decimal('amount', 15, 2);
+            $table->boolean('is_correction')->default(false);
+            $table->string('correction_reason')->nullable();
 
             $table->foreign('chart_of_account_id')
                 ->references('id')
