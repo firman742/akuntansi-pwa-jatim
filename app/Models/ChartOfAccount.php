@@ -174,4 +174,13 @@ class ChartOfAccount extends Model
     {
         return $this->hasMany(CoaRequest::class, 'parent_coa_id');
     }
+
+    /**
+     * Get the account topups associated with this chart of account.
+     * @return HasMany
+     */
+    public function accountTopups(): HasMany
+    {
+        return $this->hasMany(AccountTopup::class, 'chart_of_account_id');
+    }
 }

@@ -92,4 +92,22 @@ class SubPeriod extends Model
     {
         return $this->hasMany(CoaRequest::class, 'sub_period_id');
     }
+
+    /**
+     * Get all opening balances associated with the sub-period.
+     * @return HasMany
+     */
+    public function openingBalances(): HasMany
+    {
+        return $this->hasMany(OpeningBalance::class, 'sub_period_id');
+    }
+
+    /**
+     * Get all account topups associated with the sub-period.
+     * @return HasMany
+     */
+    public function accountTopups(): HasMany
+    {
+        return $this->hasMany(AccountTopup::class, 'sub_period_id');
+    }
 }

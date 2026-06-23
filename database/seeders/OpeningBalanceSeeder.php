@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Period;
+use App\Enums\NormalBalanceEnum;
 use App\Models\ChartOfAccount;
+use App\Models\CoaBalance;
 use App\Models\OpeningBalance;
-use App\Models\SubPeriod;
+use App\Models\Period;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class OpeningBalanceSeeder extends Seeder
 {
@@ -17,30 +17,69 @@ class OpeningBalanceSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::transaction(function () {
+        $creator = User::query()
+            ->where('email', 'bendahara@example.com')
+            ->first();
 
-            $period = Period::active()->first();
-            $subPeriod = SubPeriod::where('period_id', $period->id)->inRandomOrder()->first();
-            $user   = User::query()->inRandomOrder()->first();
+        if (!$creator) {
+            return;
+        }
 
-            $coas = ChartOfAccount::where('is_active', true)->get();
+        $periods = Period::query()
+            ->whereIn('name', ['2025', '2026'])
+            ->with('subPeriods')
+            ->get();
 
-            foreach ($coas as $coa) {
+        $assetTypeId = ChartOfAccountSeeder::ACCOUNT_TYPE['ASET'];
 
-                $amount = match ($coa->normal_balance) {
-                    'debit'  => fake()->numberBetween(1_000_000, 20_000_000),
-                    'credit' => fake()->numberBetween(1_000_000, 20_000_000),
-                };
+        $debitAccounts = ChartOfAccount::query()
+            ->where('account_type_id', $assetTypeId)
+            ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
+            ->whereDoesntHave('children')
+            ->get();
 
-                OpeningBalance::create([
-                    'chart_of_account_id' => $coa->id,
-                    'period_id'           => $period->id,
-                    'sub_period_id'       => $subPeriod->id,
-                    'created_by'          => $user->id,
-                    'balance_type'        => $coa->normal_balance,
-                    'amount'              => $amount,
-                ]);
+        foreach ($periods as $period) {
+
+            foreach ($period->subPeriods as $subPeriod) {
+
+                foreach ($debitAccounts as $coa) {
+
+                    $amount = fake()->numberBetween(
+                        500_000,
+                        50_000_000
+                    );
+
+                    $openingBalance = OpeningBalance::firstOrCreate(
+                        [
+                            'chart_of_account_id' => $coa->id,
+                            'period_id'           => $period->id,
+                            'sub_period_id'       => $subPeriod->id,
+                        ],
+                        [
+                            'created_by'       => $creator->id,
+                            'balance_type'     => $coa->normal_balance,
+                            'amount'           => $amount,
+                            'is_correction'    => false,
+                            'correction_reason'=> null,
+                        ]
+                    );
+
+                    CoaBalance::updateOrCreate(
+                        [
+                            'chart_of_account_id' => $coa->id,
+                            'period_id'           => $period->id,
+                            'sub_period_id'       => $subPeriod->id,
+                        ],
+                        [
+                            'opening_balance'    => $openingBalance->amount,
+                            'debit_total'        => 0,
+                            'credit_total'       => 0,
+                            'current_balance'    => $openingBalance->amount,
+                            'last_transaction_at'=> null,
+                        ]
+                    );
+                }
             }
-        });
+        }
     }
 }

@@ -446,7 +446,7 @@
                 <span class="hidden sm:inline">Previous</span>
             </button>
 
-            <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden">
+            <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 ">
                 Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
             </span>
 

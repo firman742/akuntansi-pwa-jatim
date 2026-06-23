@@ -56,7 +56,6 @@ class RequestBalanceService extends BaseService
             // Tambahkan atau perbarui saldo akun pengguna untuk COA tujuan
             $this->updateUserAccountBalance($balanceRequest, $sourceCoa);
 
-
             // Buat jurnal untuk distribusi saldo
             $this->generateJournal($balanceRequest, $sourceCoa, $destinationCoaId);
 

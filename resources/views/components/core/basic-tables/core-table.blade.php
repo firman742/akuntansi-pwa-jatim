@@ -53,14 +53,24 @@
                             @click.away="open = false"
 
                             class="
-                                absolute left-0 z-999 mt-3
-                                w-[calc(100vw-32px)]
-                                max-w-sm
-                                overflow-hidden
+                                fixed inset-x-4 top-auto z-50 mt-2
+                                max-h-[80vh]
+                                overflow-y-auto
                                 rounded-2xl
                                 border border-gray-200
                                 bg-white
-                                shadow-xl
+                                shadow-2xl
+
+                                sm:absolute
+                                sm:left-0
+                                sm:inset-x-auto
+                                sm:top-full
+                                sm:mt-3
+                                sm:w-[420px]
+                                sm:max-w-[90vw]
+
+                                lg:absolute
+                                lg:right-0
 
                                 dark:border-gray-700
                                 dark:bg-gray-900

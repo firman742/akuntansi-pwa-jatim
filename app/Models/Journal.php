@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -31,7 +32,7 @@ use Illuminate\Support\Collection;
  */
 class Journal extends Model
 {
-    use HasUuids;
+    use HasUuids, HasFactory;
 
     protected $table = 'journals';
     protected $fillable = [

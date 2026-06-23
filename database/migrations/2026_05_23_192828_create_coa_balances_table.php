@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('debit_total', 20, 2);
             $table->decimal('credit_total', 20, 2);
             $table->decimal('current_balance', 20, 2);
-            $table->timestamp('last_transaction_at');
+            $table->timestamp('last_transaction_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

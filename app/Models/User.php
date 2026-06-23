@@ -82,7 +82,7 @@ class User extends Authenticatable
     /**
      * @return HasMany
      */
-    public function user_accounts(): HasMany
+    public function userAccounts(): HasMany
     {
         return $this->hasMany(UserAccount::class, 'user_id');
     }
@@ -143,6 +143,14 @@ class User extends Authenticatable
     public function account_balances(): HasMany
     {
         return $this->hasMany(OpeningBalance::class, 'created_by');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function balance_requests(): HasMany
+    {
+        return $this->hasMany(BalanceRequest::class, 'requester_id');
     }
 
     /**

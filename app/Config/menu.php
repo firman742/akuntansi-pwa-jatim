@@ -130,15 +130,20 @@ class menu
                 ],
             ],
             [
-                'name' => 'Saldo & Alokasi Dana',
+                'name' => 'Manajemen Saldo',
                 'icon' => 'money',
                 'active_on' => [
+                    'bendahara/coa-balances*',
                     'bendahara/opening-balances*',
-                    'bendahara/budget-allocations*',
-                    'bendahara/user-account-balances*',
-                    'bendahara/requests/balances*',
+                    'bendahara/topup-balances*',
                 ],
                 'subItems' => [
+                    self::item(
+                        'Saldo Akun',
+                        null,
+                        '/bendahara/coa-balances',
+                        ['bendahara/coa-balances*']
+                    ),
                     self::item(
                         'Saldo Awal',
                         null,
@@ -146,13 +151,30 @@ class menu
                         ['bendahara/opening-balances*']
                     ),
                     self::item(
-                        'Distribusi Saldo',
+                        'Penambahan Saldo',
+                        null,
+                        '/bendahara/topup-balances',
+                        ['bendahara/topup-balances*']
+                    ),
+                ]
+            ],
+            [
+                'name' => 'Manajemen Dana',
+                'icon' => 'transaction',
+                'active_on' => [
+                    'bendahara/budget-allocations*',
+                    'bendahara/user-account-balances*',
+                    'bendahara/requests/balances*',
+                ],
+                'subItems' => [
+                    self::item(
+                        'Alokasi Dana',
                         null,
                         '/bendahara/budget-allocations',
                         ['bendahara/budget-allocations*']
                     ),
                     self::item(
-                        'Pembagian Saldo Ke Pengguna',
+                        'Dana Operasional Pengguna',
                         null,
                         '/bendahara/user-account-balances',
                         ['bendahara/user-account-balances*']
@@ -165,7 +187,7 @@ class menu
                     ),
                 ]
             ],
-            
+
 
             // REPORTS
             self::item(

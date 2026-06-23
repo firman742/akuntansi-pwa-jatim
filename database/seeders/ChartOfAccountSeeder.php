@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class ChartOfAccountSeeder extends Seeder
 {
-    private const ACCOUNT_TYPE = [
+    public const ACCOUNT_TYPE = [
         'ASET'       => 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         'KEWAJIBAN'  => 'a1b2c3d4-e5f6-7890-abcd-ef1234567891',
         'EKUITAS'    => 'a1b2c3d4-e5f6-7890-abcd-ef1234567892',

@@ -174,7 +174,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
     | API FOR DYNAMIC FORM
     |--------------------------------------------------------------------------
     */
-    Route::get('/coa-balances/{coa}', function ($coa) {
+    Route::get('/api-coa-balances/{coa}', function ($coa) {
         $sub = request('sub_period_id');
 
 
@@ -231,6 +231,16 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
             'source' => null
         ]);
     });
+    /*
+    |--------------------------------------------------------------------------
+    | COA BALANCE
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('coa-balances')->name('coa-balances.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bendahara\CoaBalanceController::class, 'index'])->name('index');
+        Route::get('/{id}', [App\Http\Controllers\Bendahara\CoaBalanceController::class, 'show'])->name('show');
+    });
+
     /*
     |--------------------------------------------------------------------------
     | OPENING BALANCE

@@ -16,12 +16,30 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             UserSeeder::class,
             PeriodSeeder::class,
+            /** GROUP 1 : Master data coa & user account */
             AccountTypeSeeder::class,
             ChartOfAccountSeeder::class,
-            TaxSeeder::class,
-            InterestSeeder::class,
-            // OpeningBalanceSeeder::class,
-            // TransactionSeeder::class,
+            UserAccountSeeder::class,
+
+            /** Group 2 : Opening Balance & Coa Balance */
+            OpeningBalanceSeeder::class,
+
+            /** Group 3 : Budget Allocation & Journal */
+            BudgetAllocationSeeder::class,
+
+            /** Group 4 : User Account Balance & Journal */
+            UserAccountBalanceSeeder::class,
+
+            /** Group 5 : Transaction */
+            TransactionExpenseSeeder::class,
+
+            /** Group 6 : Request */
+            CoaRequestSeeder::class,
+            BalanceRequestSeeder::class,
+
+            /** Group 7 : Account Topup */
+            AccountTopupSeeder::class,
+            
         ]);
     }
 }

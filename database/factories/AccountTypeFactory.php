@@ -17,7 +17,9 @@ class AccountTypeFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->unique()->words(2, true),
+            'description' => $this->faker->sentence(),
+            'is_active' => $this->faker->boolean(80),
         ];
     }
 }

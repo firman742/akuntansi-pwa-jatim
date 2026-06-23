@@ -19,7 +19,7 @@ return new class extends Migration
             $table->uuid('sub_period_id');
             $table->uuid('created_by')->nullable();
             $table->decimal('amount', 15, 2);
-            $table->enum('allocation_type', ['manual', 'auto'])->default('manual');
+            $table->enum('allocation_type', ['manual', 'auto'])->default('auto');
             $table->string('description')->nullable();
             $table->softDeletes();
             $table->timestamps();

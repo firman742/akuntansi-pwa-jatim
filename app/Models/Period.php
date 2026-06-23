@@ -67,6 +67,42 @@ class Period extends Model
     }
 
     /**
+     * Get the chart of account balances for the period.
+     * @return HasMany
+     */
+    public function coaBalances(): HasMany
+    {
+        return $this->hasMany(CoaBalance::class, 'period_id');
+    }
+
+    /**
+     * Get the budget allocations for the period.
+     * @return HasMany
+     */
+    public function budgetAllocations(): HasMany
+    {
+        return $this->hasMany(BudgetAllocation::class, 'period_id');
+    }
+
+    /**
+     * Get the coa requests for the period.
+     * @return HasMany
+     */
+    public function coaRequests(): HasMany
+    {
+        return $this->hasMany(CoaRequest::class, 'period_id');
+    }
+
+    /**
+     * Get the account topups for the period.
+     * @return HasMany
+     */
+    public function accountTopups(): HasMany
+    {
+        return $this->hasMany(AccountTopup::class, 'period_id');
+    }
+
+    /**
      * Scope a query to only include active periods.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
