@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Superadmin\Roles\UpdateRoleRequest;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,9 +63,13 @@ class RoleController extends Controller
             $permissions = $request->input('permissions', []);
             $role->syncPermissions($permissions);
 
-            return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil dibuat');
+            return redirect()
+                ->route('superadmin.roles.index')
+                ->with('success', 'Peran berhasil dibuat');
         } catch (Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat membuat peran: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat membuat peran: ' . $e->getMessage());
         }
     }
 
@@ -74,24 +79,25 @@ class RoleController extends Controller
      * @param string $id
      * @return RedirectResponse
      */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(UpdateRoleRequest $request, string $id): RedirectResponse
     {
         try {
-            $request->validate([
-                'name' => 'required|unique:roles,name,' . $id,
-                'permissions' => 'array',
-            ]);
+            $validated = $request->validated();
 
             $role = Role::findOrFail($id);
-            $role->name = strtoupper($request->input('name'));
+            $role->name = strtoupper($validated['name']);
             $role->save();
 
-            $permissions = $request->input('permissions', []);
+            $permissions = $validated['permissions'] ?? [];
             $role->syncPermissions($permissions);
 
-            return redirect()->route('superadmin.roles.index')->with('success', 'Peran berhasil diperbarui');
+            return redirect()
+                ->route('superadmin.roles.index')
+                ->with('success', 'Peran berhasil diperbarui');
         } catch (Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat memperbarui peran: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui peran: ' . $e->getMessage());
         }
     }
 }

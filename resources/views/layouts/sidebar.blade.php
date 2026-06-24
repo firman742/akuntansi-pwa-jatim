@@ -72,7 +72,7 @@
         <a href="{{ route('home') }}" class="flex items-center gap-2">
 
             {{-- Logo Icon --}}
-            <img src="/images/logo/logo-icon.svg" alt="Logo"
+            <img src="{{ SettingHelper::logo() }}" alt="Logo"
                 class="
                  transition-all
                  w-7 h-7

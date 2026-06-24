@@ -3,14 +3,15 @@
 @section('title', 'Edit Pengaturan Sistem')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Edit Pengaturan Sistem" />
+    <x-common.page-breadcrumb defaultTitle="Pengaturan Sistem" pageTitle="Pengaturan Sistem"
+        pageDescription="Monitoring dan kelola pengaturan sistem di sistem" pageIcon="system-config" />
 
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1 dark:text-white">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-dark-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -47,34 +48,24 @@
 
                     {{-- APP NAME --}}
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Nama Aplikasi
-                        </label>
-
-                        <input type="text" name="app_name"
-                            value="{{ old('app_name', $settings['APP_NAME']->value ?? '') }}"
-                            class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-800">
+                        <x-form.input id="app_name" name="app_name" label="Nama Aplikasi"
+                            placeholder="Masukkan Nama Applikasi"
+                            value="{{ old('app_name', $settings['APP_NAME']->value ?? '') }}" required />
                     </div>
 
                     {{-- DESCRIPTION --}}
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Deskripsi Aplikasi
-                        </label>
-
-                        <textarea rows="4" name="app_description"
-                            class="dark:bg-dark-900 shadow-theme-xs w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-800">{{ old('app_description', $settings['APP_DESCRIPTION']->value ?? '') }}</textarea>
+                        <x-form.text-area name="app_description" label="Deskripsi Aplikasi"
+                            placeholder="Masukkan deskripsi aplikasi...."
+                            value="{{ old('app_description', $settings['APP_DESCRIPTION']->value ?? '') }}" rows="6"
+                            required />
                     </div>
 
                     {{-- TAGLINE --}}
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Tagline
-                        </label>
-
-                        <input type="text" name="app_tagline"
-                            value="{{ old('app_tagline', $settings['APP_TAGLINE']->value ?? '') }}"
-                            class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-800">
+                        <x-form.input id="app_tagline" name="app_tagline" label="Tagline"
+                            placeholder="Masukkan Tagline Aplikasi"
+                            value="{{ old('app_tagline', $settings['APP_TAGLINE']->value ?? '') }}" required />
                     </div>
 
                 </div>
@@ -98,63 +89,69 @@
                     {{-- LOGO --}}
                     <div>
                         <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Logo Aplikasi
+                            Logo Aplikasi <span class="text-xs text-gray-400">(Ukuran maksimal 2MB)</span>
                         </label>
 
-                        <div
-                            class="flex h-56 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800">
+                        <div x-data="{
+                            preview: '{{ $settings['APP_LOGO']?->getFirstMediaUrl('configuration_app_logo') }}'
+                        }">
+                            <div
+                                class="flex h-56 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 overflow-hidden">
 
-                            @if ($settings['APP_LOGO']?->getFirstMediaUrl('configuration_app_logo'))
-                                <img src="{{ $settings['APP_LOGO']->getFirstMediaUrl('configuration_app_logo') }}"
-                                    class="max-h-40 max-w-full object-contain">
-                            @else
-                                <div class="text-center">
-                                    <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M3 16l4-4a3 3 0 014.243 0L15 15m-2-2l1-1a3 3 0 014.243 0L21 15" />
-                                    </svg>
+                                <template x-if="preview">
+                                    <img :src="preview" class="max-h-40 max-w-full object-contain">
+                                </template>
 
-                                    <p class="mt-2 text-sm text-gray-500">
+                                <template x-if="!preview">
+                                    <div class="text-center">
                                         Belum ada logo
-                                    </p>
-                                </div>
-                            @endif
-                        </div>
+                                    </div>
+                                </template>
+                            </div>
 
-                        <input type="file" name="app_logo" accept="image/*"
-                            class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-brand-700 hover:file:bg-brand-100 dark:text-gray-400 dark:file:bg-brand-900/30 dark:file:text-brand-400">
+                            <input type="file" name="app_logo" accept="image/jpeg,image/png,image/gif,image/svg+xml"
+                            class="mt-3 focus:border-ring-brand-300 shadow-theme-xs focus:file:ring-brand-300 h-11 w-full overflow-hidden rounded-lg border border-gray-300 bg-transparent text-sm text-gray-500 transition-colors file:mr-5 file:border-collapse file:cursor-pointer file:rounded-l-lg file:border-0 file:border-r file:border-solid file:border-gray-200 file:bg-brand-50 file:py-3 file:pr-3 file:pl-3.5 file:text-sm file:text-gray-700 placeholder:text-gray-400 hover:file:bg-gray-100 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:text-white/90 dark:file:border-gray-800 dark:file:bg-white/[0.03] dark:file:text-gray-400 dark:placeholder:text-gray-400"
+                                @change="
+                                    const file = $event.target.files[0];
+                                    if(file){
+                                        preview = URL.createObjectURL(file);
+                                    }
+                                ">
+                        </div>
                     </div>
 
                     {{-- BACKGROUND LOGIN --}}
                     <div>
                         <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Background Login
+                            Background Login <span class="text-xs text-gray-400">(Ukuran maksimal 2MB)</span>
                         </label>
 
-                        <div
-                            class="flex h-56 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800">
+                        <div x-data="{
+                            preview: '{{ $settings['APP_BACKGROUND_LOGIN']?->getFirstMediaUrl('configuration_app_background_login') }}'
+                        }">
+                            <div
+                                class="flex h-56 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300">
 
-                            @if ($settings['APP_BACKGROUND_LOGIN']?->getFirstMediaUrl('configuration_app_background_login'))
-                                <img src="{{ $settings['APP_BACKGROUND_LOGIN']->getFirstMediaUrl('configuration_app_background_login') }}"
-                                    class="h-full w-full object-cover">
-                            @else
-                                <div class="text-center">
-                                    <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M3 16l4-4a3 3 0 014.243 0L15 15m-2-2l1-1a3 3 0 014.243 0L21 15" />
-                                    </svg>
+                                <template x-if="preview">
+                                    <img :src="preview" class="h-full w-full object-cover">
+                                </template>
 
-                                    <p class="mt-2 text-sm text-gray-500">
+                                <template x-if="!preview">
+                                    <div class="text-center">
                                         Belum ada background
-                                    </p>
-                                </div>
-                            @endif
-                        </div>
+                                    </div>
+                                </template>
+                            </div>
 
-                        <input type="file" name="app_background_login" accept="image/*"
-                            class="mt-3 block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-brand-700 hover:file:bg-brand-100 dark:text-gray-400 dark:file:bg-brand-900/30 dark:file:text-brand-400">
+                            <input type="file" name="app_background_login" accept="image/jpeg,image/png,image/gif,image/svg+xml"
+                            class="mt-3 focus:border-ring-brand-300 shadow-theme-xs focus:file:ring-brand-300 h-11 w-full overflow-hidden rounded-lg border border-gray-300 bg-transparent text-sm text-gray-500 transition-colors file:mr-5 file:border-collapse file:cursor-pointer file:rounded-l-lg file:border-0 file:border-r file:border-solid file:border-gray-200 file:bg-brand-50 file:py-3 file:pr-3 file:pl-3.5 file:text-sm file:text-gray-700 placeholder:text-gray-400 hover:file:bg-gray-100 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:text-white/90 dark:file:border-gray-800 dark:file:bg-white/[0.03] dark:file:text-gray-400 dark:placeholder:text-gray-400"
+                                @change="
+                                    const file = $event.target.files[0];
+                                    if(file){
+                                        preview = URL.createObjectURL(file);
+                                    }
+                                ">
+                        </div>
                     </div>
 
                 </div>

@@ -38,9 +38,17 @@ class Configuration extends Model implements HasMedia
     ];
 
 
+    /**
+     * Register the media collections for the model.
+     *
+     * @return void
+     */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('configuration')
+        $this->addMediaCollection('configuration_app_logo')
+            ->singleFile();
+
+        $this->addMediaCollection('configuration_app_background_login')
             ->singleFile();
     }
 }

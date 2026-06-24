@@ -122,7 +122,7 @@
                     </div>
                     <div class="flex max-w-xs flex-col items-center">
                         <a href="#" class="mb-4 flex items-center gap-2">
-                            <img src="./images/logo/logo-icon.svg" alt="Logo" class="h-8 w-8">
+                            <img src="{{ \App\Helpers\SettingHelper::logo() }}" alt="Logo" class="h-8 w-8">
                             <span class="text-white font-semibold text-lg">{{ \App\Helpers\SettingHelper::appName() }}</span>
                         </a>
                         <p class="text-center text-gray-400 dark:text-white/60">

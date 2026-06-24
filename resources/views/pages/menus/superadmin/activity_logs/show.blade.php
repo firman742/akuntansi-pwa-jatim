@@ -3,6 +3,14 @@
 @section('title', 'Detail Aktivitas')
 
 @section('content')
+    <x-common.page-breadcrumb 
+        defaultTitle="Manajemn Aktivitas" 
+        pageTitle="Detail Aktivitas"
+        pageDescription="Monitoring dan kelola Log Aktivitas yang terdaftar di sistem" 
+        pageIcon="user-profile" parentTitle="Manajemen Aktivitas"
+        :parentRoute="route('superadmin.users.index')" 
+        currentTitle="Detail Aktivitas" />
+
     <div class="space-y-6">
 
         {{-- HEADER SUMMARY --}}

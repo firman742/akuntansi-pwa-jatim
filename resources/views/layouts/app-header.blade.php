@@ -52,7 +52,7 @@
             <a href="/" class="xl:hidden flex items-center gap-2">
 
                 {{-- Icon --}}
-                <img src="/images/logo/logo-icon.svg" alt="Logo"
+                <img src="{{ \App\Helpers\SettingHelper::logo() }}" alt="Logo"
                     class="
                             w-7 h-7
                             sm:w-8 sm:h-8

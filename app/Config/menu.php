@@ -52,7 +52,7 @@ class menu
             ),
             self::item(
                 'Pengaturan Sistem',
-                'settings',
+                'system-config',
                 '/superadmin/configurations/edit',
                 ['superadmin/configurations/edit*'],
             )

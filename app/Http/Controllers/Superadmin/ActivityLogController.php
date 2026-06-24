@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ActivityLogController extends Controller
@@ -11,11 +12,18 @@ class ActivityLogController extends Controller
     /**
      * @return View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $activityLogs = ActivityLog::with('user')
-            ->latest()->get();
+        $search = $request->input('search');
 
+        $activityLogs = ActivityLog::with('user')
+            ->when($search, function ($query, $search) {
+                $query->where('description', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%");
+                    });
+            })->get();
+            
         return view('pages.menus.superadmin.activity_logs.index', compact('activityLogs'));
     }
 

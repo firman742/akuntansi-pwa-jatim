@@ -37,15 +37,13 @@ class ConfigurationController extends Controller
         try {
             $service->update($request->validated());
 
-            return back()->with(
-                'success',
-                'Konfigurasi berhasil diperbarui.'
-            );
+            return redirect()
+                ->route('superadmin.configurations.edit')
+                ->with('success', 'Konfigurasi berhasil diperbarui.');
         } catch (Exception $e) {
-            return back()->with(
-                'error',
-                'Konfigurasi tidak ditemukan.'
-            );
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Terjadi kesalahan saat mengubah pengaturan: ' . $e->getMessage()]);
         }
     }
 }

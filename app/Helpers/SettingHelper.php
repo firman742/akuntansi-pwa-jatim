@@ -50,7 +50,7 @@ class SettingHelper
             ->where('key', 'APP_LOGO')
             ->first();
 
-        return $configuration?->getFirstMediaUrl('configuration');
+        return $configuration?->getFirstMediaUrl('configuration_app_logo');
     }
 
     public static function loginBackground(): ?string
@@ -59,6 +59,20 @@ class SettingHelper
             ->where('key', 'APP_BACKGROUND_LOGIN')
             ->first();
 
-        return $configuration?->getFirstMediaUrl('configuration');
+        return $configuration?->getFirstMediaUrl('configuration_app_background_login');
+    }
+
+    public static function updateMedia(string $key, string $collectionName, mixed $file): void
+    {
+        $configuration = Configuration::query()
+            ->where('key', $key)
+            ->firstOrFail();
+
+        $configuration->clearMediaCollection($collectionName);
+        $configuration
+            ->addMedia($file)
+            ->toMediaCollection($collectionName);
+
+        self::$settings[$key] = $configuration->getFirstMediaUrl($collectionName);
     }
 }

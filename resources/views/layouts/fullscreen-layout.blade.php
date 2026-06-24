@@ -7,6 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title> {{ \App\Helpers\SettingHelper::appName() ?? config('app.name') }} | {{ $title ?? 'Dashboard' }} </title>
+    {{-- Favicon --}}
+    <link rel="icon" href="{{ \App\Helpers\SettingHelper::logo() ?? asset('favicon.ico') }}" type="image/x-icon">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])

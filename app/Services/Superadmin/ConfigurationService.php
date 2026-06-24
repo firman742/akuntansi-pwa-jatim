@@ -2,13 +2,20 @@
 
 namespace App\Services\Superadmin;
 
+use App\Helpers\SettingHelper;
 use App\Models\Configuration;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\DB;
 
 class ConfigurationService extends BaseService
 {
-    public function update(array $data): Configuration
+    /**
+     * Update the application configuration.
+     *
+     * @param  array  $data
+     * @return void
+     */
+    public function update(array $data): void
     {
         DB::beginTransaction();
         $this->updateConfig(
@@ -26,32 +33,31 @@ class ConfigurationService extends BaseService
             $data['app_tagline']
         );
 
-        if (isset($data['app_logo'])) {
+        if (!empty($data['app_logo'])) {
 
-            $config = Configuration::where('key', 'APP_LOGO')->firstOrFail();
-
-            $config->clearMediaCollection('configuration');
-            $config
-                ->addMediaFromRequest('app_logo')
-                ->toMediaCollection('configuration_app_logo');
-
+            SettingHelper::updateMedia(
+                'APP_LOGO',
+                'configuration_app_logo',
+                $data['app_logo']
+            );
+            
             $this->updateConfig(
                 'APP_LOGO',
-                $config->getFirstMediaUrl('configuration_app_logo')
+                SettingHelper::logo()
             );
         }
 
         if (isset($data['app_background_login'])) {
 
-            $config = Configuration::where('key', 'APP_BACKGROUND_LOGIN')->firstOrFail();
-            $config->clearMediaCollection('configuration');
-            $config
-                ->addMediaFromRequest('app_background_login')
-                ->toMediaCollection('configuration_app_background_login');
+            SettingHelper::updateMedia(
+                'APP_BACKGROUND_LOGIN',
+                'configuration_app_background_login',
+                $data['app_background_login']
+            );
 
             $this->updateConfig(
                 'APP_BACKGROUND_LOGIN',
-                $config->getFirstMediaUrl('configuration_app_background_login')
+                SettingHelper::loginBackground()
             );
         }
 
@@ -68,7 +74,6 @@ class ConfigurationService extends BaseService
             ]
         );
         DB::commit();
-        return $config;
     }
 
     /**
