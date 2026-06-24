@@ -10,18 +10,27 @@ use App\Models\User;
 use App\Services\Superadmin\UserService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
     /**
-     *
+     * @param Request $request
      * @return View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $users = User::with('roles')->get();
+        $search = $request->input('search');
+
+        $users = User::query()
+            ->with('roles')
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })->get();
+        
         return view('pages.menus.superadmin.users.index', compact('users'));
     }
 
@@ -63,10 +72,9 @@ class UserController extends Controller
                 ->route('superadmin.users.index')
                 ->with('success', 'User berhasil ditambahkan');
         } catch (Exception $e) {
-            return redirect()
-                ->back()
+            return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan user: ' . $e->getMessage());
+                ->withErrors(['error' => 'Terjadi kesalahan saat menambahkan user: ' . $e->getMessage()]);
         }
     }
 
@@ -124,9 +132,9 @@ class UserController extends Controller
                 ->route('superadmin.users.index')
                 ->with('success', 'User berhasil dihapus');
         } catch (Exception $e) {
-            return redirect()
-                ->back()
-                ->with('error', 'Terjadi kesalahan saat menghapus user: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Gagal menghapus user: ' . $e->getMessage()])->withInput();
         }
     }
 }

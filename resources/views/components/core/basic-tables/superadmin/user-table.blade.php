@@ -11,6 +11,18 @@
     showUrl: '{{ route('superadmin.users.show', ':id') }}',
     editUrl: '{{ route('superadmin.users.edit', ':id') }}',
     destroyUrl: '{{ route('superadmin.users.destroy', ':id') }}',
+    deleteModalOpen: false,
+    selectedUser: null,
+
+    openDeleteModal(user) {
+        this.selectedUser = user;
+        this.deleteModalOpen = true;
+    },
+
+    closeDeleteModal() {
+        this.deleteModalOpen = false;
+        this.selectedUser = null;
+    },
 
     get totalPages() {
         return Math.ceil(this.tableRowData.length / this.itemsPerPage);
@@ -148,15 +160,14 @@
                                     <!-- View -->
                                     <a :href="showUrl.replace(':id', row.id)"
                                         class="flex h-8 w-8 items-center justify-center rounded-md text-green-500 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-500/10">
-                                        <svg class="h-5 w-5"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     </a>
-                                    
+
                                     <!-- Edit -->
                                     <a :href="editUrl.replace(':id', row.id)"
                                         class="flex h-8 w-8 items-center justify-center rounded-md text-blue-500 hover:bg-green-50 dark:text-blue-400 dark:hover:bg-green-500/10"
@@ -168,21 +179,14 @@
                                     </a>
 
                                     <!-- Delete -->
-                                    <!-- Delete SELALU tampil -->
-                                    <form :action="destroyUrl.replace(':id', row.id)" method="POST"
-                                        onsubmit="return confirm('Yakin hapus pengguna ini?')">
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button type="submit"
-                                            class="flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                                            title="Hapus Sub Periode">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862 a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6 m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </form>
+                                    <button type="button" @click="openDeleteModal(row)"
+                                        class="flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                                        title="Hapus Pengguna">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -208,7 +212,7 @@
                 <span class="hidden sm:inline">Previous</span>
             </button>
 
-            <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden">
+            <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 ">
                 Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
             </span>
 
@@ -237,6 +241,59 @@
                         fill="currentColor" />
                 </svg>
             </button>
+        </div>
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div x-show="deleteModalOpen" x-transition.opacity x-cloak
+        class="fixed inset-0 z-99999 flex items-center justify-center bg-black/50 p-4">
+
+        <div @click.away="closeDeleteModal()"
+            class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900">
+
+            <!-- ICON -->
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+                <svg class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                </svg>
+            </div>
+
+            <!-- TITLE -->
+            <h3 class="mt-4 text-center text-lg font-semibold text-gray-900 dark:text-white">
+                Konfirmasi Hapus
+            </h3>
+
+            <!-- DESCRIPTION -->
+            <p class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                Apakah Anda yakin ingin menghapus pengguna
+                <span class="font-semibold text-gray-800 dark:text-white" x-text="selectedUser?.name"></span>?
+            </p>
+
+            <p class="mt-1 text-center text-xs text-red-500">
+                Data yang dihapus tidak dapat dikembalikan.
+            </p>
+
+            <!-- ACTION -->
+            <div class="mt-6 flex justify-end gap-3">
+
+                <button type="button" @click="closeDeleteModal()"
+                    class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                    Batal
+                </button>
+
+                <form :action="destroyUrl.replace(':id', selectedUser?.id)" method="POST">
+                    @csrf
+                    @method('DELETE')
+
+                    <button type="submit"
+                        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+                        Ya, Hapus
+                    </button>
+                </form>
+
+            </div>
+
         </div>
     </div>
 </div>

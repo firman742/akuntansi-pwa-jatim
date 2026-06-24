@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bendahara\CoaBalances\TopUpBalanceRequest;
 use App\Models\BudgetAllocation;
 use App\Models\CoaBalance;
 use App\Models\OpeningBalance;
@@ -10,6 +11,8 @@ use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
+use App\Services\Bendahara\TopUpBalanceService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -112,6 +115,7 @@ class CoaBalanceController extends Controller
             ->where('chart_of_account_id', $coaBalance->chart_of_account_id)
             ->where('sub_period_id', $coaBalance->sub_period_id)
             ->latest()
+            ->limit(10)
             ->get();
 
         /**
@@ -137,6 +141,7 @@ class CoaBalanceController extends Controller
                 );
             })
             ->latest('transaction_date')
+            ->limit(10)
             ->get();
 
         /**
@@ -161,6 +166,7 @@ class CoaBalanceController extends Controller
                     );
             })
             ->latest()
+            ->limit(10)
             ->get();
 
         /**
@@ -175,6 +181,7 @@ class CoaBalanceController extends Controller
         ])
             ->where('coa_balance_id', $coaBalance->id)
             ->latest('allocated_at')
+            ->limit(10)
             ->get();
 
         
@@ -274,5 +281,27 @@ class CoaBalanceController extends Controller
             'chartData' => $chartData,
             'hasChartData' => $hasChartData,
         ]);
+    }
+
+    /**
+     * Handle the top-up balance request for a specific CoaBalance.
+     *
+     * @param TopUpBalanceService $service
+     * @param TopUpBalanceRequest $request
+     * @return RedirectResponse
+     */
+    public function topUp(TopUpBalanceService $service, TopUpBalanceRequest $request): RedirectResponse
+    {
+        $id = CoaBalance::where('chart_of_account_id', $request->chart_of_account_id)
+            ->where('period_id', $request->period_id)
+            ->where('sub_period_id', $request->sub_period_id)
+            ->value('id');
+
+        try {
+            $service->store($request->validated());
+            return redirect()->route('bendahara.coa-balances.show', $id)->with('success', 'Topup akun berhasil dilakukan.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat melakukan topup: ' . $e->getMessage());
+        }
     }
 }

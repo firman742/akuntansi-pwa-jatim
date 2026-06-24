@@ -11,6 +11,12 @@
             :parentRoute="route('bendahara.coa-balances.index')" currentTitle="Detail" />
     </div>
 
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+        </div>
+    @endif
+
     {{-- Alert Error --}}
     @if ($errors->any())
         <div class="mb-6">
@@ -23,7 +29,7 @@
             </x-ui.alert>
         </div>
     @endif
-    
+
 
     {{-- Grid Layout Utama --}}
     <div class="space-y-6">
@@ -35,11 +41,22 @@
                 <a href="{{ route('bendahara.coa-balances.index') }}">
                     <x-ui.button variant="outline" class="rounded-xl px-4 py-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                         Kembali
                     </x-ui.button>
                 </a>
+            </div>
+            <div>
+                <!-- Tombol Tambah Saldo -->
+                <x-ui.button variant="primary" class="rounded-xl px-4 py-2" onclick="toggleModal('topUpBalanceModal')">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4v16m8-8H4" />
+                    </svg>
+                     Tambah Saldo
+                </x-ui.button>
             </div>
         </div>
 
@@ -368,10 +385,175 @@
 
         </x-common.component-card>
 
+
+        <!-- Modal Form Top-Up Saldo -->
+        <div id="topUpBalanceModal" class="fixed inset-0 z-99999 overflow-y-auto  bg-black/60 p-4 hidden">
+            <div class="flex items-center justify-center ">
+                <div class="w-full max-w-lg sm:max-w-xl lg:max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
+
+                    {{-- HEADER --}}
+                    <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-800">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
+
+                                {{-- svg tambah --}}
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+
+                            </div>
+
+                            <div>
+
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                    Top-Up Saldo Akun
+                                </h3>
+
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    Tambahkan saldo ke akun <span
+                                        class="font-semibold text-gray-900 dark:text-white">{{ $coaBalance->chartOfAccount->code }}
+                                        -
+                                        {{ $coaBalance->chartOfAccount->name }}</span> untuk periode
+                                    <span
+                                        class="font-semibold text-gray-900 dark:text-white">{{ $coaBalance->period->name }}
+                                        -
+                                        {{ $coaBalance->subPeriod->name }}</span>.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {{-- BODY --}}
+                    <div class="p-6 space-y-5">
+
+                        {{-- ALERT --}}
+                        <div
+                            class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+
+                            <p class="text-sm text-amber-700 dark:text-amber-300">
+                                Pastikan jumlah top-up saldo sesuai dengan kebutuhan dan telah disetujui oleh pihak yang berwenang.
+                            </p>
+
+                        </div>
+
+                        {{-- Akun COA --}}
+                        <div>
+
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Akun COA
+                            </label>
+
+                            <div
+                                class="rounded-lg bg-gray-50 p-4 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+
+                                {{ $account->code }} - {{ $account->name }}
+
+                            </div>
+
+                            <input type="hidden" name="chart_of_account_id" value="{{ $account->id }}" form="approve-form">
+
+
+                        </div>
+
+                        {{-- Periode --}}
+                        <div>
+
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Periode
+                            </label>
+
+                            <div
+                                class="rounded-lg bg-gray-50 p-4 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+
+                                {{ $coaBalance->period->name }}
+                            </div>
+
+                            <input type="hidden" name="period_id" value="{{ $coaBalance->period->id }}" form="approve-form">
+
+                        </div>
+
+                        {{-- Sub Periode --}}
+                        <div>
+
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Sub Periode
+                            </label>
+
+                            <div
+                                class="rounded-lg bg-gray-50 p-4 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+
+                                {{ $coaBalance->subPeriod->name }}
+                            </div>
+
+                            <input type="hidden" name="sub_period_id" value="{{ $coaBalance->subPeriod->id }}" form="approve-form">
+
+
+                        </div>
+
+                        {{-- Jumlah TopUp --}}
+                        <div>
+                            <x-form.input 
+                            type="number"
+                            id="amount" 
+                            name="amount"
+                            label="Jumlah Topup"
+                            form="approve-form"
+                            placeholder="Masukkan jumlah top-up saldo" 
+                            required />
+
+                        </div>
+
+                        {{-- Alasan Penyesuaian --}}
+                        <div>
+                            <x-form.text-area 
+                                name="reason" 
+                                label="Catatan / Alasan Penyesuaian" 
+                                placeholder="Contoh: Penyesuaian saldo untuk menutupi kekurangan dana operasional bulan ini."
+                                rows="4"
+                                form="approve-form"
+                                required />
+                        </div>
+
+                    </div>
+
+                    {{-- FOOTER --}}
+                    <div class="flex justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-800">
+
+                        <button type="button" onclick="toggleModal('topUpBalanceModal')"
+                            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                            Batal
+                        </button>
+
+                        <form id="approve-form" method="POST"
+                            action="{{ route('bendahara.coa-balances.topup') }}">
+
+                            @csrf
+
+                            <button type="submit"
+                                class="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                                Top-Up Saldo
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     {{-- Script Grafik --}}
     <script>
+        // Function to toggle modal visibility
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const ctx = document.getElementById('balanceChart');
             if (!ctx) return;

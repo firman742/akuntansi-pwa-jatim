@@ -239,6 +239,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
     Route::prefix('coa-balances')->name('coa-balances.')->group(function () {
         Route::get('/', [App\Http\Controllers\Bendahara\CoaBalanceController::class, 'index'])->name('index');
         Route::get('/{id}', [App\Http\Controllers\Bendahara\CoaBalanceController::class, 'show'])->name('show');
+        Route::post('/topup', [App\Http\Controllers\Bendahara\CoaBalanceController::class, 'topUp'])->name('topup'); // API untuk topup saldo akun
     });
 
     /*
@@ -258,6 +259,21 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'edit'])->name('edit');
         Route::put('/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'update'])->name('update');
         Route::delete('/{id}', [App\Http\Controllers\Bendahara\OpeningBalanceController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    |TOP UP ACCOUNT
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('account-topups')->name('account-topups.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bendahara\AccountTopupController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Bendahara\AccountTopupController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Bendahara\AccountTopupController::class, 'store'])->name('store');
+        Route::get('/{id}', [App\Http\Controllers\Bendahara\AccountTopupController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\AccountTopupController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\Bendahara\AccountTopupController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\Bendahara\AccountTopupController::class, 'destroy'])->name('destroy');
     });
 
     /*

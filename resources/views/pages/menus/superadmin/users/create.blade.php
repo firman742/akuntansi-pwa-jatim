@@ -3,7 +3,9 @@
 @section('title', 'Tambah Pengguna')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Tambah Pengguna" />
+    <x-common.page-breadcrumb defaultTitle="Tambah Pengguna " pageTitle="Tambah Pengguna"
+        pageDescription="Monitoring dan kelola pengguna yang terdaftar di sistem" pageIcon="user-profile"
+        parentTitle="Manajemen Pengguna" :parentRoute="route('superadmin.users.index')" currentTitle="Tambah Pengguna" />
 
     @if ($errors->any())
         <div class="mb-6">
@@ -25,188 +27,60 @@
     @endif
 
     <x-common.component-card title="Tambah Pengguna">
-        <p class="mb-6 text-sm text-gray-600">
-
-        </p>
-
         <form method="POST" action="{{ route('superadmin.users.store') }}">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Nama Pengguna
-                    </label>
-                    <input type="text" name="name" value="{{ old('name') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('name') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                        bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                        required />
-
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+            <div class="grid grid-cols-2 sm:grid-cols-1 gap-4">
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="name" name="name" label="Nama Pengguna" placeholder="Masukkan Nama Pengguna"
+                        value="{{ old('name') }}" required />
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        No Telpon
-                    </label>
-                    <input type="number" name="no_telp" value="{{ old('no_telp') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('no_telp') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('no_telp')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="no_telp" name="no_telp" type="number" label="No Telpon"
+                        placeholder="Masukkan No Telpon" value="{{ old('no_telp') }}" />
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Email
-                    </label>
-                    <input type="email" name="email" value="{{ old('email') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('email') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                        required />
-                    @error('email')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="email" name="email" type="email" label="Email" placeholder="Masukkan Email"
+                        value="{{ old('email') }}" required />
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Alamat
-                    </label>
-                    <input type="text" name="address" value="{{ old('address') }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('address') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('address')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="address" name="address" label="Alamat" placeholder="Masukkan Alamat"
+                        value="{{ old('address') }}" />
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Peran
-                    </label>
-                    <div x-data="{ isOptionSelected: false }" class="relative z-20 bg-transparent">
-                        <select name="role"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full appearance-none rounded-lg border @error('role') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent bg-none px-4 py-2.5 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                            :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
-                            @change="isOptionSelected = true" required>
-                            <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                Pilih Peran
+                <div class="col-span-2">
+                    <x-form.select id="role" name="role" label="Peran" placeholder="Pilih Peran" required>
+                        @foreach ($roles as $role)
+                            <option value="{{ $role }}">
+                                {{ $role }}
                             </option>
-                            @foreach ($roles as $role)
-                                <option value="{{ $role }}"
-                                    class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                    {{ $role }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <span
-                            class="pointer-events-none absolute top-1/2 right-4 z-30 -translate-y-1/2 text-gray-700 dark:text-gray-400">
-                            <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </span>
-                    </div>
-                    @error('role')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                        @endforeach
+                    </x-form.select>
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Password
-                    </label>
-                    <div x-data="{ showPassword: false }" class="relative">
-                        <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
-                            placeholder="Enter your password"
-                            class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                            @error('password') 
-                                border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                            @else 
-                                border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                            @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                            required />
-                        <span @click="showPassword = !showPassword"
-                            class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
-                            <svg x-show="!showPassword" class="fill-current" width="20" height="20"
-                                viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M10.0002 13.8619C7.23361 13.8619 4.86803 12.1372 3.92328 9.70241C4.86804 7.26761 7.23361 5.54297 10.0002 5.54297C12.7667 5.54297 15.1323 7.26762 16.0771 9.70243C15.1323 12.1372 12.7667 13.8619 10.0002 13.8619ZM10.0002 4.04297C6.48191 4.04297 3.49489 6.30917 2.4155 9.4593C2.3615 9.61687 2.3615 9.78794 2.41549 9.94552C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C13.5184 15.3619 16.5055 13.0957 17.5849 9.94555C17.6389 9.78797 17.6389 9.6169 17.5849 9.45932C16.5055 6.30919 13.5184 4.04297 10.0002 4.04297ZM9.99151 7.84413C8.96527 7.84413 8.13333 8.67606 8.13333 9.70231C8.13333 10.7286 8.96527 11.5605 9.99151 11.5605H10.0064C11.0326 11.5605 11.8646 10.7286 11.8646 9.70231C11.8646 8.67606 11.0326 7.84413 10.0064 7.84413H9.99151Z"
-                                    fill="#98A2B3" />
-                            </svg>
-                            <svg x-show="showPassword" class="fill-current" width="20" height="20"
-                                viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M4.63803 3.57709C4.34513 3.2842 3.87026 3.2842 3.57737 3.57709C3.28447 3.86999 3.28447 4.34486 3.57737 4.63775L4.85323 5.91362C3.74609 6.84199 2.89363 8.06395 2.4155 9.45936C2.3615 9.61694 2.3615 9.78801 2.41549 9.94558C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C11.255 15.3619 12.4422 15.0737 13.4994 14.5598L15.3625 16.4229C15.6554 16.7158 16.1302 16.7158 16.4231 16.4229C16.716 16.13 16.716 15.6551 16.4231 15.3622L4.63803 3.57709ZM12.3608 13.4212L10.4475 11.5079C10.3061 11.5423 10.1584 11.5606 10.0064 11.5606H9.99151C8.96527 11.5606 8.13333 10.7286 8.13333 9.70237C8.13333 9.5461 8.15262 9.39434 8.18895 9.24933L5.91885 6.97923C5.03505 7.69015 4.34057 8.62704 3.92328 9.70247C4.86803 12.1373 7.23361 13.8619 10.0002 13.8619C10.8326 13.8619 11.6287 13.7058 12.3608 13.4212ZM16.0771 9.70249C15.7843 10.4569 15.3552 11.1432 14.8199 11.7311L15.8813 12.7925C16.6329 11.9813 17.2187 11.0143 17.5849 9.94561C17.6389 9.78803 17.6389 9.61696 17.5849 9.45938C16.5055 6.30925 13.5184 4.04303 10.0002 4.04303C9.13525 4.04303 8.30244 4.17999 7.52218 4.43338L8.75139 5.66259C9.1556 5.58413 9.57311 5.54303 10.0002 5.54303C12.7667 5.54303 15.1323 7.26768 16.0771 9.70249Z"
-                                    fill="#98A2B3" />
-                            </svg>
-                        </span>
-                    </div>
-                    @error('password')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input 
+                        id="password" 
+                        name="password" 
+                        label="Password" 
+                        type="password"
+                        placeholder="Masukkan Password"
+                        value="{{ old('password') }}" 
+                        required />
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Konfirmasi Password
-                    </label>
-                    <div x-data="{ showPassword: false }" class="relative">
-                        <input :type="showPassword ? 'text' : 'password'" id="password_confirmation"
-                            name="password_confirmation" placeholder="Enter your password"
-                            class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                            @error('password') 
-                                border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                            @else 
-                                border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                            @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        <span @click="showPassword = !showPassword"
-                            class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
-                            <svg x-show="!showPassword" class="fill-current" width="20" height="20"
-                                viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M10.0002 13.8619C7.23361 13.8619 4.86803 12.1372 3.92328 9.70241C4.86804 7.26761 7.23361 5.54297 10.0002 5.54297C12.7667 5.54297 15.1323 7.26762 16.0771 9.70243C15.1323 12.1372 12.7667 13.8619 10.0002 13.8619ZM10.0002 4.04297C6.48191 4.04297 3.49489 6.30917 2.4155 9.4593C2.3615 9.61687 2.3615 9.78794 2.41549 9.94552C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C13.5184 15.3619 16.5055 13.0957 17.5849 9.94555C17.6389 9.78797 17.6389 9.6169 17.5849 9.45932C16.5055 6.30919 13.5184 4.04297 10.0002 4.04297ZM9.99151 7.84413C8.96527 7.84413 8.13333 8.67606 8.13333 9.70231C8.13333 10.7286 8.96527 11.5605 9.99151 11.5605H10.0064C11.0326 11.5605 11.8646 10.7286 11.8646 9.70231C11.8646 8.67606 11.0326 7.84413 10.0064 7.84413H9.99151Z"
-                                    fill="#98A2B3" />
-                            </svg>
-                            <svg x-show="showPassword" class="fill-current" width="20" height="20"
-                                viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M4.63803 3.57709C4.34513 3.2842 3.87026 3.2842 3.57737 3.57709C3.28447 3.86999 3.28447 4.34486 3.57737 4.63775L4.85323 5.91362C3.74609 6.84199 2.89363 8.06395 2.4155 9.45936C2.3615 9.61694 2.3615 9.78801 2.41549 9.94558C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C11.255 15.3619 12.4422 15.0737 13.4994 14.5598L15.3625 16.4229C15.6554 16.7158 16.1302 16.7158 16.4231 16.4229C16.716 16.13 16.716 15.6551 16.4231 15.3622L4.63803 3.57709ZM12.3608 13.4212L10.4475 11.5079C10.3061 11.5423 10.1584 11.5606 10.0064 11.5606H9.99151C8.96527 11.5606 8.13333 10.7286 8.13333 9.70237C8.13333 9.5461 8.15262 9.39434 8.18895 9.24933L5.91885 6.97923C5.03505 7.69015 4.34057 8.62704 3.92328 9.70247C4.86803 12.1373 7.23361 13.8619 10.0002 13.8619C10.8326 13.8619 11.6287 13.7058 12.3608 13.4212ZM16.0771 9.70249C15.7843 10.4569 15.3552 11.1432 14.8199 11.7311L15.8813 12.7925C16.6329 11.9813 17.2187 11.0143 17.5849 9.94561C17.6389 9.78803 17.6389 9.61696 17.5849 9.45938C16.5055 6.30925 13.5184 4.04303 10.0002 4.04303C9.13525 4.04303 8.30244 4.17999 7.52218 4.43338L8.75139 5.66259C9.1556 5.58413 9.57311 5.54303 10.0002 5.54303C12.7667 5.54303 15.1323 7.26768 16.0771 9.70249Z"
-                                    fill="#98A2B3" />
-                            </svg>
-                        </span>
-                    </div>
-                    @error('password')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input 
+                        id="password_confirmation" 
+                        name="password_confirmation" 
+                        type="password"
+                        label="Konfirmasi Password" 
+                        placeholder="Masukkan Konfirmasi Password"
+                        value="{{ old('password_confirmation') }}" 
+                        required />
                 </div>
-
             </div>
 
             <div class="mt-8 flex justify-end gap-3">

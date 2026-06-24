@@ -153,7 +153,6 @@
                             name="balance_type" 
                             label="Tipe Saldo">
                             <option value="DEBIT">DEBIT</option>
-                            <option value="CREDIT">KREDIT</option>
                         </x-form.select>
 
                     </div>
@@ -238,6 +237,8 @@
                 const response = await fetch(
                     `/bendahara/opening-balances/get-last-closing?coa_id=${coaId}&sub_period_id=${subId}`);
                 const data = await response.json();
+                console.log(data);
+                
 
                 // Isi data ke Form Tahap 2
                 document.getElementById('final_coa_id').value = coaId;

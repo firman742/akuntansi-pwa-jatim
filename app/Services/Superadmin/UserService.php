@@ -86,27 +86,31 @@ class UserService extends BaseService
      * Delete the specified user.
      *
      * @param  string  $id
-     * @return void
+     * @return mixed
+     * @throws Exception
      */
-    public function delete(string $id): void
+    public function delete(string $id): mixed
     {
-        DB::beginTransaction();
-        $user = User::findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $user = User::findOrFail($id);
 
-        // optional: lepas role & permission
-        $user->syncRoles([]);
-        $user->permissions()->detach();
+            // optional: detach roles & permissions
+            $user->syncRoles([]);
+            $user->permissions()->detach();
 
-        // soft delete
-        $user->delete();
+            if ($user->hasRelatedEntities()) {
+                throw new Exception("Tidak dapat menghapus user {$user->name} karena memiliki entitas terkait: " . implode(', ', array_keys($user->getRelatedEntities())));
+            }
 
-        $this->logger->log(
-            action: 'delete',
-            module: 'user',
-            subject: $user,
-            description: "User {$user->name} deleted",
-            old: $user->getOriginal()
-        );
-        DB::commit();
+            $user->delete();
+
+            $this->logger->log(
+                action: 'delete',
+                module: 'user',
+                subject: $user,
+                description: "User {$user->name} deleted",
+                old: $user->getOriginal()
+            );
+        });
     }
 }

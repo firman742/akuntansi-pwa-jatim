@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use App\Enums\NormalBalanceEnum;
+use App\Models\Abstracts\BaseModelAuthenticated;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -31,7 +30,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read CoaRequest[]|null $coa_requests
  * @property-read CoaRequest[]|null $approved_coa_requests
  */
-class User extends Authenticatable
+class User extends BaseModelAuthenticated
 {
     use HasUuids, HasFactory, HasRoles, Notifiable;
 
@@ -78,6 +77,18 @@ class User extends Authenticatable
             'is_superadmin' => 'boolean',
         ];
     }
+
+    protected array $relationshipToCheck = [
+        'userAccounts',
+        'coas',
+        'debitCoas',
+        'creditCoas',
+        'transactions',
+        'account_balances',
+        'balance_requests',
+        'coa_requests',
+        'approved_coa_requests',
+    ];
 
     /**
      * @return HasMany
@@ -127,14 +138,6 @@ class User extends Authenticatable
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'created_by');
-    }
-
-    /**
-     * @return HasMany
-     */
-    public function periods(): HasMany
-    {
-        return $this->hasMany(Period::class, 'created_by');
     }
 
     /**

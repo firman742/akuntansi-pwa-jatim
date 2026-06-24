@@ -1,5 +1,6 @@
 @props([
     'resetUrl' => null,
+    'needFilter' => false,
 ])
 
 <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-sm">
@@ -8,7 +9,7 @@
     <div
         class="px-6 py-6 border-b border-gray-200 
                 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        
+
         {{-- SEARCH BAR --}}
         <div class="flex items-center gap-2">
             {{ $search ?? '' }}
@@ -20,39 +21,36 @@
                 <div class="flex w-full flex-wrap gap-2 lg:w-auto">
 
                     {{-- FILTER DROPDOWN --}}
-                    <div class="relative" x-data="{ open: false }">
+                    @if ($needFilter)
+                        <div class="relative" x-data="{ open: false }">
 
-                        <x-ui.button type="button" variant="outline" @click="open = !open"
-                            class="rounded-xl px-4 py-2">
+                            <x-ui.button type="button" variant="outline" @click="open = !open"
+                                class="rounded-xl px-4 py-2">
 
-                            <svg class="stroke-current fill-white dark:fill-gray-800" width="20" height="20"
-                                viewBox="0 0 20 20" fill="none">
+                                <svg class="stroke-current fill-white dark:fill-gray-800" width="20" height="20"
+                                    viewBox="0 0 20 20" fill="none">
 
-                                <path d="M2.29004 5.90393H17.7067" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
+                                    <path d="M2.29004 5.90393H17.7067" stroke-width="1.5" stroke-linecap="round"
+                                        stroke-linejoin="round" />
 
-                                <path d="M17.7075 14.0961H2.29085" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
+                                    <path d="M17.7075 14.0961H2.29085" stroke-width="1.5" stroke-linecap="round"
+                                        stroke-linejoin="round" />
 
-                                <path
-                                    d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z"
-                                    stroke-width="1.5" />
+                                    <path
+                                        d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z"
+                                        stroke-width="1.5" />
 
-                                <path
-                                    d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z"
-                                    stroke-width="1.5" />
-                            </svg>
+                                    <path
+                                        d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z"
+                                        stroke-width="1.5" />
+                                </svg>
 
-                            Filter
-                        </x-ui.button>
+                                Filter
+                            </x-ui.button>
 
-                        {{-- FILTER PANEL --}}
-                        <div
-                            x-show="open"
-                            x-transition
-                            @click.away="open = false"
-
-                            class="
+                            {{-- FILTER PANEL --}}
+                            <div x-show="open" x-transition @click.away="open = false"
+                                class="
                                 fixed inset-x-4 top-auto z-50 mt-2
                                 max-h-[80vh]
                                 overflow-y-auto
@@ -76,38 +74,39 @@
                                 dark:bg-gray-900
                             ">
 
-                            <form method="GET" class="p-5">
-                                <div class="space-y-4">
-                                    {{ $filters ?? '' }}
-                                </div>
+                                <form method="GET" class="p-5">
+                                    <div class="space-y-4">
+                                        {{ $filters ?? '' }}
+                                    </div>
 
-                                <div class="mt-5 flex gap-2">
+                                    <div class="mt-5 flex gap-2">
 
-                                    <x-ui.button type="submit" variant="primary" class="flex-1 justify-center">
-                                        Tampilkan
-                                    </x-ui.button>
-
-                                    <a href="{{ $resetUrl }}" class="flex-1">
-
-                                        <x-ui.button variant="outline" class="w-full justify-center">
-                                            Reset
+                                        <x-ui.button type="submit" variant="primary" class="flex-1 justify-center">
+                                            Tampilkan
                                         </x-ui.button>
 
-                                    </a>
+                                        <a href="{{ $resetUrl }}" class="flex-1">
 
-                                </div>
+                                            <x-ui.button variant="outline" class="w-full justify-center">
+                                                Reset
+                                            </x-ui.button>
 
-                            </form>
+                                        </a>
+
+                                    </div>
+
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
-                     {{-- ACTIONS BUTTON --}}
+                    {{-- ACTIONS BUTTON --}}
                     <div>
                         {{ $actions ?? '' }}
                     </div>
                 </div>
             </div>
-            
+
         </div>
 
     </div>

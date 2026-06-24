@@ -135,7 +135,6 @@ class menu
                 'active_on' => [
                     'bendahara/coa-balances*',
                     'bendahara/opening-balances*',
-                    'bendahara/topup-balances*',
                 ],
                 'subItems' => [
                     self::item(
@@ -149,12 +148,6 @@ class menu
                         null,
                         '/bendahara/opening-balances',
                         ['bendahara/opening-balances*']
-                    ),
-                    self::item(
-                        'Penambahan Saldo',
-                        null,
-                        '/bendahara/topup-balances',
-                        ['bendahara/topup-balances*']
                     ),
                 ]
             ],

@@ -23,7 +23,7 @@
     @endif
 
     <div class="relative">
-        <textarea id="{{ $id ?? $name }}" name="{{ $name }}" form="{{ $form }}" rows="{{ $rows }}" placeholder="{{ $placeholder }}"
+        <textarea id="{{ $id ?? $name }}" name="{{ $name }}" rows="{{ $rows }}" placeholder="{{ $placeholder }}" @if ($form) form="{{ $form }}" @endif
             @required($required) @readonly($readonly) @disabled($disabled)
             {{ $attributes->merge([
                 'class' =>

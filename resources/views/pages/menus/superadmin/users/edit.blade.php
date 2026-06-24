@@ -3,14 +3,16 @@
 @section('title', 'Edit Pengguna')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Edit Pengguna" />
+    <x-common.page-breadcrumb defaultTitle="Edit Pengguna" pageTitle="Edit Pengguna"
+        pageDescription="Monitoring dan kelola pengguna yang terdaftar di sistem" pageIcon="user-profile"
+        parentTitle="Manajemen Pengguna" :parentRoute="route('superadmin.users.index')" currentTitle="Edit Pengguna" />
 
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1 dark:text-white">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-danger-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -28,109 +30,36 @@
             @csrf
             @method('PUT')
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Nama Pengguna
-                    </label>
-                    <input type="text" name="name" value="{{ old('name', $user->name) }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('name') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                        bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                        required />
-
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="name" name="name" label="Nama Pengguna" placeholder="Masukkan Nama Pengguna"
+                        value="{{ old('name', $user->name) }}" required />
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        No Telpon
-                    </label>
-                    <input type="text" name="no_telp" value="{{ old('no_telp', $user->no_telp) }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('no_telp') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('no_telp')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="no_telp" name="no_telp" type="number" label="No Telpon"
+                        placeholder="Masukkan No Telpon" value="{{ old('no_telp', $user->no_telp) }}" />
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Email
-                    </label>
-                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('email') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                        required />
-                    @error('email')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="email" name="email" type="email" label="Email" placeholder="Masukkan Email"
+                        value="{{ old('email', $user->email) }}" required />
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Alamat
-                    </label>
-                    <input type="text" name="address" value="{{ old('address', $user->address) }}"
-                        class="dark:bg-dark-900 shadow-theme-xs h-11 w-full rounded-lg border 
-                        @error('address') 
-                            border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-700
-                        @else 
-                            border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 dark:border-gray-700
-                        @enderror 
-                            bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('address')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="address" name="address" label="Alamat" placeholder="Masukkan Alamat"
+                        value="{{ old('address', $user->address) }}" />
                 </div>
 
-                <div class="col-span-1 md:col-span-2">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Peran
-                    </label>
-                    <div x-data="{ isOptionSelected: false }" class="relative z-20 bg-transparent">
-                        <select name="role"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full appearance-none rounded-lg border @error('role') border-error-300 focus:border-error-300 @else border-gray-300 @enderror bg-transparent bg-none px-4 py-2.5 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                            :class="isOptionSelected && 'text-gray-800 dark:text-white/90'"
-                            @change="isOptionSelected = true">
-                            <option value="" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                Pilih Peran
+                <div class="col-span-2">
+                    <x-form.select id="role" name="role" label="Peran" placeholder="Pilih Peran" disabled>
+                        @foreach ($roles as $role)
+                            <option value="{{ $role }}" {{ old('role', $userRole) === $role ? 'selected' : '' }}>
+                                {{ $role }}
                             </option>
-                            @foreach ($roles as $role)
-                                <option value="{{ $role }}"
-                                    {{ old('role', $userRole) === $role ? 'selected' : '' }}
-                                    class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                    {{ $role }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <span
-                            class="pointer-events-none absolute top-1/2 right-4 z-30 -translate-y-1/2 text-gray-700 dark:text-gray-400">
-                            <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="" stroke-width="1.5"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </span>
-                    </div>
-                    @error('role')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                        @endforeach
+                    </x-form.select>
+
+                    <input type="hidden" name="role" value="{{ old('role', $userRole) }}">
                 </div>
             </div>
 

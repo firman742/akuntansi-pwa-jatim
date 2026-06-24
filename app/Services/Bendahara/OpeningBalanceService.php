@@ -202,6 +202,7 @@ class OpeningBalanceService extends BaseService
                 'balance_type'        => $data['balance_type'],
                 'amount'              => $totalAmount,
                 'created_by'          => Auth::id(),
+                'is_correction'       => false,
             ]);
 
             // ================= 2. CREATE COA BALANCE (STATE SNAPSHOT) =================
@@ -226,7 +227,7 @@ class OpeningBalanceService extends BaseService
                 subject: $openingBalance,
                 description: "Membuat opening balance untuk akun {$openingBalance->chartOfAccount->name} ({$openingBalance->chartOfAccount->code}) pada sub periode {$openingBalance->subPeriod->name} dengan jumlah " . number_format($totalAmount, 2),
                 old: [],
-                new: $openingBalance,
+                new: $openingBalance->toArray(),
                 additionalData: [
                     "coa_balance" => $coaBalance,
                 ]
@@ -475,53 +476,5 @@ class OpeningBalanceService extends BaseService
 
             return $openingBalance->fresh();
         });
-    }
-
-    // ================== PRIVATE METHODS ==================
-    /**
-     * Validasi untuk memastikan sub periode masih bisa dimutasi (create/update/delete opening balance).
-     * Cek apakah periode sudah ditutup, apakah sudah ada transaksi di sub periode ini, dan apakah sudah ada transaksi di periode setelahnya.
-     *
-     * @param SubPeriod $subPeriod
-     * @param string|null $accountId (opsional, hanya untuk update)
-     * @throws Exception
-     */
-    private function validateSubPeriodMutation(SubPeriod $subPeriod, string $accountId): void
-    {
-        if ($subPeriod->period->is_closed) {
-            throw new Exception('Periode sudah ditutup.');
-        }
-
-        if (
-            Journal::where('sub_period_id', $subPeriod->id)
-            ->exists()
-        ) {
-            throw new Exception(
-                'Sudah ada transaksi pada sub periode ini.'
-            );
-        }
-
-        if (OpeningBalance::where([
-            'chart_of_account_id' => $accountId,
-            'sub_period_id' => $subPeriod->id
-        ])->exists()) {
-            throw new Exception('Opening balance sudah ada.');
-        }
-
-        $futureJournalExists = Journal::whereHas(
-            'subPeriod',
-            fn($q) =>
-            $q->where(
-                'start_date',
-                '>',
-                $subPeriod->start_date
-            )
-        )->exists();
-
-        if ($futureJournalExists) {
-            throw new Exception(
-                'Sudah ada transaksi pada periode setelahnya.'
-            );
-        }
     }
 }
