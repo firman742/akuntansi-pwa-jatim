@@ -8,6 +8,7 @@ use App\Models\ChartOfAccount;
 use App\Models\User;
 use App\Services\Bendahara\UserAccountService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Throwable;
 
@@ -16,15 +17,22 @@ class UserAccountController extends Controller
     /**
      * Display a listing of the resource.
      * 
+     * @param Request $request
      * @return View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->query('search');
+
         $users = User::role('ACCOUNTING USER')
             ->withCount([
                 'debitCoas',
                 'creditCoas'
             ])
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
             ->orderBy('name')
             ->get();
 
@@ -69,16 +77,17 @@ class UserAccountController extends Controller
      */
     public function sync(string $id, UserAccountService $service, SyncUserAccountRequest $request): RedirectResponse
     {
-        // try {
+        try {
             $service->sync($id, $request->validated());
 
-            return redirect()->route('bendahara.master.account-users.index')
-                ->with('success', 'Akun pengguna berhasil disinkronkan.');
+            return redirect()
+                ->route('bendahara.master.account-users.index')
+                ->with('success', 'Penanggung Jawab Akun COA berhasil disinkronkan.');
 
-        // } catch (Throwable $e) {
-        //     return back()
-        //         ->withInput()
-        //         ->with('error', 'Gagal menyinkronkan akun pengguna: ' . $e->getMessage());
-        // }
+        } catch (Throwable $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal menyinkronkan penanggung jawab akun: ' . $e->getMessage());
+        }
     }
 }

@@ -142,8 +142,12 @@ class OpeningBalanceService extends BaseService
         $subPeriods = optional($periods->first())->subPeriods()->orderBy('start_date')->get();
 
         // just get coa debit
-        $coaLists = ChartOfAccount::where('normal_balance', NormalBalanceEnum::DEBIT->value)->orderBy('code')->get();
-
+        $coaLists = ChartOfAccount::query()
+            ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
+            ->whereNotNull('parent_id')
+            ->doesntHave('children')
+            ->orderBy('code')
+            ->get();
 
         return compact('periods', 'coaLists', 'subPeriods');
     }

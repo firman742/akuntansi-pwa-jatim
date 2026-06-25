@@ -193,7 +193,7 @@
                                 {{-- Kode COA --}}
                                 <td class="px-4 py-3.5 sm:px-6">
                                     <span class="font-medium text-gray-700 dark:text-gray-300"
-                                        x-text="row.proposed_code">
+                                        x-text="row.proposed_code ?? 'Belum Ada'">
                                     </span>
                                 </td>
 

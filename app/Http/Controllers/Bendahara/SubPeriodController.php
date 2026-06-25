@@ -12,19 +12,20 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Exception;
+use Illuminate\Http\Request;
 
 class SubPeriodController extends Controller
 {
     /**
      * Display a listing of the resource.
      * 
+     * @param Request $request
      * @return View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        // Ambil periode aktif (1 saja)
-        $activePeriod = Period::where('is_closed', false)
-            ->first();
+        $search = $request->input('search');
+        $periodId = $request->input('period_id');
 
         // Ambil semua periode untuk filter
         $periods = Period::select([
@@ -35,21 +36,21 @@ class SubPeriodController extends Controller
             'is_closed'
         ])->orderBy('name')->get();
 
-        // Jika tidak ada periode aktif, fallback ke periode terbaru
-        $periodId = request('period_id')
-            ?? optional($activePeriod)->id
-            ?? optional($periods->first())->id;
-
         $query = SubPeriod::with('period')->withCount('transactions');
 
-        if (request()->period_id) {
-            $query->where('period_id', request()->period_id);
+        if ($periodId) {
+            $query->where('period_id', $periodId);
         }
 
-        $sub_periods = $query->get();
+        $sub_periods = $query
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->get();
 
         return view('pages.menus.bendahara.sub_periods.index',
-            compact('sub_periods', 'periods', 'periodId')
+            compact('sub_periods', 'periods')
         );
     }
 
@@ -67,7 +68,8 @@ class SubPeriodController extends Controller
             'end_date'
         )->where('is_closed', false)->get();
 
-        return view('pages.menus.bendahara.sub_periods.create',
+        return view(
+            'pages.menus.bendahara.sub_periods.create',
             compact('periods')
         );
     }
@@ -112,7 +114,8 @@ class SubPeriodController extends Controller
 
         $isLocked = $hasTransaction || $isExpired;
 
-        return view('pages.menus.bendahara.sub_periods.edit',
+        return view(
+            'pages.menus.bendahara.sub_periods.edit',
             compact('subPeriod', 'periods', 'isLocked', 'hasTransaction', 'isExpired')
         );
     }

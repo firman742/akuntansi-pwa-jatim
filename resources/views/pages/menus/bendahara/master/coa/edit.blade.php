@@ -3,7 +3,9 @@
 @section('title', 'Master Data - Edit Akun COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Edit Akun COA" />
+    <x-common.page-breadcrumb defaultTitle="Edit Akun COA " pageTitle="Edit Akun COA"
+        pageDescription="Monitoring dan kelola Akun COA yang terdaftar di sistem" pageIcon="book" parentTitle="Akun COA"
+        :parentRoute="route('bendahara.master.coas.index')" currentTitle="Edit" />
 
     @if ($errors->any())
         <div class="mb-6">
@@ -76,14 +78,8 @@
 
                 {{-- PARENT --}}
                 <div>
-                    <x-form.select 
-                        id="parent_id" 
-                        name="parent_id"
-                        xModel="parentId"
-                        label="Parent Akun (Opsional)" 
-                        placeholder="Pilih AKun Parent" 
-                        alpineDisabled="isLocked"
-                        >
+                    <x-form.select id="parent_id" name="parent_id" xModel="parentId" label="Parent Akun (Opsional)"
+                        placeholder="Pilih AKun Parent" alpineDisabled="isLocked">
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(old('parent_id', $coa->parent_id) == $parent->id)>
                                 {{ $parent->code }} - {{ $parent->name }}
@@ -100,12 +96,8 @@
 
                 {{-- CODE --}}
                 <div>
-                    <x-form.input 
-                        id="code" 
-                        name="code" 
-                        xModel="code"
-                        label="Kode Akun (Otomatis)"
-                        readonly disabled />
+                    <x-form.input id="code" name="code" xModel="code" label="Kode Akun (Otomatis)" readonly
+                        disabled />
 
                     <input type="hidden" name="code" :value="code">
                     <input type="hidden" name="level" :value="level">
@@ -118,26 +110,14 @@
 
                 {{-- NAME (editable always) --}}
                 <div>
-                    <x-form.input 
-                        id="name" 
-                        name="name" 
-                        xModel="name"
-                        type="text"
-                        value="{{ $coa->name }}"
-                        label="Nama Akun COA"
-                        required />
+                    <x-form.input id="name" name="name" xModel="name" type="text" value="{{ $coa->name }}"
+                        label="Nama Akun COA" required />
                 </div>
 
                 {{-- ACCOUNT TYPE --}}
                 <div>
-                    <x-form.select 
-                        id="account_type_id" 
-                        name="account_type_id"
-                        xModel="accountTypeId"
-                        label="Tipe Akun" 
-                        placeholder="Pilih Tipe Akun" 
-                        alpineDisabled="isLocked"
-                        >
+                    <x-form.select id="account_type_id" name="account_type_id" xModel="accountTypeId" label="Tipe Akun"
+                        placeholder="Pilih Tipe Akun" alpineDisabled="isLocked">
                         @foreach ($accountTypes as $type)
                             <option value="{{ $type->id }}" @selected(old('account_type_id', $coa->account_type_id) == $type->id)>
                                 {{ $type->name }}
@@ -149,14 +129,8 @@
 
                 {{-- NORMAL BALANCE --}}
                 <div>
-                    <x-form.select 
-                        id="normal_balance" 
-                        name="normal_balance"
-                        xModel="normalBalance"
-                        label="Normal Balance" 
-                        placeholder="Pilih Normal Balance" 
-                        alpineDisabled="isLocked"
-                        >
+                    <x-form.select id="normal_balance" name="normal_balance" xModel="normalBalance" label="Normal Balance"
+                        placeholder="Pilih Normal Balance" alpineDisabled="isLocked">
                         @foreach ($normalBalances as $balance)
                             <option value="{{ $balance->value }}" @selected(old('normal_balance', $coa->normal_balance) === $balance->value)>
                                 {{ $balance->label() }}
@@ -168,8 +142,8 @@
 
                 {{-- DESCRIPTION --}}
                 <div>
-                    <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...." value="{{ $coa->description }}"
-                            rows="4" />
+                    <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...."
+                        value="{{ $coa->description }}" rows="4" />
                 </div>
 
                 {{-- ACTIVE --}}

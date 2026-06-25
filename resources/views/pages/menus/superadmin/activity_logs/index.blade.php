@@ -17,7 +17,7 @@
         <x-core.basic-tables.core-table>
             {{-- SLOT search --}}
             <x-slot name="search">
-                <x-form.input id="coaSearch" name="search" value="{{ request('search') }}"
+                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
                     placeholder="Cari berdasarkan nama pengguna..." startIconSearch endIconSearch />
             </x-slot>
 
@@ -27,7 +27,7 @@
 
     {{-- SCRIPT --}}
     <script>
-        const searchInput = document.getElementById('coaSearch');
+        const searchInput = document.getElementById('searchId');
         let timeout = null;
 
         searchInput.addEventListener('input', function () {

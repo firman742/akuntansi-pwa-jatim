@@ -3,7 +3,9 @@
 @section('title', 'Edit Periode')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Edit Periode" />
+<x-common.page-breadcrumb defaultTitle="Edit Periode " pageTitle="Edit Periode"
+pageDescription="Monitoring dan kelola Periode yang terdaftar di sistem" pageIcon="calendar"
+parentTitle="Periode" :parentRoute="route('bendahara.periods.index')" currentTitle="Edit" />
 
     @if ($errors->any())
         <div class="mb-6">

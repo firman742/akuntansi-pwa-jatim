@@ -5,7 +5,7 @@
 @section('content')
     <x-common.page-breadcrumb defaultTitle="Tambah Pengguna " pageTitle="Tambah Pengguna"
         pageDescription="Monitoring dan kelola pengguna yang terdaftar di sistem" pageIcon="user-profile"
-        parentTitle="Manajemen Pengguna" :parentRoute="route('superadmin.users.index')" currentTitle="Tambah Pengguna" />
+        parentTitle="Pengguna" :parentRoute="route('superadmin.users.index')" currentTitle="Tambah" />
 
     @if ($errors->any())
         <div class="mb-6">

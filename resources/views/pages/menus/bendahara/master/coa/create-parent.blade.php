@@ -3,14 +3,16 @@
 @section('title', 'Master Data - Buat Akun COA Induk')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Buat Akun COA Induk" />
+    <x-common.page-breadcrumb defaultTitle="Tambah Akun COA Induk " pageTitle="Tambah Akun COA Induk"
+        pageDescription="Monitoring dan kelola Akun COA Induk yang terdaftar di sistem" pageIcon="book" parentTitle="Akun COA"
+        :parentRoute="route('bendahara.master.coas.index')" currentTitle="Tambah Induk" />
 
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                    <li class="text-red-500">{{ $error }}</li>
+                        <li class="text-red-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -77,23 +79,14 @@
 
                             {{-- Nama Akun --}}
                             <div>
-                                <x-form.input 
-                                    id="name" 
-                                    name="name" 
-                                    label="Nama Akun COA"
-                                    placeholder="Contoh: Kas, Bank, Pendapatan" 
-                                    value="{{ old('name') }}" 
-                                    required />
+                                <x-form.input id="name" name="name" label="Nama Akun COA"
+                                    placeholder="Contoh: Kas, Bank, Pendapatan" value="{{ old('name') }}" required />
                             </div>
 
                             {{-- Tipe Akun --}}
                             <div>
-                                <x-form.select 
-                                    id="account_type_id" 
-                                    name="account_type_id" 
-                                    label="Tipe Akun" 
-                                    placeholder="Pilih Tipe Akun" 
-                                    required>
+                                <x-form.select id="account_type_id" name="account_type_id" label="Tipe Akun"
+                                    placeholder="Pilih Tipe Akun" required>
                                     @foreach ($accountTypes as $type)
                                         <option value="{{ $type->id }}" @selected(old('account_type_id') == $type->id)>
                                             {{ $type->name }}
@@ -104,12 +97,8 @@
 
                             {{-- Normal Balance --}}
                             <div>
-                                <x-form.select 
-                                    id="normal_balance" 
-                                    name="normal_balance" 
-                                    label="Normal Balance" 
-                                    placeholder="Pilih Normal Balance" 
-                                    required>
+                                <x-form.select id="normal_balance" name="normal_balance" label="Normal Balance"
+                                    placeholder="Pilih Normal Balance" required>
                                     @foreach ($normalBalances as $balance)
                                         <option value="{{ $balance }}" @selected(old('normal_balance') == $balance)
                                             class="dark:bg-white/[0.03] dark:text-white/90 dark:border-gray-700">
@@ -121,12 +110,15 @@
 
                             {{-- Deskripsi --}}
                             <div>
-                                <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...." rows="3" />
+                                <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...."
+                                    rows="3" />
                             </div>
 
                             {{-- Status --}}
                             <div>
-                                <x-form.toggle-switch name="is_active" label="Aktifkan Akun COA" :value="true" additionalAttributes="Status penggunaan akun dalam transaksi" onText="Akun Aktif" offText="Akun Tidak Aktif" />
+                                <x-form.toggle-switch name="is_active" label="Aktifkan Akun COA" :value="true"
+                                    additionalAttributes="Status penggunaan akun dalam transaksi" onText="Akun Aktif"
+                                    offText="Akun Tidak Aktif" />
                             </div>
                         </div>
                     </x-common.component-card>
@@ -224,7 +216,7 @@
 
                         <x-ui.button type="submit" variant="primary" size="sm">
 
-                            Simpan Parent COA
+                            Simpan Akun COA Induk
                         </x-ui.button>
                     </div>
                 </div>

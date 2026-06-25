@@ -7,9 +7,11 @@ use App\Http\Requests\Bendahara\OpeningBalances\CorrectionOpeningBalanceRequest;
 use App\Http\Requests\Bendahara\OpeningBalances\StoreOpeningBalanceRequest;
 use App\Http\Requests\Bendahara\OpeningBalances\UpdateOpeningBalanceRequest;
 use App\Models\ClosingBalance;
+use App\Models\OpeningBalance;
 use App\Models\SubPeriod;
 use App\Services\Bendahara\OpeningBalanceService;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -45,7 +47,8 @@ class OpeningBalanceController extends Controller
      */
     public function create(OpeningBalanceService $service): View
     {
-        return view('pages.menus.bendahara.opening_balances.create',
+        return view(
+            'pages.menus.bendahara.opening_balances.create',
             $service->getCreateData()
         );
     }
@@ -79,7 +82,8 @@ class OpeningBalanceController extends Controller
      */
     public function edit(string $id, OpeningBalanceService $service): View
     {
-        return view('pages.menus.bendahara.opening_balances.edit',
+        return view(
+            'pages.menus.bendahara.opening_balances.edit',
             $service->getEditData($id)
         );
     }
@@ -154,6 +158,32 @@ class OpeningBalanceController extends Controller
         return response()->json([
             'amount' => $closing ? $closing->amount : 0,
             'balance_type' => $closing ? $closing->balance_type : 'DEBIT'
+        ]);
+    }
+
+    /**
+     * Check opening balance existence.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function checkExisting(Request $request): JsonResponse
+    {
+        $request->validate([
+            'coa_id' => ['required', 'uuid'],
+            'sub_period_id' => ['required', 'uuid'],
+        ]);
+
+        $exists = OpeningBalance::where([
+            'chart_of_account_id' => $request->coa_id,
+            'sub_period_id'       => $request->sub_period_id,
+        ])->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists
+                ? 'Saldo awal untuk akun dan sub periode ini sudah dibuat.'
+                : 'Saldo awal belum ada.',
         ]);
     }
 }

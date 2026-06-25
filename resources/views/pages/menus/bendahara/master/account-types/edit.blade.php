@@ -3,11 +3,13 @@
 @section('title', 'Master Data - Edit Tipe Akun')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Edit Tipe Akun" />
+    <x-common.page-breadcrumb defaultTitle="Edit Tipe Akun " pageTitle="Edit Tipe Akun"
+        pageDescription="Monitoring dan kelola Tipe Akun yang terdaftar di sistem" pageIcon="book" parentTitle="Tipe Akun"
+        :parentRoute="route('bendahara.master.account-types.index')" currentTitle="Edit" />
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li class="text-red-500">{{ $error }}</li>
@@ -27,7 +29,7 @@
     <x-common.component-card title="Edit Tipe Akun">
         <form method="POST" action="{{ route('bendahara.master.account-types.update', $accountType->id) }}">
             @csrf
-            @method('PUT')  
+            @method('PUT')
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <div class="col-span-1 md:col-span-2">
                     <x-form.input name="name" label="Nama Tipe Akun" :value="old('name', $accountType->name)" required />
@@ -35,7 +37,7 @@
 
                 <div class="col-span-1 md:col-span-2">
                     <x-form.text-area name="description" label="Deskripsi Tipe Akun" placeholder="Masukkan deskripsi...."
-                            :value="old('description', $accountType->description)" rows="6" />
+                        :value="old('description', $accountType->description)" rows="6" />
                 </div>
 
                 <div class="col-span-1 md:col-span-2">

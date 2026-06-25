@@ -10,15 +10,15 @@
         class="px-6 py-6 border-b border-gray-200 
                 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-        {{-- SEARCH BAR --}}
-        <div class="flex items-center gap-2">
-            {{ $search ?? '' }}
-        </div>
 
-        {{-- ACTION & FILTER SLOT --}}
+        {{-- SEARCH BAR & FILTER SLOT --}}
         <div class="flex flex-wrap items-center gap-2">
             <div class="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex w-full flex-wrap gap-2 lg:w-auto">
+                    {{-- SEARCH BAR --}}
+                    <div>
+                        {{ $search ?? '' }}
+                    </div>
 
                     {{-- FILTER DROPDOWN --}}
                     @if ($needFilter)
@@ -49,30 +49,34 @@
                             </x-ui.button>
 
                             {{-- FILTER PANEL --}}
-                            <div x-show="open" x-transition @click.away="open = false"
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95" @click.outside="open = false"
                                 class="
-                                fixed inset-x-4 top-auto z-50 mt-2
-                                max-h-[80vh]
-                                overflow-y-auto
-                                rounded-2xl
-                                border border-gray-200
-                                bg-white
-                                shadow-2xl
+                                    absolute
+                                    top-full
+                                    mt-3
+                                    z-50
 
-                                sm:absolute
-                                sm:left-0
-                                sm:inset-x-auto
-                                sm:top-full
-                                sm:mt-3
-                                sm:w-[420px]
-                                sm:max-w-[90vw]
+                                    left-0
+                                    w-[calc(100vw-2rem)]
 
-                                lg:absolute
-                                lg:right-0
+                                    sm:left-auto
+                                    sm:right-0
+                                    sm:w-[420px]
 
-                                dark:border-gray-700
-                                dark:bg-gray-900
-                            ">
+                                    rounded-2xl
+                                    border
+                                    border-gray-200
+                                    bg-white
+                                    shadow-2xl
+
+                                    dark:border-gray-700
+                                    dark:bg-gray-900/95
+                                ">
 
                                 <form method="GET" class="p-5">
                                     <div class="space-y-4">
@@ -100,13 +104,15 @@
                         </div>
                     @endif
 
-                    {{-- ACTIONS BUTTON --}}
-                    <div>
-                        {{ $actions ?? '' }}
-                    </div>
+                    
                 </div>
             </div>
 
+        </div>
+
+        {{-- ACTION BUTTONS --}}
+        <div class="flex items-center gap-2">
+            {{ $actions ?? '' }}
         </div>
 
     </div>

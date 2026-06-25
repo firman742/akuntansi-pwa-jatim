@@ -195,7 +195,7 @@
 
                                 {{-- Kode COA --}}
                                 <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.proposed_code"></span>
+                                    <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.proposed_code ?? 'kosong'"></span>
                                 </td>
 
                                 {{-- Nama COA --}}

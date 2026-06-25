@@ -3,7 +3,8 @@
 @section('title', 'Daftar Pengajuan COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Daftar Pengajuan COA" />
+    <x-common.page-breadcrumb defaultTitle="Pengajuan Akun COA" pageTitle="Daftar Pengajuan akun COA"
+        pageDescription="Monitoring dan kelola pengajuan akun COA yang terdaftar di sistem" pageIcon="book" />
 
     @if (session('success'))
         <div class="mb-6">
@@ -24,7 +25,8 @@
     @endif
 
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Daftar Pengajuan COA" description="Berikut adalah daftar pengajuan coa yang tersedia.">
+        <x-core.basic-tables.core-table title="Daftar Pengajuan COA"
+            description="Berikut adalah daftar pengajuan coa yang tersedia.">
 
             <x-core.basic-tables.bendahara.request-coa-table :requests="$requests" />
         </x-core.basic-tables.core-table>

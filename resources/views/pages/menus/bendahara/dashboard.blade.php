@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Dashboard Bendahara" />
+    <x-common.page-breadcrumb defaultTitle="Dashboard Bendahara" pageTitle="Dashboard Bendahara"
+        pageDescription="Monitoring Dan Kelola Alur Utama Akuntansi" pageIcon="dashboard" />
 
     <div class="space-y-6">
         {{-- HERO --}}

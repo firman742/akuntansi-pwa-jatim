@@ -120,12 +120,13 @@ class COAController extends Controller
         try {
             $service->store($request->validated());
 
-            return redirect()->route('bendahara.master.coas.index')
-                ->with('success', 'Chart of Account berhasil dibuat.');
+            return redirect()
+                ->route('bendahara.master.coas.index')
+                ->with('success', 'Akun COA berhasil dibuat.');
         } catch (Exception $e) {
             return back()
                 ->withInput()
-                ->with('error', 'Gagal membuat Chart of Account: ' . $e->getMessage());
+                ->with('error', 'Gagal membuat Akun COA: ' . $e->getMessage());
         }
     }
 
@@ -174,12 +175,13 @@ class COAController extends Controller
         try {
             $service->update($id, $request->validated());
 
-            return redirect()->route('bendahara.master.coas.index')
-                ->with('success', 'Chart of Account berhasil diperbarui.');
+            return redirect()
+                ->route('bendahara.master.coas.index')
+                ->with('success', 'Akun COA berhasil diperbarui.');
         } catch (Exception $e) {
             return back()
                 ->withInput()
-                ->with('error', 'Gagal memperbarui Chart of Account: ' . $e->getMessage());
+                ->with('error', 'Gagal memperbarui Akun COA: ' . $e->getMessage());
         }
     }
 
@@ -196,11 +198,12 @@ class COAController extends Controller
         try {
             $service->delete($id);
 
-            return redirect()->route('bendahara.master.coas.index')
-                ->with('success', 'Chart of Account berhasil dihapus.');
+            return redirect()
+            ->route('bendahara.master.coas.index')
+                ->with('success', 'Akun COA berhasil dihapus.');
         } catch (Exception $e) {
             return back()
-                ->with('error', 'Gagal menghapus Chart of Account: ' . $e->getMessage());
+                ->with('error', 'Gagal menghapus Akun COA: ' . $e->getMessage());
         }
     }
 }

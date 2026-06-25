@@ -10,6 +10,7 @@ use App\Models\SubPeriod;
 use App\Services\Bendahara\PeriodService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
@@ -18,10 +19,13 @@ class PeriodController extends Controller
     /**
      * Display a listing of the resource.
      * 
+     * @param Request $request
      * @return View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->input('search');
+
         $periods = Period::with('subPeriods')
             ->withCount('transactions')
             ->withCount([
@@ -34,6 +38,10 @@ class PeriodController extends Controller
                     );
                 }
             ])
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            })
             ->orderBy('is_closed', 'desc')
             ->get();
 
@@ -68,7 +76,8 @@ class PeriodController extends Controller
                 ->with('success', 'Periode berhasil ditambahkan');
         } catch (Exception $e) {
             return back()
-                ->withInput()->withErrors([
+                ->withInput()
+                ->withErrors([
                 'period' => $e->getMessage()
             ]);
         }
@@ -145,7 +154,7 @@ class PeriodController extends Controller
                 ->route('bendahara.periods.index')
                 ->with('success', 'Periode - ' . ($period->name ?? '-') . ' berhasil dihapus');
         } catch (Exception $e) {
-            return back()->withErrors([
+            return back()->withInput()->withErrors([
                 'period' => $e->getMessage()
             ]);
         }

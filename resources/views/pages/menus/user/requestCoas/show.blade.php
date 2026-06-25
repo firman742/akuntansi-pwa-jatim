@@ -4,7 +4,9 @@
 
 @section('content')
 
-    <x-common.page-breadcrumb pageTitle="Detail Pengajuan COA" />
+<x-common.page-breadcrumb defaultTitle="Detail Pengajuan Akun COA " pageTitle="Detail Pengajuan Akun COA"
+pageDescription="Monitoring Detail pengajuan akun COA" pageIcon="book"
+parentTitle="Pengajuan Akun COA" :parentRoute="route('user.requests.coas.index')" currentTitle="Detail" />
 
     <div class="space-y-6">
 
@@ -24,7 +26,7 @@
                         </p>
 
                         <h2 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-                            {{ $coaRequest->proposed_code }}
+                            {{ $coaRequest->proposed_code ?? 'Belum Ada' }}
                         </h2>
 
                         <p class="mt-2 text-gray-600 dark:text-gray-400">

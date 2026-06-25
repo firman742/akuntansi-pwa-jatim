@@ -3,11 +3,13 @@
 @section('title', 'Master Data - Tambah Tipe Akun')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Tambah Tipe Akun" />
+    <x-common.page-breadcrumb defaultTitle="Tambah Tipe Akun " pageTitle="Tambah Tipe Akun"
+        pageDescription="Monitoring dan kelola Tipe Akun yang terdaftar di sistem" pageIcon="book" parentTitle="Tipe Akun"
+        :parentRoute="route('bendahara.master.account-types.index')" currentTitle="Tambah" />
 
     @if ($errors->any())
         <div class="mb-6">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan" >
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li class="text-red-500">{{ $error }}</li>
@@ -29,13 +31,8 @@
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <div class="col-span-1 md:col-span-2">
                     {{-- Name --}}
-                    <x-form.input 
-                        id="name" 
-                        name="name" 
-                        label="Nama Tipe Akun"
-                        placeholder="Masukkan Nama Tipe Akun" 
-                        value="{{ old('name') }}" 
-                        required />
+                    <x-form.input id="name" name="name" label="Nama Tipe Akun" placeholder="Masukkan Nama Tipe Akun"
+                        value="{{ old('name') }}" required />
                 </div>
 
                 <div class="col-span-1 md:col-span-2">

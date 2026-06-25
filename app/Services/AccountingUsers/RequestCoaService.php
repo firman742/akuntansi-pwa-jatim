@@ -22,16 +22,17 @@ class RequestCoaService extends BaseService
     {
         // Gunakan generateCode untuk otomatis kode, level, dan order
         $result = $this->generateCode($data['parent_id'] ?? null);
-        $generated = $this->generateCode(
-            $data['parent_coa_id'] ?? null
-        );
+        // Generate code dihidden karna ketika pengguna request maka kode harus kosong kecuali sudah di approve oleh bendahara
+        // $generated = $this->generateCode(
+        //     $data['parent_coa_id'] ?? null
+        // );
 
         $coa = CoaRequest::create([
             'requester_id'     => Auth::id(),
             'parent_coa_id'    => $data['parent_coa_id'] ?? null,
             'account_type_id'  => $data['account_type_id'],
             'proposed_name'    => $data['proposed_name'],
-            'proposed_code'    => $generated['code'],
+            'proposed_code'    => null,
             'normal_balance'   => $data['normal_balance'],
             'description'      => $data['description'] ?? null,
 

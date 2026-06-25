@@ -3,7 +3,8 @@
 @section('title', 'Periode')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Period" />
+    <x-common.page-breadcrumb defaultTitle="Periode" pageTitle="Manajemen Periode"
+        pageDescription="Monitoring dan kelola periode yang terdaftar di sistem" pageIcon="calendar" />
 
     @if (session('success'))
         <div class="mb-6">
@@ -35,9 +36,16 @@
             </ul>
         </x-ui.alert>
     </div>
-    
+
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Daftar Periode" description="Berikut adalah daftar periode yang tersedia.">
+        <x-core.basic-tables.core-table>
+            {{-- SLOT search --}}
+            <x-slot name="search">
+                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
+                    placeholder="Cari berdasarkan nama dan deskripsi..." startIconSearch endIconSearch />
+            </x-slot>
+
+            {{-- SLOT Actions --}}
             <x-slot name="actions">
                 <a href="{{ route('bendahara.periods.create') }}">
                     <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
@@ -50,4 +58,26 @@
             <x-core.basic-tables.bendahara.period-table :periods="$periods" />
         </x-core.basic-tables.core-table>
     </div>
+
+    {{-- SCRIPT --}}
+    <script>
+        const searchInput = document.getElementById('searchId');
+        let timeout = null;
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const searchValue = this.value;
+                const urlParams = new URLSearchParams(window.location.search);
+
+                if (searchValue) {
+                    urlParams.set('search', searchValue);
+                } else {
+                    urlParams.delete('search');
+                }
+
+                window.location.search = urlParams.toString();
+            }, 500);
+        });
+    </script>
 @endsection

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<x-common.page-breadcrumb defaultTitle="Dashboard Superadmin" pageTitle="Dashboard Superadmin"
+    <x-common.page-breadcrumb defaultTitle="Dashboard Superadmin" pageTitle="Dashboard Superadmin"
         pageDescription="Monitoring dan kelola pengguna yang terdaftar di sistem" pageIcon="dashboard" />
 
     <div class="space-y-6">

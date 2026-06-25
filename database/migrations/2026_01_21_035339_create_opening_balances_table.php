@@ -39,6 +39,8 @@ return new class extends Migration
                 ->references('id')->on('users')
                 ->onDelete('set null');
             $table->timestamps();
+
+            $table->unique(['chart_of_account_id', 'period_id', 'sub_period_id'], 'unique_opening_balance');
         });
     }
 

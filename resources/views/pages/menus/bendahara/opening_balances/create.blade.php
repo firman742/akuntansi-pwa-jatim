@@ -3,11 +3,9 @@
 @section('title', 'Neraca Saldo Awal - Buat Manual')
 
 @section('content')
-    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Buat Manual Saldo Awal" pageDescription="Buat saldo awal untuk akun tertentu dari periode sebelumnya"
-            pageIcon="money" 
-            parentTitle="Saldo Awal"
-            :parentRoute="route('bendahara.opening-balances.index')"
-            currentTitle="Buat Manual" />
+    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Buat Manual Saldo Awal"
+        pageDescription="Buat saldo awal untuk akun tertentu dari periode sebelumnya" pageIcon="money" parentTitle="Saldo Awal"
+        :parentRoute="route('bendahara.opening-balances.index')" currentTitle="Buat Manual" />
 
     @if ($errors->any())
         <div class="mb-6">
@@ -66,11 +64,7 @@
         {{-- Form Seleksi (Input periode, sub periode, coa seperti kode sebelumnya) --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
-                <x-form.select 
-                    id="select_period" 
-                    name="period_id" 
-                    label="Periode" 
-                    placeholder="-- Pilih Periode --">
+                <x-form.select id="select_period" name="period_id" label="Periode" placeholder="-- Pilih Periode --">
                     @foreach ($periods as $period)
                         <option value="{{ $period->id }}">{{ $period->name }}</option>
                     @endforeach
@@ -78,20 +72,13 @@
             </div>
 
             <div>
-                <x-form.select 
-                    id="select_sub_period" 
-                    name="sub_period_id" 
-                    label="Sub Periode" 
+                <x-form.select id="select_sub_period" name="sub_period_id" label="Sub Periode"
                     placeholder="-- Pilih Sub Periode --">
                 </x-form.select>
             </div>
 
             <div>
-                <x-form.select 
-                    id="select_coa" 
-                    name="coa_id" 
-                    label="Akun (COA)" 
-                    placeholder="-- Pilih Akun --">
+                <x-form.select id="select_coa" name="coa_id" label="Akun (COA)" placeholder="-- Pilih Akun --">
                     @foreach ($coaLists as $coa)
                         <option value="{{ $coa->id }}" data-balance="{{ $coa->normal_balance }}">
                             {{ $coa->code }} — {{ $coa->name }}
@@ -99,6 +86,10 @@
                     @endforeach
                 </x-form.select>
             </div>
+        </div>
+
+        <div id="opening_balance_alert"
+            class="hidden mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
         </div>
 
         <div class="mt-4 flex justify-end">
@@ -111,7 +102,7 @@
     {{-- STEP 2: FORM INPUT (HIDDEN BY DEFAULT) --}}
     <div id="form_container" style="display: none;">
         <x-common.component-card title="2. Detail Saldo Awal">
-            <form method="POST" action="{{ route('bendahara.opening-balances.store') }}">
+            <form method="POST" action="{{ route('bendahara.opening-balances.store') }}" id="opening_balance_form">
                 @csrf
 
                 <input type="hidden" name="chart_of_account_id" id="final_coa_id">
@@ -120,40 +111,29 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {{-- SALDO SISA (DARI PERIODE LALU) --}}
                     <div>
-                        <x-form.input 
-                            id="amount_display" 
-                            name=""
-                            label="Saldo Sisa (Periode Sebelumnya)"
-                            colorLabel="blue"
-                            placeholder="Rp 0" 
-                            readonly />
+                        <x-form.input id="amount_display" name="" label="Saldo Sisa (Periode Sebelumnya)"
+                            colorLabel="blue" placeholder="Rp 0" readonly />
 
                         <input type="hidden" name="amount" id="amount_hidden">
-                        
+
                         <p class="mt-1 text-xs text-gray-500 italic">* Diambil otomatis dari closing balance terakhir</p>
                     </div>
 
                     {{-- SALDO TAMBAHAN --}}
                     <div>
-                        <x-form.input 
-                            id="additional_display" 
-                            name=""
-                            label="Saldo Tambahan (Jika Ada)"
-                            colorLabel="green"
-                            placeholder="Masukkan nominal tambahan jika ada" 
-                        />
+                        <x-form.input id="additional_display" name="" label="Saldo Tambahan (Jika Ada)"
+                            colorLabel="green" placeholder="Masukkan nominal tambahan jika ada" />
 
                         <input type="hidden" name="additional_amount" id="additional_hidden" value="0">
                     </div>
 
                     {{-- TIPE SALDO --}}
                     <div>
-                        <x-form.select 
-                            id="final_balance_type" 
-                            name="balance_type" 
-                            label="Tipe Saldo">
+                        <x-form.select id="final_balance_type" name="balance_type" label="Tipe Saldo" disabled>
                             <option value="DEBIT">DEBIT</option>
                         </x-form.select>
+
+                        <input type="hidden" name="balance_type" id="final_balance_type" value="DEBIT">
 
                     </div>
 
@@ -171,7 +151,7 @@
                             Kembali
                         </x-ui.button>
                     </a>
-                    <x-ui.button type="submit" variant="primary" size="sm">
+                    <x-ui.button type="submit" variant="primary" size="sm" id="submit_opening_balance">
                         Simpan Saldo Awal
                     </x-ui.button>
                 </div>
@@ -185,6 +165,10 @@
         const selectCoa = document.getElementById('select_coa');
         const btnCheck = document.getElementById('btn_check_balance');
         const formContainer = document.getElementById('form_container');
+
+        // Check balance
+        const submitButton = document.getElementById('submit_opening_balance');
+        const alertBox = document.getElementById('opening_balance_alert');
 
         // Utils
         function formatRupiah(value) {
@@ -221,6 +205,7 @@
 
         // 2. Handle Check Balance API
         btnCheck.addEventListener('click', async function() {
+
             const coaId = selectCoa.value;
             const subId = selectSubPeriod.value;
 
@@ -229,46 +214,124 @@
                 return;
             }
 
-            btnCheck.innerText = 'Memproses...';
             btnCheck.disabled = true;
+            btnCheck.innerText = 'Memproses...';
 
             try {
-                // Panggil endpoint yang kita buat di controller sebelumnya
-                const response = await fetch(
-                    `/bendahara/opening-balances/get-last-closing?coa_id=${coaId}&sub_period_id=${subId}`);
-                const data = await response.json();
-                console.log(data);
-                
 
-                // Isi data ke Form Tahap 2
+                // ==================================
+                // CEK APAKAH OPENING BALANCE SUDAH ADA
+                // ==================================
+
+                const existingResponse = await fetch(
+                    `/bendahara/opening-balances/check-existing?coa_id=${coaId}&sub_period_id=${subId}`
+                );
+
+                const existingData = await existingResponse.json();
+
+                if (existingData.exists) {
+
+                    alertBox.classList.remove('hidden');
+
+                    alertBox.innerHTML = `
+            <strong>Saldo Awal Sudah Ada</strong><br>
+            ${existingData.message}
+        `;
+
+                    formContainer.style.display = 'none';
+
+                    return;
+                }
+
+                alertBox.classList.add('hidden');
+
+                // ==================================
+                // CEK SALDO TERAKHIR
+                // ==================================
+
+                const response = await fetch(
+                    `/bendahara/opening-balances/get-last-closing?coa_id=${coaId}&sub_period_id=${subId}`
+                );
+
+                const data = await response.json();
+
                 document.getElementById('final_coa_id').value = coaId;
                 document.getElementById('final_sub_period_id').value = subId;
 
-                // Saldo Sisa Otomatis
                 document.getElementById('amount_hidden').value = data.amount;
                 document.getElementById('amount_display').value = formatRupiah(data.amount);
+
                 document.getElementById('final_balance_type').value = data.balance_type;
 
-                // Reset Saldo Tambahan
                 document.getElementById('additional_hidden').value = 0;
                 document.getElementById('additional_display').value = '';
 
-                // Tampilkan Form
                 formContainer.style.display = 'block';
+
                 formContainer.scrollIntoView({
                     behavior: 'smooth'
                 });
+
                 calculateTotal();
 
             } catch (error) {
-                alert('Gagal mengambil saldo terakhir.');
+
+                alert('Gagal memvalidasi saldo awal.');
+
             } finally {
-                btnCheck.innerText = 'Cek Saldo Sebelumnya & Lanjutkan';
+
                 btnCheck.disabled = false;
+                btnCheck.innerText = 'Cek Saldo Sebelumnya & Lanjutkan';
+
             }
         });
 
-        // 3. Handle Formatting & Calculation
+        // 3. Tambah validasi saat submit
+        document
+            .getElementById('opening_balance_form')
+            .addEventListener('submit', async function(e) {
+
+                e.preventDefault();
+
+                const coaId = document.getElementById('final_coa_id').value;
+                const subId = document.getElementById('final_sub_period_id').value;
+
+                submitButton.disabled = true;
+
+                try {
+
+                    const response = await fetch(
+                        `/bendahara/opening-balances/check-existing?coa_id=${coaId}&sub_period_id=${subId}`
+                    );
+
+                    const result = await response.json();
+
+                    if (result.exists) {
+
+                        alertBox.classList.remove('hidden');
+
+                        alertBox.innerHTML = `
+                    <strong>Gagal Menyimpan</strong><br>
+                    Saldo awal untuk akun dan sub periode tersebut sudah ada.
+                `;
+
+                        submitButton.disabled = false;
+
+                        return;
+                    }
+
+                    this.submit();
+
+                } catch (error) {
+
+                    submitButton.disabled = false;
+
+                    alert('Gagal melakukan validasi.');
+
+                }
+            });
+
+        // 4. Handle Formatting & Calculation
         const addDisplay = document.getElementById('additional_display');
         const addHidden = document.getElementById('additional_hidden');
 

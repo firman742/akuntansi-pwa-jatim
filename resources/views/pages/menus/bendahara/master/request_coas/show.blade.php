@@ -1,10 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Pengajuan COA')
+@section('title', 'Detail Pengajuan Akun COA')
 
 @section('content')
 
-    <x-common.page-breadcrumb pageTitle="Detail Pengajuan COA" />
+    <x-common.page-breadcrumb defaultTitle="Detail Pengajuan Akun COA " pageTitle="Detail Pengajuan Akun COA"
+        pageDescription="Monitoring dan kelola akun COA yang diajukan oleh pengguna" pageIcon="book" parentTitle="Pengajuan Akun COA"
+        :parentRoute="route('bendahara.master.requests.coas.index')" currentTitle="Detail" />
 
     @if ($errors->any())
         <div class="mb-6">
@@ -248,8 +250,7 @@
 
 
         {{-- APPROVAL INFORMATION --}}
-        <div
-            class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
 
             <div class="border-b border-gray-200 px-6 py-4 dark:border-white/[0.05]">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -267,9 +268,12 @@
 
                     <span @class([
                         'inline-flex rounded-full px-3 py-1 text-sm font-medium',
-                        'bg-yellow-50 text-yellow-700 border border-yellow-500 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500' => $coaRequest->status === 'PENDING',
-                        'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500' => $coaRequest->status === 'APPROVED',
-                        'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500' => $coaRequest->status === 'REJECTED',
+                        'bg-yellow-50 text-yellow-700 border border-yellow-500 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500' =>
+                            $coaRequest->status === 'PENDING',
+                        'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500' =>
+                            $coaRequest->status === 'APPROVED',
+                        'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500' =>
+                            $coaRequest->status === 'REJECTED',
                     ])>
                         {{ $coaRequest->status }}
                     </span>
@@ -553,7 +557,7 @@
                         @csrf
 
                         <div class="p-6">
-                            <x-form.text-area name="rejection_reason" form="approve-form" label="Alasan Penolakan"
+                            <x-form.text-area name="rejection_reason" label="Alasan Penolakan"
                                 placeholder="Jelaskan alasan penolakan...." rows="4" required />
                         </div>
 

@@ -3,7 +3,9 @@
 @section('title', 'Edit Sub Periode')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Edit Sub Periode" />
+    <x-common.page-breadcrumb defaultTitle="Edit Sub Periode " pageTitle="Edit Sub Periode"
+        pageDescription="Monitoring dan kelola Sub Periode yang terdaftar di sistem" pageIcon="calendar"
+        parentTitle="Sub Periode" :parentRoute="route('bendahara.sub-periods.index')" currentTitle="Edit" />
 
     @if ($errors->any())
         <div class="mb-6">
@@ -23,13 +25,11 @@
         </div>
     @endif
 
-    @if($isLocked)
+    @if ($isLocked)
         <div class="mb-6">
-            <x-ui.alert
-                variant="warning"
-                title="Sub Periode Terkunci" :dismissible="false">
+            <x-ui.alert variant="warning" title="Sub Periode Terkunci" :dismissible="false">
 
-                @if($hasTransaction)
+                @if ($hasTransaction)
                     <p>
                         Sub periode ini tidak dapat diubah karena sudah memiliki transaksi.
                     </p>
@@ -67,13 +67,13 @@
         
                     this.periodEnd =
                         selected.dataset.endDate || '';
-                    
+        
                     this.formatDate = (dateStr) => {
                         if (!dateStr) return '';
-                        const options = { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
+                        const options = {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
                         };
                         return new Date(dateStr).toLocaleDateString('id-ID', options);
                     };

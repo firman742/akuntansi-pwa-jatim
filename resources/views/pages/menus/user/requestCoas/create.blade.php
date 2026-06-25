@@ -96,10 +96,6 @@
                         bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-3
                         focus:outline-hidden dark:border-gray-700 dark:text-white/90">
 
-                        <option value="">
-                            Tanpa Parent (Root Account)
-                        </option>
-
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" data-account-type="{{ $parent->account_type_id }}"
                                 data-normal-balance="{{ $parent->normal_balance }}" @selected(old('parent_coa_id') == $parent->id)>
@@ -117,7 +113,7 @@
                 </div>
 
                 {{-- Preview Kode --}}
-                <div>
+                {{-- <div>
                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
                         Preview Kode COA
                     </label>
@@ -130,7 +126,7 @@
                     <p class="mt-1 text-xs text-gray-500">
                         Kode final akan ditentukan kembali saat proses penyimpanan.
                     </p>
-                </div>
+                </div> --}}
 
                 {{-- Nama COA --}}
                 <div>

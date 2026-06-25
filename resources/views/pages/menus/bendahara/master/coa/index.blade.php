@@ -3,7 +3,8 @@
 @section('title', 'Master Data - COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Master Data - COA" />
+    <x-common.page-breadcrumb defaultTitle="Akun COA" pageTitle="Manajemen Akun COA"
+        pageDescription="Monitoring dan kelola Akun COA yang terdaftar di sistem" pageIcon="book" />
 
     @if ($errors->any())
         <div class="mb-4">
@@ -28,7 +29,14 @@
     @endphp
 
 
-    <x-core.basic-tables.core-table title="Daftar COA" description="Chart of Accounts dikelompokkan berdasarkan jenis akun.">
+    <x-core.basic-tables.core-table>
+
+        {{-- SLOT search --}}
+        <x-slot name="search">
+            {{-- SEARCH BAR --}}
+            <x-form.input id="searchId" name="name" placeholder="Cari berdasarkan kode atau nama COA..." startIconSearch
+                endIconSearch />
+        </x-slot>
 
         <x-slot name="actions">
             <a href="{{ route('bendahara.master.coas.create-parent') }}">
@@ -42,14 +50,10 @@
                     + Buat Akun Sub COA
                 </x-ui.button>
             </a>
-
         </x-slot>
 
         {{-- GRID 1 COLUMN --}}
         <div class="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-1 gap-3 p-3">
-            {{-- SEARCH BAR --}}
-            <x-form.input id="coaSearch" name="name" placeholder="Cari berdasarkan kode atau nama COA..." startIconSearch
-                endIconSearch />
 
             <div class="mt-3 flex justify-end">
 
@@ -192,7 +196,7 @@
         }
 
         // SEARCH
-        const searchInput = document.getElementById('coaSearch');
+        const searchInput = document.getElementById('searchId');
         const clearButton = document.getElementById('clearSearch');
 
         searchInput.addEventListener('input', function(e) {
@@ -264,7 +268,6 @@
 
             searchInput.focus();
         });
-
     </script>
 
 @endsection

@@ -78,7 +78,8 @@ class RequestCoaController extends Controller
         try {
             $service->approveRequest($id, $request->all());
 
-            return redirect()->route('bendahara.master.requests.coas.index')
+            return redirect()
+                ->route('bendahara.master.requests.coas.index')
                 ->with('success', 'COA request approved successfully.');
         } catch (Exception $e) {
             return back()
@@ -101,7 +102,8 @@ class RequestCoaController extends Controller
         try {
             $service->rejectRequest($id, $request->all());
 
-            return redirect()->route('bendahara.master.requests.coas.index')
+            return redirect()
+                ->route('bendahara.master.requests.coas.index')
                 ->with('success', 'COA request rejected successfully.');
         } catch (Exception $e) {
             return back()

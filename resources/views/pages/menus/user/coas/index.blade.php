@@ -80,7 +80,7 @@
                 </div>
 
                 {{-- INPUT --}}
-                <input type="text" id="coaSearch" placeholder="Cari berdasarkan kode atau nama COA..."
+                <input type="text" id="searchId" placeholder="Cari berdasarkan kode atau nama COA..."
                     class="dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90 dark:placeholder:text-white/30
                    h-11 w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12
                    text-sm text-gray-800 shadow-theme-xs
@@ -152,7 +152,7 @@
         }
 
         // SEARCH
-        const searchInput = document.getElementById('coaSearch');
+        const searchInput = document.getElementById('searchId');
         const clearButton = document.getElementById('clearSearch');
 
         searchInput.addEventListener('input', function(e) {

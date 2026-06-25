@@ -21,7 +21,7 @@ return new class extends Migration
             $table->uuid('account_type_id');
             $table->uuid('sub_period_id')->nullable();
             $table->string('proposed_name');
-            $table->string('proposed_code')->unique();
+            $table->string('proposed_code')->nullable();
             $table->enum('normal_balance', NormalBalanceEnum::values());
             $table->enum('status', RequestStatus::values())->default(RequestStatus::PENDING->value);
             $table->text('description')->nullable();

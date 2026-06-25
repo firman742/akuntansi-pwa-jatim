@@ -3,7 +3,9 @@
 @section('title', 'Master Data - Buat Sub Akun COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Buat Sub Akun COA" />
+    <x-common.page-breadcrumb defaultTitle="Tambah Sub Akun COA " pageTitle="Tambah Sub Akun COA"
+        pageDescription="Monitoring dan kelola Sub Akun COA yang terdaftar di sistem" pageIcon="book" parentTitle="Akun COA"
+        :parentRoute="route('bendahara.master.coas.index')" currentTitle="Tambah Sub Akun" />
 
     @if ($errors->any())
         <div class="mb-6">
@@ -26,8 +28,8 @@
     <x-common.component-card title="Tambah Akun COA">
         <form method="POST" action="{{ route('bendahara.master.coas.store') }}">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4" x-data="{
-                parentId: '{{ old('parent_id', $parents->first()?->id) }}',            
+            <div class="grid grid-cols-2 sm:grid-cols-1 gap-4" x-data="{
+                parentId: '{{ old('parent_id', $parents->first()?->id) }}',
                 code: '-',
                 level: 1,
                 order: 1,
@@ -91,10 +93,13 @@
                     this.accountTypeId = parent.account_type_id;
                     this.normalBalance = parent.normal_balance;
                 }
-            }" x-init="fetchCode();
-            syncParentData();
-            oldParentId = parentId;"
-                x-effect="
+            }" 
+            x-init="
+                fetchCode();
+                syncParentData();
+                oldParentId = parentId;
+            "
+            x-effect="
                 if (parentId !== oldParentId) {
                     fetchCode();
                     syncParentData();
@@ -102,14 +107,9 @@
                 }
             ">
                 {{-- Parent Akun --}}
-                <div class="col-span-1 md:col-span-2">
-                    <x-form.select 
-                        id="parent_id" 
-                        name="parent_id"
-                        xModel="parentId"
-                        label="Parent Akun COA" 
-                        placeholder="Pilih Tipe Akun" 
-                        required>
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.select id="parent_id" name="parent_id" xModel="parentId" label="Parent Akun COA"
+                        placeholder="Pilih Tipe Akun" required>
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(old('parent_id') == $parent->id)>
                                 {{ $parent->code }} - {{ $parent->name }}
@@ -117,18 +117,14 @@
                         @endforeach
                     </x-form.select>
                     <p class="mt-1 text-xs text-amber-600">
-                        Child account wajib memiliki parent account.
+                        Sub Akun wajib memiliki Akun COA Induk. Jika tidak ada, silakan buat Akun COA Induk terlebih dahulu.
                     </p>
                 </div>
 
                 {{-- Kode Akun Otomatis --}}
-                <div class="col-span-1 md:col-span-2">
-                    <x-form.input 
-                        id="code" 
-                        name="code" 
-                        xModel="code"
-                        label="Kode Akun (Otomatis)"
-                        readonly disabled />
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="code" name="code" xModel="code" label="Kode Akun (Otomatis)" readonly
+                        disabled />
 
                     {{-- Hidden fields untuk backend --}}
                     <input type="hidden" name="code" :value="code">
@@ -142,25 +138,14 @@
                 </div>
 
                 {{-- Nama Akun --}}
-                <div class="col-span-1 md:col-span-2">
-                    <x-form.input 
-                        id="name" 
-                        name="name" 
-                        xModel="name"
-                        label="Nama Akun COA"
-                        required />
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.input id="name" name="name" xModel="name" label="Nama Akun COA" required />
                 </div>
 
                 {{-- Tipe Akun --}}
-                <div class="col-span-1 md:col-span-2">
-                    <x-form.select 
-                        id="accountTypeId" 
-                        name="accountTypeId"
-                        xModel="accountTypeId"
-                        label="Tipe Akun" 
-                        placeholder="Pilih Tipe Akun" 
-                        alpineDisabled="parentId"
-                        >
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.select id="accountTypeId" name="accountTypeId" xModel="accountTypeId" label="Tipe Akun"
+                        placeholder="Pilih Tipe Akun" alpineDisabled="parentId">
                         @foreach ($accountTypes as $type)
                             <option value="{{ $type->id }}">
                                 {{ $type->name }}
@@ -178,15 +163,9 @@
                 </div>
 
                 {{-- Normal Balance --}}
-                <div class="col-span-1 md:col-span-2">
-                    <x-form.select 
-                        id="normalBalance" 
-                        name="normalBalance"
-                        xModel="normalBalance"
-                        label="Normal Balance" 
-                        placeholder="Pilih Normal Balance" 
-                        alpineDisabled="parentId"
-                        >
+                <div class="col-span-2 sm:col-span-1">
+                    <x-form.select id="normalBalance" name="normalBalance" xModel="normalBalance" label="Normal Balance"
+                        placeholder="Pilih Normal Balance" alpineDisabled="parentId">
                         @foreach ($normalBalances as $balance)
                             <option value="{{ $balance }}">
                                 {{ $balance }}
@@ -204,8 +183,9 @@
                 </div>
 
                 {{-- Aktif --}}
-                <div class="col-span-1 md:col-span-2">
-                    <x-form.toggle-switch name="is_active" label="Aktifkan Akun COA" :value="true" onText="Akun Aktif" offText="Akun Tidak Aktif" />
+                <div class="col-span-1 sm:col-span-1">
+                    <x-form.toggle-switch name="is_active" label="Aktifkan Akun COA" :value="true" onText="Akun Aktif"
+                        offText="Akun Tidak Aktif" />
                 </div>
             </div>
 

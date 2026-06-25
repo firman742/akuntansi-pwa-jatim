@@ -9,6 +9,7 @@ use App\Models\AccountType;
 use App\Services\Bendahara\AccountTypeService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AccountTypeController extends Controller
@@ -16,11 +17,19 @@ class AccountTypeController extends Controller
     /**
      * Display a listing of the resource.
      * 
+     * @param Request $request
      * @return View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $accountTypes = AccountType::withCount('chartOfAccounts')->get();
+        $search = $request->input('search');
+
+        $accountTypes = AccountType::withCount('chartOfAccounts')
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->get();
 
         return view('pages.menus.bendahara.master.account-types.index', compact('accountTypes'));
     }
@@ -48,12 +57,15 @@ class AccountTypeController extends Controller
         try {
             $service->store($request->validated());
 
-            return redirect()->route('bendahara.master.account-types.index')
+            return redirect()
+                ->route('bendahara.master.account-types.index')
                 ->with('success', 'Tipe akun berhasil ditambahkan.');
         } catch (Exception $e) {
-            return back()->withErrors([
-                'error' => 'Gagal membuat Tipe akun: ' . $e->getMessage()
-            ])->withInput();
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'error' => 'Gagal membuat Tipe akun: ' . $e->getMessage()
+                ]);
         }
     }
 
@@ -84,13 +96,15 @@ class AccountTypeController extends Controller
         try {
             $service->update($id, $request->validated());
 
-            return redirect()->route('bendahara.master.account-types.index')
+            return redirect()
+                ->route('bendahara.master.account-types.index')
                 ->with('success', 'Tipe akun berhasil diperbarui.');
-
         } catch (Exception $e) {
-            return back()->withErrors([
-                'error' => 'Gagal memperbarui Tipe akun: ' . $e->getMessage()
-            ])->withInput();
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'error' => 'Gagal memperbarui Tipe akun: ' . $e->getMessage()
+                ]);
         }
     }
 
@@ -107,13 +121,15 @@ class AccountTypeController extends Controller
         try {
             $service->delete($id);
 
-            return redirect()->route('bendahara.master.account-types.index')
+            return redirect()
+                ->route('bendahara.master.account-types.index')
                 ->with('success', 'Tipe akun berhasil dihapus.');
-
         } catch (Exception $e) {
-            return back()->withErrors([
-                'error' => 'Gagal menghapus Tipe akun: ' . $e->getMessage()
-            ]);
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'error' => 'Gagal menghapus Tipe akun: ' . $e->getMessage()
+                ]);
         }
     }
 }

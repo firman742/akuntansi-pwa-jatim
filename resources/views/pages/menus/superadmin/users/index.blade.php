@@ -3,7 +3,7 @@
 @section('title', 'Manajemen Pengguna')
 
 @section('content')
-    <x-common.page-breadcrumb defaultTitle="Manajemen Pengguna" pageTitle="Manajemen Pengguna"
+    <x-common.page-breadcrumb defaultTitle="Pengguna" pageTitle="Manajemen Pengguna"
         pageDescription="Monitoring dan kelola pengguna yang terdaftar di sistem" pageIcon="user-profile" />
 
     @if (session('success'))
@@ -29,7 +29,7 @@
         <x-core.basic-tables.core-table>
             {{-- SLOT search --}}
             <x-slot name="search">
-                <x-form.input id="coaSearch" name="search" value="{{ request('search') }}"
+                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
                     placeholder="Cari berdasarkan Akun atau kode COA..." startIconSearch endIconSearch />
             </x-slot>
 
@@ -48,7 +48,7 @@
 
     {{-- SCRIPT --}}
     <script>
-        const searchInput = document.getElementById('coaSearch');
+        const searchInput = document.getElementById('searchId');
         let timeout = null;
 
         searchInput.addEventListener('input', function () {

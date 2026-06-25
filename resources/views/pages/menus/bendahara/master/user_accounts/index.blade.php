@@ -3,7 +3,8 @@
 @section('title', 'Master Data - Pengguna COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Master Data - Pengguna COA" />
+    <x-common.page-breadcrumb defaultTitle="Penanggung Jawab Akun COA" pageTitle="Manajemen Penanggung Jawab Akun COA"
+        pageDescription="Monitoring dan kelola pengguna yang bertanggung jawab pada setiap akun coa yang ada" pageIcon="book" />
 
     @if (session('success'))
         <div class="mb-6">
@@ -12,12 +13,36 @@
     @endif
 
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Daftar Pengguna COA" description="Berikut adalah daftar pengguna COA yang tersedia.">
-            <x-slot name="actions">
-               
+        <x-core.basic-tables.core-table>
+           {{-- SLOT search --}}
+           <x-slot name="search">
+                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
+                    placeholder="Cari berdasarkan Akun atau kode COA..." startIconSearch endIconSearch />
             </x-slot>
 
             <x-core.basic-tables.bendahara.user-account-table :users="$users" />
         </x-core.basic-tables.core-table>
     </div>
+
+    {{-- SCRIPT --}}
+    <script>
+        const searchInput = document.getElementById('searchId');
+        let timeout = null;
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const searchValue = this.value;
+                const urlParams = new URLSearchParams(window.location.search);
+
+                if (searchValue) {
+                    urlParams.set('search', searchValue);
+                } else {
+                    urlParams.delete('search');
+                }
+
+                window.location.search = urlParams.toString();
+            }, 500);
+        });
+    </script>
 @endsection

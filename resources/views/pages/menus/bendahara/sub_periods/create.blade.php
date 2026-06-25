@@ -3,7 +3,9 @@
 @section('title', 'Tambah Sub Periode')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Tambah Sub Periode" />
+    <x-common.page-breadcrumb defaultTitle="Tambah Sub Periode " pageTitle="Tambah Sub Periode"
+        pageDescription="Monitoring dan kelola Sub Periode yang terdaftar di sistem" pageIcon="calendar"
+        parentTitle="Sub Periode" :parentRoute="route('bendahara.sub-periods.index')" currentTitle="Tambah" />
 
     @if ($errors->any())
         <div class="mb-6">

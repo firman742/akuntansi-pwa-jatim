@@ -31,7 +31,7 @@
             {{-- SLOT search --}}
             <x-slot name="search">
                     <x-form.input
-                    id="coaSearch"
+                    id="searchId"
                     name="search"
                     value="{{ request('search') }}"
                     placeholder="Cari berdasarkan Akun atau kode COA..."
@@ -86,7 +86,7 @@
     <script>
         const periodFilter = document.getElementById('filter_period');
         const subPeriodFilter = document.getElementById('filter_sub_period');
-        const searchInput = document.getElementById('coaSearch');
+        const searchInput = document.getElementById('searchId');
 
         let timeout = null;
 

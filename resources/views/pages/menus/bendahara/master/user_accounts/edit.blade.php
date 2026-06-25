@@ -1,9 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Master Data - Penghubung Akun COA ke Pengguna')
+@section('title', 'Master Data - Hubungkan Penanggung Jawab Akun COA')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Penghubung Akun COA ke Pengguna" />
+    <x-common.page-breadcrumb defaultTitle="Penanggung Jawab Akun COA " pageTitle="Hubungkan Penanggung Jawab Akun COA"
+        pageDescription="Memberikan Tanggung Jawab Kepada Pengguna" pageIcon="book"
+        parentTitle="Penanggung Jawab Akun COA" :parentRoute="route('bendahara.master.account-users.index')" currentTitle="Hubungkan" />
 
     {{-- Success Message --}}
     @if (session('success'))
@@ -144,7 +146,7 @@
                         </a>
 
                         <x-ui.button type="submit" size="sm">
-                            Simpan Sinkronisasi
+                            Simpan Perubahan
                         </x-ui.button>
                     </div>
                 </div>

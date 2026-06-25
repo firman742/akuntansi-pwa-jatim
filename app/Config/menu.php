@@ -108,21 +108,21 @@ class menu
                         ['bendahara/master/account-types*']
                     ),
                     self::item(
-                        'COA (Chart of Account)',
+                        'Akun COA',
                         null,
                         '/bendahara/master/coas',
                         ['bendahara/master/coas*'],
                         PermissionEnum::COA_VIEW
                     ),
                     self::item(
-                        'Pengguna COA',
+                        'Penanggung Jawab COA',
                         null,
                         '/bendahara/master/account-users',
                         ['bendahara/master/account-users*'],
                         PermissionEnum::COA_ASSIGN_USER
                     ),
                     self::item(
-                        'Pengajuan COA',
+                        'Pengajuan Akun COA',
                         null,
                         '/bendahara/master/requests/coas',
                         ['bendahara/master/requests/coas*'],
@@ -155,17 +155,17 @@ class menu
                 'name' => 'Manajemen Dana',
                 'icon' => 'transaction',
                 'active_on' => [
-                    'bendahara/budget-allocations*',
+                    // 'bendahara/budget-allocations*',
                     'bendahara/user-account-balances*',
                     'bendahara/requests/balances*',
                 ],
                 'subItems' => [
-                    self::item(
-                        'Alokasi Dana',
-                        null,
-                        '/bendahara/budget-allocations',
-                        ['bendahara/budget-allocations*']
-                    ),
+                    // self::item(
+                    //     'Alokasi Dana',
+                    //     null,
+                    //     '/bendahara/budget-allocations',
+                    //     ['bendahara/budget-allocations*']
+                    // ),
                     self::item(
                         'Dana Operasional Pengguna',
                         null,
