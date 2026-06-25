@@ -52,6 +52,7 @@ class TransactionController extends Controller
 
         $selectedSubPeriodId = request('sub_period_id')
             ?? $subPeriods->first()?->id;
+        
 
         // ── Kas User (Distribusi Bendahara) ────────────────
         $cashCoas = UserAccountBalance::query()

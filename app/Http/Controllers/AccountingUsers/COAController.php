@@ -30,7 +30,7 @@ class COAController extends Controller
             ])
             ->orderBy('code')
             ->get();
-        
+
         $groupedByType = $coas->groupBy(fn($coa) => $coa->accountType?->name ?? 'Uncategorized');
 
         return view('pages.menus.user.coas.index', compact('coas', 'groupedByType'));

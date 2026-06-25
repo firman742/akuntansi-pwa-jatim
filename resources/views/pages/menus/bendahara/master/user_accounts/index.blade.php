@@ -17,7 +17,7 @@
            {{-- SLOT search --}}
            <x-slot name="search">
                 <x-form.input id="searchId" name="search" value="{{ request('search') }}"
-                    placeholder="Cari berdasarkan Akun atau kode COA..." startIconSearch endIconSearch />
+                    placeholder="Cari berdasarkan nama atau email pengguna..." startIconSearch endIconSearch />
             </x-slot>
 
             <x-core.basic-tables.bendahara.user-account-table :users="$users" />
