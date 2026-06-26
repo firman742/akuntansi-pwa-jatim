@@ -75,7 +75,7 @@
                                     shadow-2xl
 
                                     dark:border-gray-700
-                                    dark:bg-gray-900/95
+                                    dark:bg-gray-dark
                                 ">
 
                                 <form method="GET" class="p-5">

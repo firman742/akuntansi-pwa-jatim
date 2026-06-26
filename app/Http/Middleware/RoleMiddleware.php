@@ -28,13 +28,13 @@ class RoleMiddleware
             abort(500, 'Pengguna tidak memiliki metode getRoleNames. Pastikan model User menggunakan trait HasRoles dari Spatie.');
         }
 
-        $userRole = $user->getRoleNames()->first();
+        $userRoles = $user->getRoleNames()->toArray();
 
-        if (! $userRole) {
+        if (empty($userRoles)) {
             abort(403, 'Pengguna tidak memiliki peran yang valid');
         }
 
-        if (! in_array($userRole, $roles, true)) {
+        if (empty(array_intersect($userRoles, $roles))) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini');
         }
 

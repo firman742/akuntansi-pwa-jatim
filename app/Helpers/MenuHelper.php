@@ -10,13 +10,19 @@ class MenuHelper
 {
     public static function getMenuGroups(): array
     {
-        $user = Auth::user();
-
-        if (! $user || $user->getRoleNames()->isEmpty()) {
+        if (!Auth::check()) {
             return [];
         }
 
-        $role = RoleEnum::from($user->getRoleNames()->first());
+        $role = match (true) {
+            request()->routeIs('bendahara.*') => RoleEnum::BENDAHARA,
+            request()->routeIs('user.*')       => RoleEnum::USER,
+            default                            => null,
+        };
+
+        if (!$role) {
+            return [];
+        }
 
         return menu::byRole($role);
     }

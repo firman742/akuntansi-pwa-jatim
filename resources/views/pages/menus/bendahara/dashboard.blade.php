@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'Beranda Bendahara')
+
 @section('content')
-    <x-common.page-breadcrumb defaultTitle="Dashboard Bendahara" pageTitle="Dashboard Bendahara"
+    <x-common.page-breadcrumb pageTitle="Beranda Bendahara"
         pageDescription="Monitoring Dan Kelola Alur Utama Akuntansi" pageIcon="dashboard" />
 
     <div class="space-y-6">
@@ -18,7 +20,7 @@
                 <div>
                     <span
                         class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
-                        Dashboard Bendahara
+                        Beranda Bendahara
                     </span>
 
                     <h1 class="mt-4 text-3xl font-bold text-gray-800 dark:text-white/90">
@@ -105,7 +107,7 @@
 
                     <div>
                         <span class="text-lg text-gray-500 dark:text-gray-400">
-                            Pemasukan
+                            Penerimaan
                         </span>
 
                         <h4 class="mt-2 text-2xl font-bold text-green-600">

@@ -50,7 +50,11 @@ class SettingHelper
             ->where('key', 'APP_LOGO')
             ->first();
 
-        return $configuration?->getFirstMediaUrl('configuration_app_logo');
+        if ($configuration->hasMedia('configuration_app_logo')) {
+            return $configuration->getFirstMediaUrl('configuration_app_logo');
+        } else {
+            return asset('images/logo/logo-icon.svg');
+        }
     }
 
     public static function loginBackground(): ?string

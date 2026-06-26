@@ -28,7 +28,7 @@ class menu
     {
         return [
             self::item(
-                'Dashboard',
+                'Beranda',
                 'dashboard',
                 '/superadmin/dashboard'
             ),
@@ -65,7 +65,7 @@ class menu
     {
         return [
             self::item(
-                'Dashboard',
+                'Beranda',
                 'dashboard',
                 '/bendahara/dashboard',
                 ['bendahara/dashboard*']
@@ -225,7 +225,7 @@ class menu
     {
         return [
             self::item(
-                'Dashboard',
+                'Beranda',
                 'dashboard',
                 '/user/dashboard',
                 ['user/dashboard*']

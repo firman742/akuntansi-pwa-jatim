@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             /** GROUP 1 : Master data coa & user account */
             AccountTypeSeeder::class,
             ChartOfAccountSeeder::class,
-            UserAccountSeeder::class,
+            // UserAccountSeeder::class,
 
             // /** Group 2 : Opening Balance & Coa Balance */
             // OpeningBalanceSeeder::class,

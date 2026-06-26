@@ -55,7 +55,7 @@
 
                     </svg>
 
-                    <span>Home</span>
+                    <span>Beranda</span>
 
                 </a>
             </li>
@@ -79,13 +79,15 @@
                     </li>
                 @endif
             @else
-                <li class="text-gray-400">
-                    /
-                </li>
+                @if ($defaultTitle)
+                    <li class="text-gray-400">
+                        /
+                    </li>
 
-                <li class="font-medium text-gray-800 dark:text-white/90">
-                    {{ $defaultTitle }}
-                </li>
+                    <li class="font-medium text-gray-800 dark:text-white/90">
+                        {{ $defaultTitle }}
+                    </li>
+                @endif
             @endif
         </ol>
     </nav>

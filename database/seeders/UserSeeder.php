@@ -25,22 +25,15 @@ class UserSeeder extends Seeder
             'email' => 'bendahara@example.com',
             'no_telp' => '081298765432',
             'address' => 'Jl. Sudirman No. 10, Bandung',
-            'roles' => [RoleEnum::BENDAHARA],
+            'roles' => [RoleEnum::BENDAHARA, RoleEnum::USER],
         ],
         [
-            'name'  => 'Pengguna ATC',
-            'email' => 'user-atc@example.com',
+            'name'  => 'Pemegang Kas Operasional',
+            'email' => 'pemegang-kas@example.com',
             'no_telp' => '081212345678',
             'address' => 'Jl. Thamrin No. 5, Surabaya',
             'roles' => [RoleEnum::USER],
-        ],
-        [
-            'name'  => 'Pengguna KLL',
-            'email' => 'user-kll@example.com',
-            'no_telp' => '081276543210',
-            'address' => 'Jl. Gatot Subroto No. 20, Medan',
-            'roles' => [RoleEnum::USER],
-        ],
+        ]
     ];
 
     public function run(): void
