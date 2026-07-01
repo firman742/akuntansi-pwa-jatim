@@ -12,7 +12,13 @@ use Illuminate\View\View;
 
 class TransactionController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Display a listing of the resource.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function index(Request $request): View
     {
         $query = Transaction::with([
             'creator:id,name',

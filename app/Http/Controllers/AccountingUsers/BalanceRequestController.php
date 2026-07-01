@@ -7,11 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AccountingUsers\StoreReqBalanceRequest;
 use App\Models\BalanceRequest;
 use App\Models\CoaBalance;
+use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\UserAccount;
 use App\Services\AccountingUsers\RequestBalanceService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -20,11 +22,24 @@ class BalanceRequestController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
      * @return View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $requests = BalanceRequest::query()
+        $periodId = $request->query('period_id', null);
+        $subPeriodId = $request->query('sub_period_id', null);
+        $search = $request->query('search', null);
+        $periods = Period::where('is_closed', false)->get();
+        $subPeriods = collect();
+
+        if ($periodId) {
+            $subPeriods = SubPeriod::where('period_id', $periodId)
+                ->orderBy('start_date')
+                ->get();
+        }
+
+        $query = BalanceRequest::query()
             ->where('requester_id', Auth::id())
             ->with([
                 'approver:id,name',
@@ -34,7 +49,28 @@ class BalanceRequestController extends Controller
                 'sourceCoa.chartOfAccount:id,code,name',
                 'period:id,name',
                 'subPeriod:id,name',
-            ])
+            ]);
+
+        if ($periodId) {
+            $query->where('period_id', $periodId);
+        }
+
+        if ($subPeriodId) {
+            $query->where('sub_period_id', $subPeriodId);
+        }
+
+
+        $requests = $query
+            ->where(function ($q) use ($search) {
+                if ($search) {
+                    $q->whereHas('userAccount.user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%");
+                    })->orWhereHas('sourceCoa.chartOfAccount', function ($q3) use ($search) {
+                        $q3->where('code', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                    });
+                }
+            })
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($item) {
@@ -43,7 +79,13 @@ class BalanceRequestController extends Controller
                 return $item;
             });
 
-        return view('pages.menus.user.requestBalances.index', compact('requests'));
+        return view('pages.menus.user.requestBalances.index', compact(
+            'requests',
+            'periodId',
+            'subPeriodId',
+            'periods',
+            'subPeriods'
+        ));
     }
 
     /**
@@ -124,7 +166,7 @@ class BalanceRequestController extends Controller
     {
         try {
             $service->store($request->validated());
-           
+
             return redirect()
                 ->route('user.requests.balances.index')
                 ->with(

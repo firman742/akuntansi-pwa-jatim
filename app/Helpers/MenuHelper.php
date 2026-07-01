@@ -17,6 +17,7 @@ class MenuHelper
         $role = match (true) {
             request()->routeIs('bendahara.*') => RoleEnum::BENDAHARA,
             request()->routeIs('user.*')       => RoleEnum::USER,
+            request()->routeIs('superadmin.*')  => RoleEnum::SUPER_ADMIN,
             default                            => null,
         };
 

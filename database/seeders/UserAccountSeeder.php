@@ -6,8 +6,8 @@ use App\Enums\RoleEnum;
 use App\Models\ChartOfAccount;
 use App\Models\User;
 use App\Models\UserAccount;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
 class UserAccountSeeder extends Seeder
 {
@@ -71,11 +71,41 @@ class UserAccountSeeder extends Seeder
                 ->unique('id');
 
             foreach ($selectedAccounts as $coa) {
+
+                // Assign akun yang dipilih
                 UserAccount::firstOrCreate([
                     'user_id' => $user->id,
-                    'coa_id' => $coa->id,
+                    'coa_id'  => $coa->id,
                 ]);
+
+                // Assign seluruh parent
+                foreach ($this->getParentAccounts($coa) as $parent) {
+
+                    UserAccount::firstOrCreate([
+                        'user_id' => $user->id,
+                        'coa_id'  => $parent->id,
+                    ]);
+                }
             }
         }
+    }
+
+    /**
+     * Ambil seluruh parent dari sebuah COA.
+     * 
+     * @return Collection<ChartOfAccount>
+     */
+    private function getParentAccounts(ChartOfAccount $coa): Collection
+    {
+        $parents = collect();
+        $current = $coa->parent;
+
+        while ($current) {
+            $parents->push($current);
+
+            $current = $current->parent;
+        }
+
+        return $parents;
     }
 }

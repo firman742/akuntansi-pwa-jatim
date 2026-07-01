@@ -45,6 +45,7 @@ class StoreBudgetAllocationRequest extends FormRequest
                 'required',
                 'uuid',
                 'exists:chart_of_accounts,id',
+                'different:from_chart_of_account_id',
             ],
 
             'amount' => [
@@ -89,6 +90,7 @@ class StoreBudgetAllocationRequest extends FormRequest
             'to_chart_of_account_id.required' => 'Akun tujuan harus dipilih.',
             'to_chart_of_account_id.uuid' => 'Akun tujuan tidak valid.',
             'to_chart_of_account_id.exists' => 'Akun tujuan yang dipilih tidak ditemukan.',
+            'to_chart_of_account_id.different' => 'Akun tujuan dan sumber harus berbeda.',
 
             'amount.required' => 'Jumlah alokasi harus diisi.',
             'amount.numeric' => 'Jumlah alokasi harus berupa angka.',

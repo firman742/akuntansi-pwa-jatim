@@ -110,74 +110,50 @@
         }
     }
 }">
-    <div
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
         <!-- Table -->
-        <div class="min-w-full overflow-x-auto custom-scrollbar">
-            <table class="min-w-full border-collapse">
-                <thead>
-                    <tr
-                        class="bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-600 border-b border-gray-200">
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+        <div class="max-w-full overflow-x-auto">
+            <table class="w-full">
+                <thead class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             No
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Nama Pengaju
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             COA Sumber Dana
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Sub Periode
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Nominal
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Status
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Disetujui Oleh
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Tanggal Pengajuan
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Action
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Jika data kosong -->
-                    <template x-if="paginatedData.length === 0">
-                        <tr>
-                            <td colspan="8" class="px-6 py-10 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
-                                    </svg>
-
-                                    <p class="text-sm font-medium text-gray-500">
-                                        Belum ada data coa yang diajukan
-                                    </p>
-
-                                    <p class="text-xs text-gray-400">
-                                        Data yang tersedia akan tampil di tabel ini
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                    </template>
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
                             <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
@@ -185,14 +161,14 @@
 
                                 {{-- No --}}
                                 <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
+                                    <span class="font-light text-gray-700 dark:text-gray-400"
                                         x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
                                     </span>
                                 </td>
 
                                 {{-- Nama Pengaju --}}
                                 <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="font-medium text-gray-700 dark:text-gray-300"
+                                    <span class="font-light text-gray-700 dark:text-gray-400"
                                         x-text="row.user_account?.user.name">
                                     </span>
                                 </td>
@@ -200,43 +176,40 @@
                                 {{-- Sumber Dana --}}
                                 <td class="px-4 py-3.5 sm:px-6">
                                     <div class="flex flex-col">
-                                        <span class="font-medium"
-                                            x-text="row.source_coa?.code ?? '-'">
+                                        <span class="font-medium" x-text="row.source_coa?.code ?? '-'">
                                         </span>
-                                
-                                        <span class="text-xs text-gray-500"
-                                            x-text="row.source_coa?.name ?? ''">
+
+                                        <span class="text-xs text-gray-500" x-text="row.source_coa?.name ?? ''">
                                         </span>
                                     </div>
                                 </td>
 
                                 {{-- Sub periode --}}
                                 <td class="px-4 py-3.5 sm:px-6">
-                                    <span x-text="row.sub_period?.name ?? '-'"></span>
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="row.sub_period?.name ?? '-'"></span>
                                 </td>
 
                                 {{-- Nominal pengajuan --}}
                                 <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="font-medium text-green-600"
-                                        x-text="formatCurrency(row.amount)">
+                                    <span class="font-light text-green-600" x-text="formatCurrency(row.amount)">
                                     </span>
                                 </td>
 
                                 {{-- Status --}}
                                 <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-light"
                                         :class="statusBadge(row.status)" x-text="row.status_label">
                                     </span>
                                 </td>
 
                                 {{-- Approver --}}
                                 <td class="px-4 py-3.5 sm:px-6">
-                                    <span x-text="row.approver?.name ?? '-'"></span>
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="row.approver?.name ?? '-'"></span>
                                 </td>
 
                                 {{-- Created At --}}
                                 <td class="px-4 py-3.5 sm:px-6">
-                                    <span x-text="formatDate(row.created_at)"></span>
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="formatDate(row.created_at)"></span>
                                 </td>
 
                                 <!-- Action -->
@@ -265,6 +238,28 @@
                             </tr>
                         </template>
                     </template>
+                    <!-- Jika data kosong -->
+                    <template x-if="paginatedData.length === 0">
+                        <tr>
+                            <td colspan="8" class="px-6 py-10 text-center">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                                    </svg>
+
+                                    <p class="text-sm font-medium text-gray-500">
+                                        Belum ada data pengajuan dana
+                                    </p>
+
+                                    <p class="text-xs text-gray-400">
+                                        Data yang tersedia akan tampil di tabel ini
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
                 </tbody>
 
             </table>
@@ -286,7 +281,7 @@
                 <span class="hidden sm:inline">Previous</span>
             </button>
 
-            <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden">
+            <span class="block text-sm font-light text-gray-700 dark:text-gray-400 sm:hidden">
                 Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
             </span>
 

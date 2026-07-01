@@ -1,85 +1,59 @@
 @extends('layouts.app')
 
-@section('title', 'Distribusi Saldo')
+@section('title', 'Alokasi Dana Akun')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Distribusi Saldo" />
-
-    {{-- FILTER & ACTION CARD --}}
-    <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <form method="GET" class="space-y-6">
-
-            {{-- FILTER SECTION --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-
-                {{-- PERIOD --}}
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Periode
-                    </label>
-                    <select name="period_id" id="filter_period"
-                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-                               focus:border-primary focus:bg-white focus:ring-primary transition">
-                        <option value="">Semua</option>
-                        @foreach ($periods as $period)
-                            <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
-                                {{ $period->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- SUB PERIOD --}}
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Sub Periode
-                    </label>
-                    <select name="sub_period_id" id="filter_sub_period"
-                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-                               focus:border-primary focus:bg-white focus:ring-primary transition">
-                        <option value="">Semua</option>
-                        @foreach ($subPeriods as $sub)
-                            <option value="{{ $sub->id }}" @selected(request('sub_period_id') == $sub->id)>
-                                {{ $sub->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- FILTER ACTION --}}
-                <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
-                    <x-ui.button type="submit" variant="primary"
-                        class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
-                        Tampilkan
-                    </x-ui.button>
-
-                    <a href="{{ route('bendahara.budget-allocations.index') }}" class="flex-1">
-                        <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
-                            Reset
-                        </x-ui.button>
-                    </a>
-                </div>
-            </div>
-        </form>
-    </div>
+    <x-common.page-breadcrumb defaultTitle="Alokasi Dana Akun" pageTitle="Kelola Alokasi Dana Akun"
+        pageDescription="Monitoring dan kelola Alokasi Dana Akun berdasarkan periode" pageIcon="transaction" />
 
     {{-- TABLE --}}
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Distribusi Saldo" description="Kelola dan monitor perpindahan saldo antar akun Chart of Account (COA) pada setiap periode pembukuan.">
-            <x-slot name="actions">
+        <x-core.basic-tables.core-table needFilter :filterColumns="1" resetUrl="{{ route('bendahara.budget-allocations.index') }}">
+            {{-- SLOT search --}}
+            <x-slot name="search">
+                <x-form.input
+                    id="searchId"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Cari berdasarkan Akun atau kode COA..."
+                    startIconSearch
+                    endIconSearch
+                />
+            </x-slot>
 
+            {{-- SLOT filter --}}
+            <x-slot name="filters">
+                <x-form.select 
+                    id="filter_period" 
+                    name="period_id" 
+                    placeholder="Pilih Periode">
+                    @foreach ($periods as $period)
+                        <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
+                            {{ $period->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+
+                <x-form.select 
+                    id="filter_sub_period" 
+                    name="sub_period_id" 
+                    placeholder="Pilih Sub Periode">
+                    <option value="">Semua</option>
+                    @foreach ($subPeriods as $subPeriod)
+                        <option value="{{ $subPeriod->id }}" @selected(request('sub_period_id') == $subPeriod->id)>
+                            {{ $subPeriod->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+            </x-slot>
+
+            {{-- SLOT Action --}}
+            <x-slot name="actions">
                 <a href="{{ route('bendahara.budget-allocations.create') }}">
                     <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
-                        + Distribusikan Saldo
+                        + Alokasikan Dana
                     </x-ui.button>
                 </a>
-
-                {{-- <a href="{{ route('bendahara.budget-allocations.create-bulk') }}">
-                    <x-ui.button variant="outline" class="rounded-xl px-4 py-2">
-                        + Multi Periode
-                    </x-ui.button>
-                </a> --}}
-
             </x-slot>
 
             {{-- TABLE COMPONENT LU --}}

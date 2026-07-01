@@ -1,7 +1,17 @@
 @props([
     'resetUrl' => null,
     'needFilter' => false,
+    'filterColumns' => 1,
 ])
+
+@php
+    $gridClass = match ($filterColumns) {
+        1 => 'grid-cols-1',
+        2 => 'grid-cols-1 sm:grid-cols-2',
+        3 => 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+        default => 'grid-cols-1 sm:grid-cols-2',
+    };
+@endphp
 
 <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-sm">
 
@@ -56,30 +66,30 @@
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95" @click.outside="open = false"
                                 class="
-                                    absolute
-                                    top-full
-                                    mt-3
-                                    z-50
+                                absolute
+                                top-full
+                                mt-3
+                                z-50
 
-                                    left-0
-                                    w-[calc(100vw-2rem)]
+                                left-0
+                                w-[calc(100vw-2rem)]
 
-                                    sm:left-auto
-                                    sm:right-0
-                                    sm:w-[420px]
+                                md:left-auto
+                                md:right-0
+                                md:w-[680px]
 
-                                    rounded-2xl
-                                    border
-                                    border-gray-200
-                                    bg-white
-                                    shadow-2xl
+                                rounded-2xl
+                                border
+                                border-gray-200
+                                bg-white
+                                shadow-xl
 
-                                    dark:border-gray-700
-                                    dark:bg-gray-dark
-                                ">
+                                dark:border-gray-700
+                                dark:bg-gray-900
+                            ">
 
                                 <form method="GET" class="p-5">
-                                    <div class="space-y-4">
+                                    <div class="grid {{ $gridClass }} gap-4">
                                         {{ $filters ?? '' }}
                                     </div>
 
@@ -104,7 +114,7 @@
                         </div>
                     @endif
 
-                    
+
                 </div>
             </div>
 

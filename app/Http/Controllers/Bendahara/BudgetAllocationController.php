@@ -7,6 +7,7 @@ use App\Http\Requests\Bendahara\BudgetAllocations\StoreBudgetAllocationRequest;
 use App\Services\Bendahara\BudgetAllocationService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BudgetAllocationController extends Controller
@@ -17,12 +18,13 @@ class BudgetAllocationController extends Controller
      * @param BudgetAllocationService $service
      * @return View
      */
-    public function index(BudgetAllocationService $service): View
+    public function index(BudgetAllocationService $service, Request $request): View
     {
-        $periodId = request('period_id');
-        $subPeriodId = request('sub_period_id');
+        $periodId = $request->query('period_id', null);
+        $subPeriodId = $request->query('sub_period_id', null);
+        $search = $request->query('search', null);
 
-        $data = $service->getIndexData($periodId, $subPeriodId);
+        $data = $service->getIndexData($periodId, $subPeriodId, $search);
 
         return view('pages.menus.bendahara.budget_allocations.index',
             array_merge($data, [
@@ -58,10 +60,13 @@ class BudgetAllocationController extends Controller
         try {
             $service->store($request->validated());
 
-            return redirect()->route('bendahara.budget-allocations.index')
+            return redirect()
+                ->route('bendahara.budget-allocations.index')
                 ->with('success', 'Distribusi Saldo berhasil disimpan.');
         } catch (Exception $e) {
-            return back()->withErrors(['error' => 'Gagal simpan: ' . $e->getMessage()])->withInput();
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Gagal simpan: ' . $e->getMessage()]);
         }
     }
 }

@@ -130,7 +130,7 @@
                         <div class="grid md:grid-cols-2 gap-4">
 
                             {{-- PAJAK --}}
-                            <div>
+                            {{-- <div>
                                 <h4 class="font-semibold text-sm mb-2">Pajak</h4>
                                 <template x-for="(line,i) in taxLines" :key="i">
                                     <div class="flex gap-2 mb-2">
@@ -158,10 +158,10 @@
                                 </template>
 
                                 <button type="button" @click="addLine('taxLines')">+ Pajak</button>
-                            </div>
+                            </div> --}}
 
                             {{-- BUNGA --}}
-                            <div>
+                            {{-- <div>
                                 <h4 class="font-semibold text-sm mb-2">Bunga</h4>
                                 <template x-for="(line,i) in interestLines" :key="i">
                                     <div class="flex gap-2 mb-2">
@@ -192,7 +192,7 @@
                                 </template>
 
                                 <button type="button" @click="addLine('interestLines')">+ Bunga</button>
-                            </div>
+                            </div> --}}
 
                         </div>
                     </x-common.component-card>
@@ -299,7 +299,7 @@
 
             {{-- ================= ACTION ================= --}}
             <div class="mt-8 flex justify-end gap-3">
-                <a href="{{ route('user.transactions.incomes.index') }}">
+                <a href="">
                     <x-ui.button variant="outline" size="sm">
                         Kembali
                     </x-ui.button>

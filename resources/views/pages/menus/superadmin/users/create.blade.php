@@ -51,13 +51,14 @@
                 </div>
 
                 <div class="col-span-2">
-                    <x-form.select id="role" name="role" label="Peran" placeholder="Pilih Peran" required>
-                        @foreach ($roles as $role)
-                            <option value="{{ $role }}">
-                                {{ $role }}
-                            </option>
-                        @endforeach
-                    </x-form.select>
+                    <x-form.multi-select
+                        id="role"
+                        name="role"
+                        label="Peran"
+                        :options="$roles"
+                        placeholder="Pilih Peran"
+                        required
+                    />
                 </div>
 
                 <div class="col-span-2 sm:col-span-1">

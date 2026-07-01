@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Bendahara\CoaBalances\TopUpBalanceRequest;
 use App\Models\BudgetAllocation;
+use App\Models\ChartOfAccount;
 use App\Models\CoaBalance;
 use App\Models\OpeningBalance;
 use App\Models\Period;
@@ -28,10 +29,14 @@ class CoaBalanceController extends Controller
     {
         $periodId = $request->query('period_id');
         $subPeriodId = $request->query('sub_period_id');
+        $coaId = $request->query('coa_id', null);
         $search = $request->query('search');
 
         $periods = Period::where('is_closed', false)->get();
         $subPeriods = collect();
+        $coas = ChartOfAccount::where('is_active', true)
+            ->orderBy('code')
+            ->get();
 
         if ($periodId) {
             $subPeriods = SubPeriod::where('period_id', $periodId)
@@ -54,6 +59,10 @@ class CoaBalanceController extends Controller
             $query->where('sub_period_id', $subPeriodId);
         }
 
+        if ($coaId) {
+            $query->where('chart_of_account_id', $coaId);
+        }
+
         $coaBalances = $query->whereHas('chartOfAccount', function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
                 ->orWhere('code', 'like', "%{$search}%");
@@ -66,6 +75,7 @@ class CoaBalanceController extends Controller
             "periodId",
             "subPeriods",
             "periods",
+            "coas",
             "coaBalances"
         ));
     }

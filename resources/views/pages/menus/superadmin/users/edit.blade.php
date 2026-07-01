@@ -51,15 +51,14 @@
                 </div>
 
                 <div class="col-span-2">
-                    <x-form.select id="role" name="role" label="Peran" placeholder="Pilih Peran" disabled>
-                        @foreach ($roles as $role)
-                            <option value="{{ $role }}" {{ old('role', $userRole) === $role ? 'selected' : '' }}>
-                                {{ $role }}
-                            </option>
-                        @endforeach
-                    </x-form.select>
-
-                    <input type="hidden" name="role" value="{{ old('role', $userRole) }}">
+                    <x-form.multi-select
+                        id="role"
+                        name="role"
+                        label="Peran"
+                        :options="$roles"
+                        :selected="$user->roles->pluck('name')->toArray()"
+                        required
+                    />
                 </div>
             </div>
 

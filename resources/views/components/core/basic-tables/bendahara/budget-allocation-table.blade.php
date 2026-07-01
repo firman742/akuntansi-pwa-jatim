@@ -10,8 +10,6 @@
     tableRowData: @js($budgetAllocations),
     itemsPerPage: 10,
     currentPage: 1,
-    {{-- editUrl: '{{ route('bendahara.opening-balances.edit', ':id') }}', --}}
-    {{-- destroyUrl: '{{ route('bendahara.opening-balances.destroy', ':id') }}', --}}
 
     get totalPages() {
         return Math.ceil(this.tableRowData.length / this.itemsPerPage);
@@ -102,25 +100,27 @@
         }
     }
 }">
-    <div class="overflow-hidden border border-gray-200 bg-white shadow-sm">
+    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
         <div class="max-w-full overflow-x-auto">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-3">
-
+                {{-- TOTAL ALOKASI --}}
                 <div class="p-4 rounded-xl bg-blue-50">
-                    <div class="text-xs text-gray-500">Total Distribusi</div>
+                    <div class="text-xs text-gray-500">Total Alokasi</div>
                     <div class="text-xl font-bold text-blue-700"
                         x-text="formatCurrency(tableRowData.reduce((a,b)=>a + Number(b.amount),0))">
                     </div>
                 </div>
 
+                {{-- JUMLAH AKUN TERALOKASI --}}
                 <div class="p-4 rounded-xl bg-green-50">
-                    <div class="text-xs text-gray-500">Jumlah Transaksi</div>
+                    <div class="text-xs text-gray-500">Jumlah Akun Teralokasi</div>
                     <div class="text-xl font-bold text-green-700" x-text="tableRowData.length">
                     </div>
                 </div>
 
+                {{-- RATA-RATA ALOKASI --}}
                 <div class="p-4 rounded-xl bg-yellow-50">
-                    <div class="text-xs text-gray-500">Rata-rata Distribusi</div>
+                    <div class="text-xs text-gray-500">Rata-rata Alokasi</div>
                     <div class="text-xl font-bold text-yellow-700"
                         x-text="formatCurrency(
                             tableRowData.length 
@@ -129,87 +129,94 @@
                         )">
                     </div>
                 </div>
-
             </div>
-            <table class="w-full border-collapse">
+            <table class="w-full">
                 <thead
                     class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
                     <tr>
                         <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            class="px-6 py-3 font-light text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             No
                         </th>
                         <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            class="px-6 py-3 font-light text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Sub Periode</th>
                         <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            class="px-6 py-3 font-light text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Akun Asal</th>
                         <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            class="px-6 py-3 font-light text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Akun Tujuan</th>
                         <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            class="px-6 py-3 font-light text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Tipe</th>
                         <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            class="px-6 py-3 font-light text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Jumlah</th>
                         <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            class="px-6 py-3 font-light text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Deskripsi</th>
-                        {{-- <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
-                            Action</th> --}}
                     </tr>
                 </thead>
-                <tbody class="text-center">
+                <tbody class="text-sm">
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
 
-                            <tr class="border-b hover:bg-gray-50 transition">
+                            <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
+                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                                 <!-- NO -->
-                                <td class="px-4 py-3 text-center text-gray-500"
-                                    x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
+                                <td class="px-4 py-3.5 sm:px-6">
+                                    <span class="font-light text-gray-700 dark:text-gray-400"
+                                        x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
+                                    </span>
                                 </td>
 
                                 <!-- SUB PERIOD -->
-                                <td class="px-4 py-3 text-gray-600" x-text="row.sub_period"></td>
+                                <td class="px-4 py-3.5 sm:px-6">
+                                    <span class="font-light text-gray-700 dark:text-gray-400"
+                                        x-text="row.sub_period"></span>
+                                </td>
 
                                 <!-- FROM -->
-                                <td class="px-4 py-3">
-                                    <div class="font-medium text-gray-800" x-text="row.from_account"></div>
-                                    <div class="text-xs text-gray-400" x-text="row.from_code"></div>
+                                <td class="px-4 py-3.5 sm:px-6 text-center">
+                                    <span class="font-medium text-gray-800 dark:text-gray-500"
+                                        x-text="row.from_account"></span>
+                                    <br>
+                                    <span class="font-light text-gray-700 dark:text-gray-200"
+                                        x-text="row.from_code"></span>
                                 </td>
 
                                 <!-- TO -->
-                                <td class="px-4 py-3">
-                                    <div class="font-medium text-gray-800" x-text="row.to_account"></div>
-                                    <div class="text-xs text-gray-400" x-text="row.to_code"></div>
+                                <td class="px-4 py-3.5 sm:px-6 text-center">
+                                    <span class="font-medium text-gray-800 dark:text-gray-500"
+                                        x-text="row.to_account"></span>
+                                    <br>
+                                    <span class="font-light text-gray-700 dark:text-gray-200"
+                                        x-text="row.to_code"></span>
                                 </td>
 
                                 <!-- TYPE -->
-                                <td class="px-4 py-3 text-center">
-                                    <span class="px-2 py-1 text-xs rounded-full"
+                                <td class="px-4 py-3.5 sm:px-6 text-center">
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-light"
                                         :class="row.type === 'IN' ?
-                                            'bg-green-100 text-green-700' :
-                                            'bg-red-100 text-red-700'"
+                                            'bg-green-100 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-400 dark:border-green-900' :
+                                            'bg-red-100 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-400 dark:border-red-900'"
                                         x-text="row.type">
                                     </span>
                                 </td>
 
                                 <!-- AMOUNT -->
-                                <td class="px-4 py-3 text-right font-semibold text-gray-800"
-                                    x-text="formatCurrency(row.amount)">
+                                <td class="px-4 py-3.5 sm:px-6">
+                                    <span class="font-light text-gray-700 dark:text-gray-400"
+                                        x-text="formatCurrency(row.amount)">
+                                    </span>
                                 </td>
 
                                 <!-- DESCRIPTION -->
                                 <td class="px-4 py-3 text-gray-500 italic" x-text="row.description ?? '-'"></td>
-
                             </tr>
-
                         </template>
-
                     </template>
                     <!-- Jika data kosong -->
                     <template x-if="paginatedData.length === 0">
@@ -223,7 +230,7 @@
                                     </svg>
 
                                     <p class="text-sm font-medium text-gray-500">
-                                        Belum ada data distribusi saldo
+                                        Belum ada data alokasi dana
                                     </p>
 
                                     <p class="text-xs text-gray-400">

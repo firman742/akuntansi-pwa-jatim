@@ -20,12 +20,12 @@
     <div class="space-y-6">
 
         {{-- HEADER --}}
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div class="bg-white border border-gray-200 dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90 shadow-sm rounded-2xl p-6">
 
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
 
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">
+                    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
                         Saldo COA Saya
                     </h1>
 
@@ -56,7 +56,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
             {{-- TOTAL ALOKASI --}}
-            <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
+            <div class="bg-white rounded-2xl border border-blue-100 border-gray-200 dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90  shadow-sm p-5">
 
                 <div class="flex items-start justify-between">
 
@@ -85,7 +85,7 @@
             </div>
 
             {{-- TERPAKAI --}}
-            <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5">
+            <div class="bg-white rounded-2xl border border-red-100 border-gray-200 dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90  shadow-sm p-5">
 
                 <div class="flex items-start justify-between">
 
@@ -112,7 +112,7 @@
             </div>
 
             {{-- SISA --}}
-            <div class="bg-white rounded-2xl border border-green-100 shadow-sm p-5">
+            <div class="bg-white rounded-2xl border border-green-100  border-gray-200 dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90  shadow-sm p-5">
 
                 <div class="flex items-start justify-between">
 
@@ -138,7 +138,7 @@
             </div>
 
             {{-- AKTIF --}}
-            <div class="bg-white rounded-2xl border border-yellow-100 shadow-sm p-5">
+            <div class="bg-white rounded-2xl border border-yellow-100 border-gray-200 dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90  shadow-sm p-5">
 
                 <div class="flex items-start justify-between">
 
@@ -166,7 +166,7 @@
         </div>
 
         {{-- TABLE --}}
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="bg-white border border-gray-200 border-gray-200 dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90  rounded-2xl shadow-sm overflow-hidden">
 
             {{-- HEADER --}}
             <div class="px-6 py-5 border-b border-gray-100">
@@ -174,7 +174,7 @@
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
                     <div>
-                        <h2 class="text-lg font-bold text-gray-800">
+                        <h2 class="text-lg font-bold text-gray-800 dark:text-white">
                             Detail Saldo Pengguna
                         </h2>
 

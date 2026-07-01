@@ -19,6 +19,7 @@ class JournalController extends Controller
         $subPeriodId =  $request->sub_period_id;
         $startDate =  $request->start_date;
         $endDate = $request->end_date;
+        $search = $request->search;
 
         // Initial Query
         $query  = Journal::with(['details.chartOfAccount.accountType', 'postedBy']);
@@ -41,8 +42,19 @@ class JournalController extends Controller
         }
 
         // ======================= ORDER ============
-        $journals = $query->orderBy('journal_date', 'desc')
-            ->get();
+        $journals = $query
+            ->where(function ($q) use ($search) {
+                if ($search) {
+                    $q->where('description', 'like', "%{$search}%")
+                        ->orWhereHas('details.chartOfAccount', function ($q2) use ($search) {
+                            $q2->where('name', 'like', "%{$search}%")
+                                ->orWhere('code', 'like', "%{$search}%");
+                        });
+                }
+            })
+            ->orderBy('journal_date', 'desc')
+            ->paginate(20)
+            ->withQueryString();
 
         $periods = Period::get();
         $subPeriods = collect();
@@ -55,7 +67,7 @@ class JournalController extends Controller
         // --- GROUPING (tetap sama) ---
         $groupedJournals = [];
 
-        foreach ($journals as $journal) {
+        foreach ($journals->items() as $journal) {
             $kasDetail = $journal->details->first(function ($detail) {
                 return $detail->chartOfAccount?->accountType?->name === 'ASET';
             });
@@ -76,6 +88,7 @@ class JournalController extends Controller
         }
 
         return view('pages.menus.bendahara.journals.index', [
+            'journals' => $journals,
             'groupedJournals' => $groupedJournals,
             'periods' => $periods,
             'subPeriods' => $subPeriods, // ⬅️ tambahan

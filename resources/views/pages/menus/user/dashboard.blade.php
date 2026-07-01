@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
+@section('title', 'Beranda Pengguna Umum')
+
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Dashboard Pengguna Umum" />
+    <x-common.page-breadcrumb pageTitle="Beranda Pengguna Umum" pageDescription="Monitoring dan mengelola transaksi yang ada"
+        pageIcon="dashboard" />
 
     <div class="space-y-6">
 
@@ -193,8 +196,7 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('user.coas.index') }}"
-                        class="text-sm text-blue-500 hover:underline">
+                    <a href="{{ route('user.coas.index') }}" class="text-sm text-blue-500 hover:underline">
                         Lihat Semua
                     </a>
                 </div>

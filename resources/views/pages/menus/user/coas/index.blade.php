@@ -11,7 +11,7 @@
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-danger-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
@@ -24,13 +24,17 @@
         </div>
     @endif
 
+    @php
+        use Illuminate\Support\Str;
+    @endphp
+
     <x-core.basic-tables.core-table>
         {{-- SLOT search --}}
         <x-slot name="search">
             <x-form.input id="searchId" name="name" placeholder="Cari berdasarkan kode atau nama COA..." startIconSearch
                 endIconSearch />
         </x-slot>
-        
+
 
         <x-slot name="actions">
             <div class="flex gap-3">
@@ -60,8 +64,16 @@
                             {{ $type }}
                         </h2>
 
-                        <button onclick="toggleGroup('{{ $slug }}')" class="text-xs text-blue-500 hover:underline">
-                            Sembunyikan
+                        <button onclick="toggleGroup('{{ $slug }}', this)"
+                            class="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 underline">
+
+                            <span>Sembunyikan</span>
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-4 w-4 transition-transform duration-200 rotate-180" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
                         </button>
                     </div>
 
@@ -86,16 +98,74 @@
 
     {{-- JS --}}
     <script>
-        function toggleGroup(id) {
+        // TOGGLE GROUP
+        function toggleGroup(id, button) {
             const el = document.getElementById('group-' + id);
+
             if (!el) return;
+
             el.classList.toggle('hidden');
+
+            const text = button.querySelector('span');
+            const icon = button.querySelector('svg');
+
+            if (el.classList.contains('hidden')) {
+                text.textContent = 'Tampilkan';
+                icon.classList.remove('rotate-180');
+            } else {
+                text.textContent = 'Sembunyikan';
+                icon.classList.add('rotate-180');
+            }
         }
 
-        function toggleNode(id) {
-            const el = document.getElementById('node-' + id);
-            if (!el) return;
-            el.classList.toggle('hidden');
+        // TOGGLE ALL GROUPS
+        let allGroupsOpened = true;
+
+        function toggleAllGroups(button) {
+
+            const groups = document.querySelectorAll('[id^="group-"]');
+
+            const text = button.querySelector('span');
+            const icon = button.querySelector('svg');
+
+            if (allGroupsOpened) {
+
+                groups.forEach(group => {
+                    group.classList.add('hidden');
+                });
+
+                document.querySelectorAll('[onclick^="toggleGroup"]').forEach(btn => {
+
+                    const span = btn.querySelector('span');
+                    const svg = btn.querySelector('svg');
+
+                    if (span) span.textContent = 'Tampilkan';
+                    if (svg) svg.classList.remove('rotate-180');
+                });
+
+                text.textContent = 'Tampilkan Semua';
+                icon.classList.remove('rotate-180');
+
+            } else {
+
+                groups.forEach(group => {
+                    group.classList.remove('hidden');
+                });
+
+                document.querySelectorAll('[onclick^="toggleGroup"]').forEach(btn => {
+
+                    const span = btn.querySelector('span');
+                    const svg = btn.querySelector('svg');
+
+                    if (span) span.textContent = 'Sembunyikan';
+                    if (svg) svg.classList.add('rotate-180');
+                });
+
+                text.textContent = 'Sembunyikan Semua';
+                icon.classList.add('rotate-180');
+            }
+
+            allGroupsOpened = !allGroupsOpened;
         }
 
         // SEARCH

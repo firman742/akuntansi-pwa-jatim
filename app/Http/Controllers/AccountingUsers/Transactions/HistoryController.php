@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\AccountingUsers;
+namespace App\Http\Controllers\AccountingUsers\Transactions;
 
-use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class HistoryController extends Controller
@@ -19,6 +19,7 @@ class HistoryController extends Controller
      */
     public function index(Request $request)
     {
+        $userId = Auth::id();
         $query = Transaction::with([
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
@@ -49,6 +50,7 @@ class HistoryController extends Controller
 
         // ================= ORDER =================
         $transactions = $query
+            ->where('created_by', $userId)
             ->orderBy('transaction_date', 'desc')
             ->get();
 
@@ -62,8 +64,6 @@ class HistoryController extends Controller
                 ->get();
         }
 
-
-        // dd($transactions);
         return view('pages.menus.user.histories.index', compact(
             'transactions',
             'periods',

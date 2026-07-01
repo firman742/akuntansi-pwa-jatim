@@ -4,7 +4,9 @@
 
 @section('content')
 
-    <x-common.page-breadcrumb pageTitle="Detail Pengajuan Penambahan Saldo" />
+    <x-common.page-breadcrumb defaultTitle="Detail Pengajuan Penambahan Saldo " pageTitle="Detail Pengajuan Penambahan Saldo"
+        pageDescription="Monitoring dan kelola penambahan saldo yang diajukan oleh pengguna" pageIcon="book"
+        parentTitle="Pengajuan penambahan saldo" :parentRoute="route('bendahara.requests.balances.index')" currentTitle="Detail" />
 
     @php
         $balanceRequest->status = strtoupper($balanceRequest->status);
@@ -16,14 +18,14 @@
         selectedSourceCoa: '',
     
         sourceCoas: @js(
-            $sourceCoas->map(
-                fn($item) => [
-                    'id' => $item->id,
-                    'name' => $item->coa_name,
-                    'balance' => $item->current_balance,
-                ],
-            ),
-        ),
+    $sourceCoas->map(
+        fn($item) => [
+            'id' => $item->id,
+            'name' => $item->coa_name,
+            'balance' => $item->current_balance,
+        ],
+    ),
+),
     
         get selectedCoa() {
             return this.sourceCoas.find(

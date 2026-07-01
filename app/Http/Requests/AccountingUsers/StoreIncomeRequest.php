@@ -22,29 +22,39 @@ class StoreIncomeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'period_id'        => 'required|exists:periods,id',
-            'sub_period_id'    => 'required|exists:sub_periods,id',
+            'period_id' => 'required|exists:periods,id',
+            'sub_period_id' => 'required|exists:sub_periods,id',
             'transaction_date' => 'required|date',
-            'cash_coa_id'      => 'required|exists:chart_of_accounts,id',
-            'description'      => 'nullable|string|max:255',
+            'user_account_balance_id' => 'required|exists:user_account_balances,id',
+            'income_coa_id' => 'required|exists:chart_of_accounts,id',
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'nullable|string|max:255',
+        ];
+    }
 
-            // Income lines
-            'income_lines'                => 'required|array|min:1',
-            'income_lines.*.coa_id'      => 'required|exists:chart_of_accounts,id',
-            'income_lines.*.amount'      => 'required|numeric|min:1',
-            'income_lines.*.description' => 'nullable|string|max:255',
-
-            // Tax lines - Gunakan '*' agar validasi spesifik ke elemen array
-            'tax_lines'            => 'nullable|array',
-            'tax_lines.*.tax_id'   => 'required|exists:taxes,id',
-            'tax_lines.*.coa_id'   => 'required|exists:chart_of_accounts,id',
-            'tax_lines.*.amount'   => 'required|numeric|min:0',
-
-            // Interest lines
-            'interest_lines'               => 'nullable|array',
-            'interest_lines.*.interest_id' => 'required|exists:interests,id', // Langsung required karena berada di dalam array yang divalidasi
-            // 'interest_lines.*.coa_id'      => 'required|exists:chart_of_accounts,id',
-            'interest_lines.*.amount'      => 'required|numeric|min:0',
+    /**
+     * Get custom error messages for validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'period_id.required' => 'Periode harus dipilih.',
+            'period_id.exists' => 'Periode yang dipilih tidak valid.',
+            'sub_period_id.required' => 'Sub Periode harus dipilih.',
+            'sub_period_id.exists' => 'Sub Periode yang dipilih tidak valid.',
+            'transaction_date.required' => 'Tanggal transaksi harus diisi.',
+            'transaction_date.date' => 'Tanggal transaksi tidak valid.',
+            'user_account_balance_id.required' => 'Akun kas harus dipilih.',
+            'user_account_balance_id.exists' => 'Akun kas yang dipilih tidak valid.',
+            'income_coa_id.required' => 'Akun pendapatan harus dipilih.',
+            'income_coa_id.exists' => 'Akun pendapatan yang dipilih tidak valid.',
+            'amount.required' => 'Jumlah harus diisi.',
+            'amount.numeric' => 'Jumlah harus berupa angka.',
+            'amount.min' => 'Jumlah harus lebih besar dari 0.',
+            'description.string' => 'Deskripsi harus berupa teks.',
+            'description.max' => 'Deskripsi maksimal 255 karakter.',
         ];
     }
 }

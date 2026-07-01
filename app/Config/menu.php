@@ -33,16 +33,16 @@ class menu
                 '/superadmin/dashboard'
             ),
             self::item(
-                'Pengguna',
-                'user-profile',
-                '/superadmin/users',
-                ['superadmin/users*'],
-            ),
-            self::item(
                 'Peran & Izin',
                 'roles',
                 '/superadmin/roles',
                 ['superadmin/roles*'],
+            ),
+            self::item(
+                'Pengguna',
+                'user-profile',
+                '/superadmin/users',
+                ['superadmin/users*'],
             ),
             self::item(
                 'Log Aktifitas',
@@ -155,17 +155,17 @@ class menu
                 'name' => 'Manajemen Dana',
                 'icon' => 'transaction',
                 'active_on' => [
-                    // 'bendahara/budget-allocations*',
+                    'bendahara/budget-allocations*',
                     'bendahara/user-account-balances*',
                     'bendahara/requests/balances*',
                 ],
                 'subItems' => [
-                    // self::item(
-                    //     'Alokasi Dana',
-                    //     null,
-                    //     '/bendahara/budget-allocations',
-                    //     ['bendahara/budget-allocations*']
-                    // ),
+                    self::item(
+                        'Alokasi Dana Akun',
+                        null,
+                        '/bendahara/budget-allocations',
+                        ['bendahara/budget-allocations*']
+                    ),
                     self::item(
                         'Dana Operasional Pengguna',
                         null,
@@ -256,28 +256,21 @@ class menu
                 'name' => 'Transaksi',
                 'icon' => 'transaction',
                 'active_on' => [
-                    // 'user/transactions/draft*',
-                    'user/transactions/create*',
-                    'user/transactions/histories*'
+                    'user/transactions/incomes/create*',
+                    'user/transactions/expenses/create*'
                 ],
                 'subItems' => [
-                    // self::item(
-                    //     'Darft Transaksi',
-                    //     null,
-                    //     '/user/trnsaction-drafs',
-                    //     ['user/trnsaction-drafs*']
-                    // ),
                     self::item(
-                        'Buat Transaksi',
+                        'Transaksi Penerimaan',
                         null,
-                        '/user/transactions/create',
-                        ['user/transactions/create*']
+                        '/user/transactions/incomes/create',
+                        ['user/transactions/incomes/create*']
                     ),
                     self::item(
-                        'Riwayat Transaksi',
+                        'Transaksi Pengeluaran',
                         null,
-                        '/user/transactions/histories',
-                        ['user/transactions/histories*']
+                        '/user/transactions/expenses/create',
+                        ['user/transactions/expenses/create*']
                     ),
                 ]
             ],
@@ -301,14 +294,14 @@ class menu
                         '/user/requests/balances',
                         ['user/requests/balances*']
                     ),
-                    // self::item(
-                    //     'Riwayat Pengajuan',
-                    //     null,
-                    //     '/user/transactions/histories',
-                    //     ['user/transactions/histories*']
-                    // ),
                 ]
             ],
+            self::item(
+                'Riwayat Transaksi',
+                'report',
+                '/user/transactions/histories',
+                ['user/transactions/histories*']
+            ),
 
         ];
     }

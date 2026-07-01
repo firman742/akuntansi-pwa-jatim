@@ -2,6 +2,8 @@
 
 namespace App\Services\Bendahara;
 
+use App\Enums\ActivityLogAction;
+use App\Enums\NormalBalanceEnum;
 use App\Models\BudgetAllocation;
 use App\Models\ChartOfAccount;
 use App\Models\CoaBalance;
@@ -9,22 +11,24 @@ use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\Period;
 use App\Models\SubPeriod;
+use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class BudgetAllocationService
+class BudgetAllocationService extends BaseService
 {
     /**
      * Get data for the index page, including periods, sub-periods, and budget Allocation.
      *
      * @param  string|null  $periodId
      * @param  string|null  $subPeriodId
+     * @param  string|null  $search
      * @return array
      */
-    public function getIndexData(?string $periodId, ?string $subPeriodId): array
+    public function getIndexData(?string $periodId, ?string $subPeriodId, ?string $search = null): array
     {
         $periods = Period::where('is_closed', false)->get();
 
@@ -58,7 +62,21 @@ class BudgetAllocationService
         }
 
         $budgetAllocations = $query
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($query) use ($search) {
+                    $query->whereHas('fromChartOfAccount', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('toChartOfAccount', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
+                    })
+                    ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
             ->latest()
+            ->limit(20)
             ->get()
             ->map(function ($item) {
                 return [
@@ -91,13 +109,13 @@ class BudgetAllocationService
     public function getCreateData(): array
     {
         $periods = Period::where('is_closed', false)->get();
-        $coaParents = ChartOfAccount::whereHas('children')
+        $coaDebits = ChartOfAccount::where('normal_balance', NormalBalanceEnum::DEBIT->value)
             ->orderBy('code')
             ->get();
-
+            
         return [
             'periods' => $periods,
-            'coaParents' => $coaParents,
+            'coaDebits' => $coaDebits,
         ];
     }
 
@@ -261,6 +279,29 @@ class BudgetAllocationService
                 'credit' => $amount,
                 'description' => 'Credit alokasi dana',
             ]);
+
+            /**
+             * 11. ACTIVITY LOG
+             * mencatat aktivitas distribusi saldo untuk audit trail
+             */
+            $this->logger->log(
+                action: ActivityLogAction::CREATED->value,
+                module: "BUDGET_ALLOCATION",
+                subject: $allocation,
+                description: "Distribusi saldo dari akun {$fromCoa->name} ke akun {$toCoa->name} sebesar Rp. {$amount} berhasil dibuat.",
+                old: [],
+                new: $allocation->toArray(),
+                additionalData: [
+                    'from_chart_of_account_id' => $fromCoa->id,
+                    'to_chart_of_account_id' => $toCoa->id,
+                    'period_id' => $data['period_id'],
+                    'sub_period_id' => $data['sub_period_id'] ?? null,
+                    'amount' => $amount,
+                    'allocation_type' => $data['allocation_type'],
+                    'description' => $data['description'] ?? null,
+                    'journal_id' => $journal->id,
+                ]
+            );
 
             return $allocation;
         });

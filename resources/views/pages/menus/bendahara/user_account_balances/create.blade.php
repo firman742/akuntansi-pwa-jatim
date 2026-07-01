@@ -1,10 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Pembagian Saldo ke Pengguna')
+@section('title', 'Alokasikan Dana Operasional Pengguna')
 
 @section('content')
 
-    <x-common.page-breadcrumb pageTitle="Pembagian Saldo ke Pengguna" />
+    <x-common.page-breadcrumb defaultTitle="Dana Operasional Pengguna" pageTitle="Alokasikan Dana Operasional Pengguna"
+        pageDescription="Alokasikan Dana Operasional Ke Pengguna" pageIcon="transaction" parentTitle="Dana Operational Pengguna"
+        :parentRoute="route('user.user-account-balances.index')" currentTitle="Alokasikan" />
 
     {{-- ERROR --}}
     @if ($errors->any())

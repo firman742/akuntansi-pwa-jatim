@@ -4,72 +4,60 @@
 
 @section('content')
 
-    <x-common.page-breadcrumb pageTitle="Buat Transaksi Pengeluaran" />
+    <x-common.page-breadcrumb defaultTitle="Buat Transaksi Pengeluaran" pageTitle="Transaksi Pengeluaran"
+        pageDescription="Membuat Transaksi pengeluaran" pageIcon="transaction" />
 
-    <div x-data="transactionForm()" class="max-w-5xl mx-auto pb-20">
-        <form method="POST" action="{{ route('user.transactions.store') }}">
+    {{-- <pre>
+    {{ print_r(session()->all(), true) }}
+    </pre> --}}
+    @if ($errors->any())
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li class="text-dark-500">{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        </div>
+    @endif
+
+
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+        </div>
+    @endif
+
+    <div x-data="transactionForm()" x-init="init()" class="max-w-5xl mx-auto pb-20">
+        <form method="POST" action="{{ route('user.transactions.expenses.store') }}">
             @csrf
 
-            {{-- Alert System --}}
-            @if (session('success') || $errors->any())
-                <div class="mb-6 space-y-2">
-                    @if (session('success'))
-                        <x-ui.alert variant="success" title="Sukses" :dismissible="true">
-                            {{ session('success') }}
-                        </x-ui.alert>
-                    @endif
-                    @if ($errors->any())
-                        <x-ui.alert variant="error" title="Terjadi Kesalahan" :dismissible="true">
-                            <ul class="list-disc list-inside text-sm">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </x-ui.alert>
-                    @endif
-                </div>
-            @endif
-
             <div class="grid md:grid-cols-3 gap-8 items-start">
-
                 {{-- FORM --}}
                 <div class="md:col-span-2 space-y-6">
-
                     <x-common.component-card title="Informasi Utama">
 
                         <div class="grid md:grid-cols-2 gap-5">
                             <div class="space-y-1">
-                                <label class="text-xs font-bold uppercase text-gray-500 tracking-wider">Sub Periode</label>
-                                <select name="sub_period_id" x-model="sub_period_id"
-                                    class="w-full border rounded-lg focus:ring-primary focus:border-primary px-3 py-2.5 text-sm">
+                                <x-form.select id="sub_period_id" name="sub_period_id" label="Sub Periode"
+                                    placeholder="Pilih Sub Periode" x-model="sub_period_id" required>
                                     @foreach ($subPeriods as $s)
                                         <option value="{{ $s->id }}">{{ $s->name }}</option>
                                     @endforeach
-                                </select>
+                                </x-form.select>
                                 <input type="hidden" name="period_id" value="{{ $selectedPeriodId }}">
                             </div>
 
                             <div>
-                                <label class="text-xs font-bold">
-                                    Tanggal
-                                </label>
-                                <x-form.date-picker id="transaction_date" name="transaction_date"
+                                <x-form.date-picker id="transaction_date" name="transaction_date" label="Tanggal"
                                     placeholder="Tentukan Tanggal Transaksi" defaultDate="{{ now()->format('Y-m-d') }}" />
                             </div>
                         </div>
                         <div class="grid md:grid-cols-1 gap-5">
                             <div>
-                                <label class="text-xs font-bold">
-                                    Pilih Kas
-                                </label>
-
-                                <select name="user_account_balance_id" x-model="selectedBalance" @change="onCashChange"
-                                    class="w-full border rounded-lg px-3 py-2">
-
-                                    <option value="">
-                                        -- Pilih Kas --
-                                    </option>
-
+                                <x-form.select name="user_account_balance_id" label="Pilih Kas"
+                                    placeholder="-- Pilih Kas --" x-model="selectedBalance" @change="onCashChange" required>
                                     @foreach ($cashCoas as $cash)
                                         <option value="{{ $cash['user_account_balance_id'] }}"
                                             data-balance="{{ $cash['remaining_balance'] }}">
@@ -81,25 +69,18 @@
                                             (Rp {{ number_format($cash['remaining_balance']) }})
                                         </option>
                                     @endforeach
-                                </select>
-
+                                </x-form.select>
                                 <div class="mt-2 text-xs text-gray-500">
                                     Sisa Saldo:
                                     <span class="font-bold text-green-600" x-text="formatRupiah(balance)">
                                     </span>
                                 </div>
                             </div>
-
                         </div>
 
                         <div class="mt-5">
-
-                            <label class="text-xs font-bold">
-                                Keterangan
-                            </label>
-
-                            <textarea name="description" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
-
+                            <x-form.text-area name="description" label="Deskripsi"
+                                placeholder="Masukkan deskripsi transaksi...." rows="3" required />
                         </div>
 
                     </x-common.component-card>
@@ -114,28 +95,18 @@
                                 <div class="grid md:grid-cols-12 gap-3">
 
                                     <div class="md:col-span-7">
-
-                                        <select :name="`expense_lines[${index}][coa_id]`"
-                                            class="w-full border rounded-lg px-3 py-2">
-
+                                        <x-form.select name="" placeholder="-- Pilih Akun Keluar --" x-bind:name="`expense_lines[${index}][coa_id]`">
                                             @foreach ($expenseCoas as $coa)
                                                 <option value="{{ $coa->id }}">
-
-                                                    {{ $coa->code }}
-                                                    -
-                                                    {{ $coa->name }}
-
+                                                    {{ $coa->code }} - {{ $coa->name }}
                                                 </option>
                                             @endforeach
-
-                                        </select>
-
+                                        </x-form.select>
                                     </div>
 
                                     <div class="md:col-span-4">
-
-                                        <input type="text" @input="onAmountInput($event, index)"
-                                            class="w-full border rounded-lg px-3 py-2 text-right" placeholder="Rp 0">
+                                        <x-form.input name="" type="text" @input="onAmountInput($event, index)"
+                                            placeholder="Rp 0" />
 
                                         <input type="hidden" :name="`expense_lines[${index}][amount]`"
                                             x-model="line.amount">
@@ -143,12 +114,9 @@
                                     </div>
 
                                     <div class="md:col-span-1">
-
                                         <button type="button" @click="removeLine(index)"
                                             class="w-full border rounded-lg py-2 text-red-500">
-
                                             ✕
-
                                         </button>
 
                                     </div>
@@ -171,31 +139,24 @@
 
                 {{-- SUMMARY --}}
                 <div>
+                    <div class="bg-gray-800 dark:bg-gray-700 rounded-2xl p-6 text-white dark:text-gray-200 shadow-lg">
 
-                    <div class="bg-gray-900 rounded-2xl p-6 text-white">
-
-                        <div class="text-sm uppercase text-gray-400">
+                        <div class="text-sm uppercase text-gray-400 dark:text-gray-300 font-semibold tracking-wide">
                             Total Pengeluaran
                         </div>
 
-                        <div class="mt-3 text-3xl font-black">
-
+                        <div class="mt-4 text-4xl font-extrabold text-primary dark:text-primary-light">
                             Rp
                             <span x-text="formatRupiah(total)">
                             </span>
-
                         </div>
 
-                        <button type="submit" class="w-full mt-6 bg-primary py-3 rounded-xl font-bold">
-
+                        <button type="submit"
+                            class="w-full mt-6 bg-primary dark:bg-primary-dark hover:bg-primary-light dark:hover:bg-primary py-3 rounded-xl font-bold text-white dark:text-gray-100 border-2 border-white dark:border-gray-500 transition duration-300 ease-in-out">
                             Simpan Transaksi
-
                         </button>
-
                     </div>
-
                 </div>
-
             </div>
 
         </form>
@@ -211,6 +172,24 @@
                 lines: [{
                     amount: 0
                 }],
+
+                init() {
+                    this.$nextTick(() => {
+                        const select = document.querySelector(
+                            '[name="user_account_balance_id"]'
+                        );
+
+                        if (select && select.selectedOptions.length) {
+
+                            this.balance = Number(
+                                select.selectedOptions[0].dataset.balance
+                            );
+
+                        }
+
+                    });
+
+                },
 
                 formatRupiah(v) {
                     return new Intl.NumberFormat(

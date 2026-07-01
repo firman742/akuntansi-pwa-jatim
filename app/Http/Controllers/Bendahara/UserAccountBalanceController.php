@@ -9,6 +9,7 @@ use App\Services\Bendahara\UserAccountBalanceService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class UserAccountBalanceController extends Controller
@@ -17,17 +18,18 @@ class UserAccountBalanceController extends Controller
      * Display a listing of the resource.
      * 
      * @param UserAccountBalanceService $service
+     * @param Request $request
      * @return View
      */
-    public function index(UserAccountBalanceService $service): View
+    public function index(UserAccountBalanceService $service, Request $request): View
     {
-        $periodId = request('period_id');
-        $subPeriodId = request('sub_period_id');
+        $periodId = $request->query('period_id', null);
+        $subPeriodId = $request->query('sub_period_id', null);
+        $search = $request->query('search', null);
 
-        $data = $service->getIndexData($periodId, $subPeriodId);
+        $data = $service->getIndexData($periodId, $subPeriodId, $search);
 
-        return view(
-            'pages.menus.bendahara.user_account_balances.index',
+        return view('pages.menus.bendahara.user_account_balances.index',
             array_merge($data, [
                 'periodId' => $periodId,
                 'subPeriodId' => $subPeriodId,
@@ -43,8 +45,7 @@ class UserAccountBalanceController extends Controller
      */
     public function create(UserAccountBalanceService $service): View
     {
-        return view(
-            'pages.menus.bendahara.user_account_balances.create',
+        return view('pages.menus.bendahara.user_account_balances.create',
             $service->getCreateData()
         );
     }
@@ -62,10 +63,14 @@ class UserAccountBalanceController extends Controller
         try {
             $service->store($request->validated());
 
-            return redirect()->route('bendahara.user-account-balances.index')
-                ->with('success', 'Opening balance berhasil disimpan.');
+            return redirect()
+                ->route('bendahara.user-account-balances.index')
+                ->with('success', 'Dana Operasional Pengguna Berhasil dialokasikan.');
+
         } catch (Exception $e) {
-            return back()->withErrors(['error' => 'Gagal simpan: ' . $e->getMessage()])->withInput();
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Gagal mengalokasikan dana operasional: ' . $e->getMessage()]);
         }
     }
 

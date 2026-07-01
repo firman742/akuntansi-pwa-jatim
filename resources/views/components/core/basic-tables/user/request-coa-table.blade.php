@@ -81,10 +81,16 @@
 
     statusBadge(status) {
         return {
-            pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400',
-            approved: 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400',
-            rejected: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
-        } [status] ?? 'bg-gray-100 text-gray-700';
+            pending: 'bg-yellow-50 text-yellow-700 border border-yellow-500 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500',
+            approved: 'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500',
+            rejected: 'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500',
+        } [status] ?? 'bg-gray-50 text-gray-700 border border-gray-500 dark:bg-gray-500/15 dark:text-gray-400 dark:border-gray-500';
+    },
+
+    normalBalanceBadge(balance) {
+        return balance === 'DEBIT' ?
+            'bg-blue-50 text-blue-700 border border-blue-500 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500' :
+            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500';
     },
 
     formatDate(date) {
@@ -110,142 +116,132 @@
         }
     }
 }">
-    <div
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
         <!-- Table -->
         <div class="max-w-full overflow-x-auto">
-            <table class="w-full border-collapse">
-                <thead>
-                    <tr
-                        class="bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-600 border-b border-gray-200">
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+            <table class="w-full">
+                <thead
+                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+                    <tr>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             No
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Kode COA
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Nama COA
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Nama Pengaju
+                        </th>
+
+
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Tipe Akun
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Parent COA
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Saldo Normal
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Status
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Tanggal Pengajuan
                         </th>
 
-                        <th class="px-6 py-3 text-start font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
                             Action
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Jika data kosong -->
-                    <template x-if="paginatedData.length === 0">
-                        <tr>
-                            <td colspan="8" class="px-6 py-10 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
-                                    </svg>
-
-                                    <p class="text-sm font-medium text-gray-500">
-                                        Belum ada data coa yang diajukan
-                                    </p>
-
-                                    <p class="text-xs text-gray-400">
-                                        Data yang tersedia akan tampil di tabel ini
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                    </template>
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
                             <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
                                 class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
 
                                 {{-- No --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
                                         x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
                                     </span>
                                 </td>
 
                                 {{-- Kode COA --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="font-medium text-gray-700 dark:text-gray-300"
-                                        x-text="row.proposed_code ?? 'Belum Ada'">
-                                    </span>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.proposed_code ?? 'kosong'"></span>
                                 </td>
 
                                 {{-- Nama COA --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span x-text="row.proposed_name"></span>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="row.proposed_name"></span>
+                                </td>
+
+                                {{-- Nama Pengaju --}}
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="row.requester.name"></span>
                                 </td>
 
                                 {{-- Account Type --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span x-text="row.account_type?.name ?? '-'"></span>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="row.account_type?.name ?? '-'"></span>
                                 </td>
 
                                 {{-- Parent COA --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span x-text="row.parent_coa?.name ?? '-'"></span>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="row.parent_coa?.name ?? '-'"></span>
                                 </td>
 
                                 {{-- Normal Balance --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium"
-                                        :class="row.normal_balance === 'DEBIT' ?
-                                            'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400' :
-                                            'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400'">
-
-                                        <span x-text="row.normal_balance"></span>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium" 
+                                        :class="normalBalanceBadge(row.normal_balance)" x-text="row.normal_balance">
                                     </span>
                                 </td>
 
                                 {{-- Status --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium" 
                                         :class="statusBadge(row.status)" x-text="row.status_label">
                                     </span>
                                 </td>
 
                                 {{-- Created At --}}
-                                <td class="px-4 py-3.5 sm:px-6">
-                                    <span x-text="formatDate(row.created_at)"></span>
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-light text-gray-700 dark:text-gray-400" x-text="formatDate(row.created_at)"></span>
                                 </td>
 
                                 <!-- Action -->
-                                <td class="px-4 sm:px-3 py-2.5">
+                                <td class="px-4 sm:px-6 py-3.5">
                                     <div class="flex items-center gap-2">
-
                                         <!-- Show -->
                                         <a :href="showUrl.replace(':id', row.id)"
                                             class="flex h-8 w-8 items-center justify-center rounded-md
-                                                    text-green-600 hover:bg-green-50
-                                                    dark:text-green-400 dark:hover:bg-green-500/10"
+                                        text-blue-500 hover:bg-green-50
+                                        dark:text-blue-400 dark:hover:bg-green-500/10"
                                             title="Lihat Detail Pengajuan">
-                                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                            <svg class="w-6 h-6 text-green-800 dark:text-white" aria-hidden="true"
                                                 xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 fill="none" viewBox="0 0 24 24">
                                                 <path stroke="currentColor" stroke-width="2"
@@ -260,6 +256,28 @@
 
                             </tr>
                         </template>
+                    </template>
+                    {{-- Jika data kosong --}}
+                    <template x-if="paginatedData.length === 0">
+                        <tr>
+                            <td colspan="11" class="px-6 py-10 text-center">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                                    </svg>
+
+                                    <p class="text-sm font-medium text-gray-500">
+                                        Belum ada data pengajuan COA
+                                    </p>
+
+                                    <p class="text-xs text-gray-400">
+                                        Data yang tersedia akan tampil di tabel ini
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
                     </template>
                 </tbody>
 

@@ -65,6 +65,18 @@
                         </option>
                     @endforeach
                 </x-form.select>
+
+                <x-form.select 
+                    id="filter_coa" 
+                    name="coa_id" 
+                    label="Akun COA"
+                    placeholder="Pilih Akun COA">
+                    @foreach ($coas as $coa)
+                        <option value="{{ $coa->id }}" @selected(request('sub_period_id') == $coa->id)>
+                            {{ $coa->code }} - {{ $coa->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
             </x-slot>
 
             {{-- SLOT actions --}}

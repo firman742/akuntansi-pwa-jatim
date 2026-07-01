@@ -20,9 +20,10 @@ class UserAccountBalanceService
      *
      * @param  string|null  $periodId
      * @param  string|null  $subPeriodId
+     * @param  string|null  $search
      * @return array
      */
-    public function getIndexData(?string $periodId, ?string $subPeriodId): array
+    public function getIndexData(?string $periodId, ?string $subPeriodId, ?string $search = null): array
     {
         $periods = Period::where('is_closed', false)->get();
         $subPeriods = collect();
@@ -40,6 +41,14 @@ class UserAccountBalanceService
             })
             ->when($subPeriodId, function ($q) use ($subPeriodId) {
                 $q->where('user_account_balances.sub_period_id', $subPeriodId);
+            })
+            ->when($search, function ($q) use ($search) {
+                $q->whereHas('userAccount.user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })->orWhereHas('coaBalance.chartOfAccount', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
             })
             ->orderBy('sub_periods.start_date')
             ->orderBy('user_account_balances.created_at', 'desc')

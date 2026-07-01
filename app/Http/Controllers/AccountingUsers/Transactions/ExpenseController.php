@@ -1,25 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\AccountingUsers;
+namespace App\Http\Controllers\AccountingUsers\Transactions;
 
 use App\Enums\NormalBalanceEnum;
-use App\Enums\TransactionType;
+use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AccountingUsers\StoreTransactionRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Period;
 use App\Models\SubPeriod;
-use App\Models\Transaction;
 use App\Models\UserAccountBalance;
 use App\Services\AccountingUsers\TransactionService;
 use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-class TransactionController extends Controller
+class ExpenseController extends Controller
 {
     /**
      * Show the form for creating a new resource.
@@ -52,12 +50,12 @@ class TransactionController extends Controller
 
         $selectedSubPeriodId = request('sub_period_id')
             ?? $subPeriods->first()?->id;
-        
+
 
         // ── Kas User (Distribusi Bendahara) ────────────────
         $cashCoas = UserAccountBalance::query()
             ->with([
-                'userAccount.coa'
+                'userAccount.coa',
             ])
             ->whereHas('userAccount', function ($q) use ($userId) {
                 $q->where('user_id', $userId);
@@ -66,6 +64,10 @@ class TransactionController extends Controller
             ->where('sub_period_id', $selectedSubPeriodId)
             ->where('remaining_balance', '>', 0)
             ->get()
+            ->sortBy(function ($balance) {
+                return $balance->userAccount->coa->code;
+            })
+            ->values()
             ->map(function ($balance) {
                 return [
                     'user_account_balance_id' => $balance->id,
@@ -84,7 +86,7 @@ class TransactionController extends Controller
             ->orderBy('code')
             ->get();
 
-        return view('pages.menus.user.transactions.create', compact(
+        return view('pages.menus.user.transactions.create-expense', compact(
             'cashCoas',
             'expenseCoas',
             'subPeriods',
@@ -95,7 +97,7 @@ class TransactionController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
+     * 
      * @param TransactionService $service
      * @param StoreTransactionRequest $request
      * @return RedirectResponse
@@ -107,58 +109,36 @@ class TransactionController extends Controller
             $service->handleExpense($request->validated());
 
             return redirect()
-                ->route('user.histories.index')
-                ->with('success', 'Transaksi berhasil disimpan');
+                ->route('user.transactions.expenses.create')
+                ->with('success', 'Transaksi Pengeluaran berhasil disimpan');
         } catch (Exception $e) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi pengeluaran: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param string $id
-     * @return View
-     */
-    public function show(string $id): View
+    public function getCashBalance(Request $request)
     {
-        $transaction = Transaction::where(
-            'transaction_type',
-            TransactionType::EXPENSE->value
-        )
-            ->findOrFail($id);
+        $coaId       = $request->coa_id;
+        $periodId    = $request->period_id;
+        $subPeriodId = $request->sub_period_id;
 
-        $transaction->load([
-            'creator:id,name',
-            'period:id,name',
-            'subPeriod:id,name',
-            'transactionLines.chartOfAccount:id,code,name,normal_balance',
-            'journal.details.coa',
-        ]);
+        if (!$coaId || !$periodId) {
+            return response()->json([
+                'balance' => 0
+            ]);
+        }
 
-        return view(
-            'pages.menus.user.histories.show',
-            compact('transaction')
+        $balance = CashBalanceHelper::getBalance(
+            $coaId,
+            $periodId,
+            $subPeriodId
         );
-    }
-
-    /**
-     * Get cash balance for a specific user account balance.
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function getCashBalance(Request $request): JsonResponse
-    {
-        $balance = UserAccountBalance::query()
-            ->where('id', $request->user_account_balance_id)
-            ->value('remaining_balance');
 
         return response()->json([
-            'balance' => $balance ?? 0
+            'balance' => $balance
         ]);
     }
 }

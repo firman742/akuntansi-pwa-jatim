@@ -1,79 +1,48 @@
 @extends('layouts.app')
 
-@section('title', 'Pembagian Saldo ke Pengguna')
+@section('title', 'Dana Operasional Pengguna')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Pembagian Saldo ke Pengguna" />
-
-    {{-- FILTER & ACTION CARD --}}
-    <div class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <form method="GET" class="space-y-6">
-
-            {{-- FILTER SECTION --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-
-                {{-- PERIOD --}}
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Periode
-                    </label>
-                    <select name="period_id" id="filter_period"
-                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-                               focus:border-primary focus:bg-white focus:ring-primary transition">
-                        <option value="">Semua</option>
-                        @foreach ($periods as $period)
-                            <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
-                                {{ $period->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- SUB PERIOD --}}
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Sub Periode
-                    </label>
-                    <select name="sub_period_id" id="filter_sub_period"
-                        class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-2.5 text-sm
-                               focus:border-primary focus:bg-white focus:ring-primary transition">
-                        <option value="">Semua</option>
-                        @foreach ($subPeriods as $sub)
-                            <option value="{{ $sub->id }}" @selected(request('sub_period_id') == $sub->id)>
-                                {{ $sub->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- FILTER ACTION --}}
-                <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
-                    <x-ui.button type="submit" variant="primary"
-                        class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
-                        Tampilkan
-                    </x-ui.button>
-
-                    <a href="{{ route('bendahara.budget-allocations.index') }}" class="flex-1">
-                        <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
-                            Reset
-                        </x-ui.button>
-                    </a>
-                </div>
-            </div>
-        </form>
-    </div>
+    <x-common.page-breadcrumb defaultTitle="Dana Operasional Pengguna" pageTitle="Dana Operasional Pengguna"
+        pageDescription="Mengalokasikan Dana Operasional kepada masing-masing pengguna" pageIcon="transaction" />
 
     {{-- TABLE --}}
     <div class="space-y-6">
-        <x-core.basic-tables.core-table title="Pembagian Saldo ke Pengguna" description="Kelola dan monitor pembagian saldo ke masing-masing pengguna.">
-            <x-slot name="actions">
+        <x-core.basic-tables.core-table needFilter>
 
+            {{-- SLOT search --}}
+            <x-slot name="search">
+                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
+                    placeholder="Cari berdasarkan Nama Pengguna..." startIconSearch endIconSearch />
+            </x-slot>
+
+            {{-- SLOT filter --}}
+            <x-slot name="filters">
+                <x-form.select id="filter_period" name="period_id" label="Periode" placeholder="Pilih Periode">
+                    @foreach ($periods as $period)
+                        <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
+                            {{ $period->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+
+                <x-form.select id="filter_sub_period" name="sub_period_id" label="Sub Periode"
+                    placeholder="Pilih Sub Periode">
+                    @foreach ($subPeriods as $sub)
+                        <option value="{{ $sub->id }}" @selected(request('sub_period_id') == $sub->id)>
+                            {{ $sub->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+            </x-slot>
+
+            {{-- SLOT ACTION --}}
+            <x-slot name="actions">
                 <a href="{{ route('bendahara.user-account-balances.create') }}">
                     <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
-                        + Bagikan Saldo Ke Pengguna
+                        + Alokasikan Dana Ke Pengguna
                     </x-ui.button>
                 </a>
-
             </x-slot>
 
             {{-- TABLE COMPONENT LU --}}
@@ -87,6 +56,8 @@
     <script>
         const periodFilter = document.getElementById('filter_period');
         const subPeriodFilter = document.getElementById('filter_sub_period');
+        const searchInput = document.getElementById('searchId');
+        let timeout = null;
 
         periodFilter.addEventListener('change', async function() {
             let periodId = this.value;
@@ -108,6 +79,22 @@
                     <option value="${sub.id}">${sub.name}</option>
                 `;
             });
+        });
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const searchValue = this.value;
+                const urlParams = new URLSearchParams(window.location.search);
+
+                if (searchValue) {
+                    urlParams.set('search', searchValue);
+                } else {
+                    urlParams.delete('search');
+                }
+
+                window.location.search = urlParams.toString();
+            }, 500);
         });
     </script>
 @endsection

@@ -128,7 +128,8 @@
 
                                 <!-- Status -->
                                 <td class="px-4 sm:px-6 py-3.5 text-center">
-                                    <span class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
+                                    <span
+                                        class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
                                         :class="getStatusClass(row.is_active)" x-text="getStatusLabel(row.is_active)">
                                     </span>
                                 </td>
@@ -262,5 +263,4 @@
             </button>
         </div>
     </div>
-</div>
 </div>

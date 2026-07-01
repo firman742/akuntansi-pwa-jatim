@@ -26,7 +26,8 @@ class UpdateUserRequest extends FormRequest
             'no_telp'   => 'nullable|numeric|max_digits:15',
             'email'     => 'required|email|unique:users,email,' . $this->route('user'),
             'address'   => 'nullable|string',
-            'role'      => 'required|exists:roles,name',
+            'role'      => 'required|array|min:1',
+            'role.*'    => 'exists:roles,name',
         ];
     }
 
@@ -48,7 +49,9 @@ class UpdateUserRequest extends FormRequest
             'no_telp.max_digits' => 'No. Telepon tidak boleh lebih dari 15 digit.',
             'address.string' => 'Alamat harus berupa teks.',
             'role.required' => 'Peran harus dipilih.',
-            'role.exists' => 'Peran yang dipilih tidak valid.',
+            'role.array' => 'Peran harus berupa array.',
+            'role.min' => 'Pilih minimal satu Peran.',
+            'role.*.exists' => 'Peran yang dipilih tidak valid.',
         ];
     }
 }

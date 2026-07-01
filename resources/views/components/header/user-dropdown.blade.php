@@ -1,6 +1,7 @@
 @php
     $name = auth()->user()->name;
     $initials = collect(explode(' ', $name))->map(fn($word) => strtoupper(substr($word, 0, 1)))->take(2)->implode('');
+    $roles = auth()->user()->getRoleNames();
 @endphp
 
 
@@ -45,7 +46,7 @@
                 class="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">{{ auth()->user()->name }}</span>
             <span class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">{{ auth()->user()->email }}</span>
             <span
-                class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">{{ auth()->user()->getRoleNames()->first() }}</span>
+                class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">{{ $roles->count() > 1 ? $roles->join(' & ') : $roles->first() }}</span>
         </div>
 
         <!-- Menu Items -->

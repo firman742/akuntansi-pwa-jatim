@@ -1,19 +1,27 @@
 @extends('layouts.app')
 
-@section('title', 'Distribusi Saldo Manual')
+@section('title', 'Alokasikan Dana Akun')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Distribusi Saldo Manual" />
+<x-common.page-breadcrumb defaultTitle="Alokasikan Dana Akun " pageTitle="Alokasikan Dana Akun"
+        pageDescription="Monitoring dan Alokasi dana akun di sistem" pageIcon="transaction" parentTitle="Alokasi Dana Akun"
+        :parentRoute="route('bendahara.budget-allocations.index')" currentTitle="Alokasi" />
 
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-danger-500">{{ $error }}</li>
                     @endforeach
                 </ul>
             </x-ui.alert>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
         </div>
     @endif
 
@@ -23,32 +31,38 @@
 
             <!-- PERIOD -->
             <div>
-                <label class="text-sm font-medium mb-2 block">Periode</label>
-                <select id="period_id" class="w-full border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                    <option value="">Pilih Periode</option>
-                    @foreach ($periods as $p)
-                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                <x-form.select 
+                    id="period_id" 
+                    name=""
+                    label="Periode" 
+                    placeholder="-- Pilih Periode --">
+                    @foreach ($periods as $period)
+                        <option value="{{ $period->id }}">{{ $period->name }}</option>
                     @endforeach
-                </select>
+                </x-form.select>
             </div>
 
             <!-- SUB PERIOD -->
             <div>
-                <label class="text-sm font-medium mb-2 block">Sub Periode</label>
-                <select id="sub_period_id" class="w-full border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                    <option value="">Pilih Sub Periode</option>
-                </select>
+                <x-form.select 
+                    id="sub_period_id" 
+                    name=""
+                    label="Sub Periode" 
+                    placeholder="-- Pilih Sub Periode --">
+                </x-form.select>
             </div>
 
-            <!-- FROM COA (PARENT ONLY) -->
+            <!-- FROM COA (Akun Kas Debit Only) -->
             <div>
-                <label class="text-sm font-medium mb-2 block">Akun Sumber (Parent COA)</label>
-                <select id="from_coa" class="w-full border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                    <option value="">Pilih COA</option>
-                    @foreach ($coaParents as $coa)
+                <x-form.select 
+                    id="from_coa" 
+                    name=""
+                    label="Akun Sumber (Kas Debit)" 
+                    placeholder="-- Pilih COA --">
+                    @foreach ($coaDebits as $coa)
                         <option value="{{ $coa->id }}">{{ $coa->code }} - {{ $coa->name }}</option>
                     @endforeach
-                </select>
+                </x-form.select>
             </div>
 
         </div>
@@ -83,30 +97,37 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {{-- TO COA --}}
                     <div>
-                        <label class="text-sm font-medium mb-2 block">Akun Tujuan (Child COA)</label>
-                        <select name="to_chart_of_account_id" id="to_coa" class="w-full border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400" required>
-                            <option value="">Pilih Tujuan</option>
-                        </select>
+                        <x-form.select 
+                            id="to_coa" 
+                            name="to_chart_of_account_id"
+                            label="Akun Tujuan (Debit)" 
+                            placeholder="-- Pilih Akun Tujuan --">
+                            @foreach ($coaDebits as $coa)
+                                <option value="{{ $coa->id }}">{{ $coa->code }} - {{ $coa->name }}</option>
+                            @endforeach
+                        </x-form.select>
                     </div>
 
 
 
                     {{-- AMOUNT --}}
                     <div>
-                        <label class="text-sm font-medium mb-2 block">
-                            Jumlah Distribusi
-                        </label>
-                        <input type="text" id="additional_display"
-                            class="h-11 w-full rounded-lg border border-blue-300 px-4 text-sm focus:ring-2 focus:ring-blue-500 dark:bg-dark-900 dark:border-gray-700"
-                            placeholder="Masukkan nominal tambahan jika ada" required>
+                        <x-form.input 
+                            id="additional_display" 
+                            name=""
+                            label="Nominal Distribusi"
+                            colorLabel="green"
+                            placeholder="Masukkan nominal tambahan jika ada" 
+                            required
+                        />
                         <input type="hidden" name="amount" id="additional_hidden" value="0">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
                     {{-- DESCRIPTION --}}
                     <div>
-                        <label class="text-sm font-medium mb-2 block">Keterangan</label>
-                        <textarea name="description" class="w-full border rounded-lg p-2 dark:border-gray-700"></textarea>
+                        <x-form.text-area name="description" label="Keterangan" placeholder="Masukkan deskripsi...."
+                            rows="4" />
                     </div>
                 </div>
 
@@ -117,7 +138,7 @@
                         </x-ui.button>
                     </a>
                     <x-ui.button type="submit" variant="primary" size="sm">
-                        Distribusikan
+                        Alokasikan
                     </x-ui.button>
                 </div>
 
@@ -191,17 +212,6 @@
             btnContinue.disabled = true;
 
             try {
-                /**
-                 * LOAD CHILD COA
-                 */
-                const res = await fetch(`/bendahara/master/coas/${fromCoa.value}/children`);
-                const data = await res.json();
-
-                toCoa.innerHTML = '<option value="">Pilih Tujuan</option>';
-                data.forEach(c => {
-                    toCoa.innerHTML += `<option value="${c.id}">${c.code} - ${c.name}</option>`;
-                });
-
                 /**
                  * LOAD AVAILABLE FUND
                  */
