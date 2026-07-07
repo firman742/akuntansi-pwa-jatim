@@ -97,6 +97,26 @@
         </form>
     </div>
 
+    {{-- Tombol export pdf & export excel --}}
+    <div class="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-end">
+
+        <div class="flex flex-col gap-2 sm:flex-row">
+            {{-- Export PDF --}}
+            <a href="#" target="_blank">
+                <x-ui.button variant="primary" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
+                    Export PDF
+                </x-ui.button>
+            </a>
+
+            {{-- Export Excel --}}
+            <a href="#">
+                <x-ui.button variant="outline" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
+                    Export Excel
+                </x-ui.button>
+            </a>
+        </div>
+    </div>
+
 
     {{-- LEDGER TABLE --}}
     @if ($coa)
@@ -167,11 +187,11 @@
                             class="bg-gray-100 dark:bg-gray-800 text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
                             <th
                                 class="border-b border-gray-200 dark:border-gray-600 px-6 py-2 text-center bg-gray-100/30 dark:bg-gray-700/30">
-                                Debit
+                                Saldo Debit
                             </th>
                             <th
                                 class="border-b border-gray-200 dark:border-gray-600 px-6 py-2 text-center bg-gray-100/30 dark:bg-gray-700/30 border-l">
-                                Kredit
+                                Saldo Kredit
                             </th>
                         </tr>
                     </thead>
@@ -181,7 +201,7 @@
                         @if ($coa)
                             <tr class="border-b border-blue-100 bg-blue-50 dark:border-blue-900 dark:bg-blue-500/10">
                                 <td class="px-6 py-4 text-center font-medium text-blue-700 dark:text-blue-400">
-                                    -
+                                    {{ $openingBalanceDate ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-blue-700 dark:text-blue-300 dark:text-blue-300">
@@ -189,7 +209,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-center">
-                                    {{ $openingBalanceCreatedBy ? $openingBalanceCreatedBy : '-' }}
+                                    {{ $openingBalanceCreatedBy ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4 text-right font-semibold text-blue-700 dark:text-blue-400">
                                     {{ $coa->normal_balance === 'DEBIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
@@ -221,8 +241,7 @@
                                 <td class="px-6 py-4">
                                     <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $row['description'] }}
                                     </div>
-                                    <div
-                                        class="mt-1 font-mono text-[10px] text-gray-700 dark:text-blue-500 tracking-tighter">
+                                    <div class="mt-1 font-light text-gray-700 dark:text-blue-500 tracking-tighter">
                                         {{ $row['ref_code'] }} - {{ $row['ref_name'] }}
                                     </div>
                                 </td>
@@ -258,6 +277,24 @@
                             </tr>
                         @endforelse
                     </tbody>
+                    <tfoot>
+                        <tr class="border-t-2 border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-900">
+                            <td colspan="5"
+                                class="px-6 py-5 text-right text-base font-bold uppercase tracking-wide text-gray-800 dark:text-gray-200">
+                                Total Saldo
+                            </td>
+
+                            <td
+                                class="px-6 py-5 text-right text-lg font-extrabold text-primary dark:text-primary-400 bg-gray-50 dark:bg-gray-800">
+                                {{ $coa->normal_balance === 'DEBIT' ? number_format(abs($endingBalance), 0, ',', '.') : '-' }}
+                            </td>
+
+                            <td
+                                class="border-l border-gray-300 px-6 py-5 text-right text-lg font-extrabold text-primary dark:border-gray-600 dark:text-primary-400 bg-gray-50 dark:bg-gray-800">
+                                {{ $coa->normal_balance === 'CREDIT' ? number_format(abs($endingBalance), 0, ',', '.') : '-' }}
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

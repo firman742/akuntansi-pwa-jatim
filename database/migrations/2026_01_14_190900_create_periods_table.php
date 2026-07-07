@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->date('start_date');
             $table->date('end_date');
-            $table->boolean('is_closed')->default(false);
-            $table->dateTime('closed_at')->nullable();
             $table->timestamps();
         });
     }

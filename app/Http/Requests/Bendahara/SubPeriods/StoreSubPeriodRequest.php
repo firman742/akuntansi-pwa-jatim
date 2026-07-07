@@ -29,7 +29,6 @@ class StoreSubPeriodRequest extends FormRequest
             'description' => 'nullable|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'is_active' => 'nullable|boolean',
         ];
     }
 
@@ -52,7 +51,6 @@ class StoreSubPeriodRequest extends FormRequest
             'end_date.required' => 'Tanggal selesai harus diisi.',
             'end_date.date' => 'Tanggal selesai harus berupa tanggal yang valid.',
             'end_date.after_or_equal' => 'Tanggal selesai harus sama dengan atau setelah tanggal mulai.',
-            'is_active.boolean' => 'Status aktif harus berupa nilai true atau false.',
         ];
     }
 }

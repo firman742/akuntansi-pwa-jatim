@@ -30,7 +30,7 @@ class BalanceRequestController extends Controller
         $periodId = $request->query('period_id', null);
         $subPeriodId = $request->query('sub_period_id', null);
         $search = $request->query('search', null);
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
         $subPeriods = collect();
 
         if ($periodId) {

@@ -3,8 +3,26 @@
 @section('title', 'Beranda Bendahara')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Beranda Bendahara"
-        pageDescription="Monitoring Dan Kelola Alur Utama Akuntansi" pageIcon="dashboard" />
+    <x-common.page-breadcrumb pageTitle="Beranda Bendahara" pageDescription="Monitoring Dan Kelola Alur Utama Akuntansi"
+        pageIcon="dashboard" />
+
+    @if ($errors->any())
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li class="text-red-500">{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="mb-6">
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+        </div>
+    @endif
 
     <div class="space-y-6">
         {{-- HERO --}}
@@ -77,6 +95,175 @@
                 </div>
             </div>
         </div>
+
+        @if ($closingReminder)
+            <div x-data="countdown('{{ $closingReminder->end_date->format('Y-m-d') }} 23:59:59')" x-init="start()"
+                class="overflow-hidden rounded-2xl border
+            {{ $closingStatus == 'expired'
+                ? 'border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-900/10'
+                : ($closingStatus == 'today'
+                    ? 'border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-900/10'
+                    : 'border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/10') }}">
+
+                {{-- HEADER --}}
+                <div class="border-b border-black/5 px-6 py-5 dark:border-white/10">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+
+                        <div>
+
+                            <div
+                                class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold
+                        {{ $closingStatus == 'expired'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                            : ($closingStatus == 'today'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300') }}">
+
+                                @switch($closingStatus)
+                                    @case('expired')
+                                        🔴 Penutupan Sub Periode Tertunda
+                                    @break
+
+                                    @case('today')
+                                        🟠 Hari Terakhir Sub Periode
+                                    @break
+
+                                    @default
+                                        🔵 Reminder Penutupan Sub Periode
+                                @endswitch
+
+                            </div>
+
+                            <h2 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
+                                {{ $closingReminder->name }}
+                            </h2>
+
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                Sub periode ini berakhir pada
+                                <span class="font-semibold">
+                                    {{ $closingReminder->end_date->translatedFormat('d F Y') }}
+                                </span>.
+                            </p>
+
+                        </div>
+
+                        {{-- COUNTDOWN --}}
+                        <div
+                            class="rounded-xl border border-white/60 bg-white/70 px-6 py-4 text-center shadow-sm dark:border-white/10 dark:bg-gray-900/40">
+
+                            <p class="text-xs uppercase tracking-wide text-gray-500">
+                                Countdown
+                            </p>
+
+                            <h3 x-text="timer" class="mt-2 text-2xl font-bold tracking-wide text-gray-900 dark:text-white">
+                            </h3>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- CONTENT --}}
+                <div class="grid gap-6 p-6 lg:grid-cols-2">
+
+                    {{-- CHECKLIST --}}
+                    <div>
+
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                            Checklist Sebelum Penutupan
+                        </h3>
+
+                        <p class="mt-1 text-sm text-gray-500">
+                            Pastikan seluruh aktivitas akuntansi pada sub periode ini telah selesai.
+                        </p>
+
+                        <div class="mt-5 space-y-3">
+
+                            @foreach ($closingChecks as $check)
+                                <div
+                                    class="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
+
+                                    <div
+                                        class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full {{ $check['passed'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
+
+                                        {{ $check['passed'] ? '✓' : '✕' }}
+
+                                    </div>
+
+                                    <p
+                                        class="text-sm {{ $check['passed'] ? 'text-gray-700 dark:text-gray-300' : 'font-medium text-red-600 dark:text-red-400' }}">
+
+                                        {{ $check['label'] }}
+
+                                    </p>
+
+                                </div>
+                            @endforeach
+
+                        </div>
+
+                    </div>
+
+                    {{-- WARNING --}}
+                    <div>
+
+                        <div
+                            class="rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-900/20">
+
+                            <div class="flex items-start gap-3">
+
+                                <div class="text-xl">
+
+                                    ⚠️
+
+                                </div>
+
+                                <div>
+
+                                    <h3 class="font-semibold text-amber-800 dark:text-amber-300">
+                                        Perhatian
+                                    </h3>
+
+                                    <p class="mt-2 text-sm leading-6 text-amber-700 dark:text-amber-200">
+
+                                        Setelah sub periode ditutup, seluruh transaksi pada sub periode ini
+                                        akan dikunci sehingga pengguna tidak dapat lagi:
+
+                                    </p>
+
+                                    <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-amber-700 dark:text-amber-200">
+
+                                        <li>Menambah transaksi baru.</li>
+
+                                        <li>Mengubah transaksi yang sudah ada.</li>
+
+                                        <li>Menghapus transaksi.</li>
+
+                                        <li>Mengubah jurnal yang telah diposting.</li>
+
+                                    </ul>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {{-- BUTTON --}}
+                        <div class="mt-6 flex flex-wrap justify-end gap-3">
+                            <a href="{{ route('bendahara.sub-periods.index') }}">
+                                <x-ui.button variant="danger">
+                                    🔒 Tutup Sub Periode
+                                </x-ui.button>
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        @endif
 
         {{-- SUMMARY CARDS --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 xl:grid-cols-3">
@@ -431,7 +618,8 @@
                     </div>
 
                     {{-- button lihat lainnya --}}
-                    <a href="{{ route('bendahara.reports.journal.index') }}" class="text-sm text-blue-500 hover:underline">
+                    <a href="{{ route('bendahara.reports.journal.index') }}"
+                        class="text-sm text-blue-500 hover:underline">
                         Lihat Semua
                     </a>
 
@@ -550,6 +738,60 @@
     {{-- CLOCK SCRIPT --}}
     @push('scripts')
         <script>
+            function countdown(endDate) {
+
+                return {
+
+                    timer: '',
+
+                    start() {
+
+                        this.update();
+
+                        setInterval(() => {
+
+                            this.update();
+
+                        }, 1000);
+
+                    },
+
+                    update() {
+
+                        const end = new Date(endDate);
+
+                        const now = new Date();
+
+                        let diff = end - now;
+
+                        let passed = false;
+
+                        if (diff < 0) {
+
+                            passed = true;
+
+                            diff = Math.abs(diff);
+
+                        }
+
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        this.timer =
+                            (passed ? '+' : '') +
+                            `${days} Hari ${hours} Jam ${minutes} Menit ${seconds} Detik`;
+
+                    }
+
+                }
+
+            };
+
             function updateClock() {
                 const now = new Date();
 

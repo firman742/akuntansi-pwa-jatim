@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\AccountingUsers\Transactions;
 
+use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\AccountingUsers\StoreIncomeRequest;
+use App\Http\Requests\AccountingUsers\Transactions\Incomes\StoreIncomeRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Period;
 use App\Models\SubPeriod;
+use App\Models\Transaction;
 use App\Models\UserAccountBalance;
-use App\Services\AccountingUsers\TransactionService;
+use App\Services\AccountingUsers\IncomeService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +20,69 @@ use Illuminate\View\View;
 
 class IncomeController extends Controller
 {
+    /**
+     * Display a listing of the income transactions for the authenticated user.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function index(Request $request): View
+    {
+        $query = Transaction::with([
+            'creator:id,name',
+            'transactionLines.chartOfAccount:id,code,name',
+            'period:id,name',
+            'subPeriod:id,name'
+        ])->where('transaction_type', TransactionType::INCOME);
+
+        // =========== Filter by period and sub-period if provided
+        if ($request->filled('period_id')) {
+            $query->where('period_id', $request->period_id);
+        }
+
+        if ($request->filled('sub_period_id')) {
+            $query->where('sub_period_id', $request->sub_period_id);
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('transaction_date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('transaction_date', '<=', $request->end_date);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+       
+        // ========= Pagination and sorting
+        $transactions = $query
+            ->where('created_by', Auth::id())
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // ========= Get periods and sub-periods for filter dropdowns
+        $periods = Period::orderBy('start_date', 'desc')->get();
+        $subPeriods = collect();
+
+        if ($request->filled('period_id')) {
+            $subPeriods = SubPeriod::where('period_id', $request->input('period_id'))
+                ->orderBy('start_date')
+                ->get();
+        }
+
+        return view('pages.menus.user.transactions.incomes.index',
+            compact(
+                'transactions',
+                'periods',
+                'subPeriods'
+            )
+        );
+    }
+
     /**
      * Show the form for creating a new income transaction.
      *
@@ -28,8 +93,8 @@ class IncomeController extends Controller
         $userId = Auth::id();
 
         $activePeriod = Period::query()
-            ->where('is_closed', false)
-            ->latest()
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
             ->first();
 
         if (!$activePeriod) {
@@ -42,7 +107,7 @@ class IncomeController extends Controller
 
         $subPeriods = SubPeriod::query()
             ->where('period_id', $selectedPeriodId)
-            ->active()
+            ->where('is_closed', false)
             ->orderBy('start_date')
             ->get();
 
@@ -69,6 +134,7 @@ class IncomeController extends Controller
                 ];
             });
 
+
         $incomeCoas = ChartOfAccount::query()
             ->whereHas('accountType', function ($q) {
                 $q->where('name', 'PENDAPATAN');
@@ -78,7 +144,7 @@ class IncomeController extends Controller
             ->orderBy('code')
             ->get();
 
-        return view('pages.menus.user.transactions.create-income',
+        return view('pages.menus.user.transactions.incomes.create',
             compact(
                 'cashCoas',
                 'incomeCoas',
@@ -92,14 +158,14 @@ class IncomeController extends Controller
     /**
      * Store a newly created income transaction in storage. This method handles the complex logic of saving the transaction,
      * 
-     * @param TransactionService $service
+     * @param IncomeService $service
      * @param StoreIncomeRequest $request
      * @return RedirectResponse
      */
-    public function store(TransactionService $service, StoreIncomeRequest $request): RedirectResponse
+    public function store(IncomeService $service, StoreIncomeRequest $request): RedirectResponse
     {
         try {
-            $service->handleIncome($request->validated());
+            $service->handle($request->validated());
 
             return redirect()
                 ->route('user.transactions.incomes.create')

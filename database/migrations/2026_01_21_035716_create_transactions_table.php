@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -18,7 +19,7 @@ return new class extends Migration
             $table->date('transaction_date');
             $table->enum('transaction_type', TransactionType::values())->default(TransactionType::INCOME->value);
             $table->text('description')->nullable();
-            $table->enum('status', ['DRAFT', 'SUBMITTED', 'POSTED', 'REVERSED'])->default('DRAFT');
+            $table->enum('status', TransactionStatus::values())->default(TransactionStatus::DRAFT->value);
             $table->decimal('gross_amount', 18, 2);
             $table->decimal('net_amount', 18, 2);
             $table->string('referencree_number')->nullable();

@@ -154,7 +154,7 @@
                                 <!-- Saldo Awal -->
                                 <td class="px-3 py-4 sm:px-6 text-right">
                                     <span class="font-light text-gray-700 dark:text-gray-400"
-                                        x-text="formatCurrency(row.opening_balance) ?? '0'">
+                                        x-text="row.opening_balance ? formatCurrency(row.opening_balance) : '0'">
                                     </span>
                                 </td>
 

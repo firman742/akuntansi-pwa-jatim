@@ -11,6 +11,6 @@ Artisan::command('inspire', function () {
 
 app()->booted(function () {
     app(Schedule::class)
-        ->command('subperiod:auto-activate')
+        ->command('sub-period:check')
         ->daily(); // Jalankan setiap hari untuk memastikan sub period yang aktif selalu sesuai dengan tanggal saat ini
 });

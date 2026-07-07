@@ -5,148 +5,161 @@ namespace App\Services\AccountingUsers;
 use App\Enums\MetaTypeTransactionEnum;
 use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionType;
-use App\Models\Journal;
-use App\Models\JournalDetail;
 use App\Models\Transaction;
-use App\Models\TransactionLine;
-use Illuminate\Support\Facades\Auth;
+use App\Models\UserAccountBalance;
+use App\Services\TransactionBaseService;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Service class to handle all business logic related to income transactions, including creation of transactions, lines, and journal entries.
- */
-class IncomeService
+class IncomeService extends TransactionBaseService
 {
     /**
-     * Handle the creation of a new income transaction, including all related lines and journal entries.
-     * TODO: Masih salah alur, harusnya setiap kali transaksi penerimaan dengan bunga, maka akan ada 2 transaksi: 1 untuk pokok (income) dan 1 untuk bunga (interest). Karena kalau digabung, jadi susah buat laporan terpisah antara pendapatan pokok dan pendapatan bunga.
+     * Handle income transaction.
+     *
+     * Journal:
+     * Debit  : Kas User
+     * Credit : Akun Penerimaan
      *
      * @param array $data
-     * @param \Illuminate\Http\UploadedFile|null $receiptFile
      * @return Transaction
+     * @throws Exception
      */
-    public function handleStore(array $data): Transaction
+    public function handle(array $data): Transaction
     {
-        // ── 1. Kalkulasi Nominal ─────────────────────────────────
-        $incomeAmount   = collect($data['income_lines'])->sum('amount');
-        $interestAmount = collect($data['interest_lines'] ?? [])->sum('amount');
-        $totalTaxAmount = collect($data['tax_lines'] ?? [])->sum('amount');
-        $receiptFile    = $data['receipt'] ?? null;
+        return DB::transaction(function () use ($data) {
 
-        $grossAmount = $incomeAmount + $interestAmount;
-        $netAmount   = ($incomeAmount + $interestAmount) - $totalTaxAmount;
+            $userBalance = UserAccountBalance::query()
+                ->with('userAccount')
+                ->lockForUpdate()
+                ->findOrFail(
+                    $data['user_account_balance_id']
+                );
 
-        return DB::transaction(function () use ($data, $receiptFile, $grossAmount, $netAmount, $incomeAmount, $interestAmount) {
+            $oldBalance = [
+                'allocated_balance' => $userBalance->allocated_balance,
+                'used_balance' => $userBalance->used_balance,
+                'remaining_balance' => $userBalance->remaining_balance,
+            ];
 
-            // ── 2. Create Transaction Header ─────────────────────
-            $transaction = Transaction::create([
-                'transaction_number' => 'TRX-IN-' . now()->format('YmdHis'),
-                'transaction_date'   => $data['transaction_date'],
-                'transaction_type'   => TransactionType::INCOME,
-                'description'        => $data['description'],
-                'gross_amount'       => $grossAmount,
-                'net_amount'         => $netAmount,
-                'total_amount'       => $grossAmount, // Backward compat
-                'status'             => 'POSTED',
-                'period_id'          => $data['period_id'],
-                'sub_period_id'      => $data['sub_period_id'],
-                'created_by'         => Auth::id(),
-            ]);
+            $amount = (float) $data['amount'];
 
-            // ── 3. Handle Receipt Upload ─────────────────────────
-            // if ($receiptFile) {
-            //     $fileName = $transaction->transaction_number . '.' . $receiptFile->getClientOriginalExtension();
-            //     $media = $transaction->addMedia($receiptFile)
-            //         ->usingFileName($fileName)
-            //         ->toMediaCollection('receipts');
-            //     $transaction->update(['receipt_path' => $media->getPathRelativeToRoot()]);
-            // }
+            /*
+            |--------------------------------------------------------------------------
+            | Journal Lines
+            |--------------------------------------------------------------------------
+            */
 
-            // ── 4. Create Transaction Lines ──────────────────────
+            $lines = [];
 
-            // 4a. KAS (DEBIT) - Pokok
-            TransactionLine::create([
-                'transaction_id'      => $transaction->id,
-                'chart_of_account_id' => $data['cash_coa_id'],
-                'position'            => NormalBalanceEnum::DEBIT->value,
-                'amount'              => $incomeAmount,
-                'meta_type'           => MetaTypeTransactionEnum::MAIN->value,
-                'description'         => 'Penerimaan Pokok: ' . $data['description'],
-            ]);
+            /**
+             * Debit Kas User
+             */
+            $lines[] = $this->line(
+                $userBalance->userAccount->coa_id,
+                $amount,
+                NormalBalanceEnum::DEBIT->value,
+                MetaTypeTransactionEnum::MAIN,
+                'Kas Masuk'
+            );
 
-            // 4b. KAS (DEBIT) - Bunga
-            if ($interestAmount > 0) {
-                TransactionLine::create([
-                    'transaction_id'      => $transaction->id,
-                    'chart_of_account_id' => $data['cash_coa_id'],
-                    'position'            => NormalBalanceEnum::DEBIT->value,
-                    'amount'              => $interestAmount,
-                    'meta_type'           => MetaTypeTransactionEnum::MAIN->value,
-                    'description'         => 'Penerimaan Jasa Giro/Bunga',
-                ]);
-            }
+            /**
+             * Credit Akun Penerimaan
+             */
+            $lines[] = $this->line(
+                $data['income_coa_id'],
+                $amount,
+                NormalBalanceEnum::CREDIT->value,
+                MetaTypeTransactionEnum::MAIN,
+                $data['description'] ?? 'Penerimaan'
+            );
 
-            // 4c. PENDAPATAN (CREDIT)
-            foreach ($data['income_lines'] as $line) {
-                TransactionLine::create([
-                    'transaction_id'      => $transaction->id,
-                    'chart_of_account_id' => $line['coa_id'],
-                    'position'            => NormalBalanceEnum::CREDIT->value,
-                    'amount'              => $line['amount'],
-                    'meta_type'           => MetaTypeTransactionEnum::MAIN->value,
-                    'description'         => $line['description'] ?? null,
-                ]);
-            }
+            /*
+            |--------------------------------------------------------------------------
+            | Store Transaction
+            |--------------------------------------------------------------------------
+            */
 
-            // 4d. PAJAK DIBAYAR DIMUKA (DEBIT)
-            foreach ($data['tax_lines'] ?? [] as $taxLine) {
-                if ($taxLine['amount'] <= 0) continue;
-                TransactionLine::create([
-                    'transaction_id'      => $transaction->id,
-                    'chart_of_account_id' => $taxLine['coa_id'],
-                    'position'            => NormalBalanceEnum::DEBIT->value,
-                    'amount'              => $taxLine['amount'],
-                    'meta_type'           => MetaTypeTransactionEnum::TAX->value,
-                    'description'         => 'Potongan Pajak Penerimaan',
-                ]);
-            }
+            $transaction = $this->storeTransaction(
+                data: $data,
+                lines: $lines,
+                totalAmount: $amount,
+                type: TransactionType::INCOME
+            );
 
-            // 4e. PENDAPATAN BUNGA (CREDIT)
-            foreach ($data['interest_lines'] ?? [] as $intLine) {
-                if ($intLine['amount'] <= 0) continue;
-                TransactionLine::create([
-                    'transaction_id'      => $transaction->id,
-                    'chart_of_account_id' => $intLine['coa_id'],
-                    'position'            => NormalBalanceEnum::CREDIT->value,
-                    'amount'              => $intLine['amount'],
-                    'meta_type'           => MetaTypeTransactionEnum::INTEREST->value,
-                    'description'         => 'Pendapatan Bunga Bank',
-                ]);
-            }
+            /*
+            |--------------------------------------------------------------------------
+            | Update Saldo User
+            |--------------------------------------------------------------------------
+            */
 
-            // ── 5. Create Journal & Details ──────────────────────
-            $journal = Journal::create([
-                'journal_number' => 'JR-' . now()->format('YmdHis'),
-                'journal_date'   => $transaction->transaction_date,
-                'description'    => $transaction->description,
-                'total_debit'    => $grossAmount,
-                'total_credit'   => $grossAmount,
-                'period_id'      => $transaction->period_id,
-                'sub_period_id'  => $transaction->sub_period_id,
-                'transaction_id' => $transaction->id,
-                'posted_by'      => Auth::id(),
-                'posted_at'      => now(),
-            ]);
+            $userBalance->increment(
+                'allocated_balance',
+                $amount
+            );
 
-            foreach ($transaction->transactionLines as $line) {
-                JournalDetail::create([
-                    'journal_id'  => $journal->id,
-                    'coa_id'      => $line->chart_of_account_id,
-                    'debit'       => $line->position === NormalBalanceEnum::DEBIT->value ? $line->amount : 0,
-                    'credit'      => $line->position === NormalBalanceEnum::CREDIT->value ? $line->amount : 0,
-                    'description' => $line->description ?? $transaction->description,
-                ]);
-            }
+            $userBalance->increment(
+                'remaining_balance',
+                $amount
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Log
+            |--------------------------------------------------------------------------
+            */
+
+            $this->logger->log(
+                action: 'CREATE',
+                module: 'TRANSACTION_INCOME',
+                subject: $transaction,
+                description: 'Membuat transaksi penerimaan.',
+                old: [],
+                new: [
+                    'transaction_id' => $transaction->id,
+                    'transaction_number' => $transaction->transaction_number,
+                    'transaction_date' => $transaction->transaction_date,
+                    'total_amount' => $amount,
+                    'status' => $transaction->status,
+                    'lines' => collect($lines)
+                        ->map(function ($line) {
+
+                            return [
+
+                                'coa_id' => $line['coa_id'],
+                                'position' => $line['position'],
+                                'amount' => $line['amount'],
+                                'description' => $line['description'],
+
+                            ];
+                        })
+                        ->toArray(),
+                ],
+                additionalData: [
+                    'transaction_type' => TransactionType::INCOME->value,
+                    'period_id' => $transaction->period_id,
+                    'sub_period_id' => $transaction->sub_period_id,
+
+                ]
+            );
+
+            $this->logger->log(
+                action: 'UPDATE',
+                module: 'USER_ACCOUNT_BALANCE',
+                subject: $userBalance,
+                description: 'Saldo pengguna bertambah karena transaksi penerimaan.',
+                old: $oldBalance,
+                new: [
+                    'allocated_balance' => $userBalance->allocated_balance,
+                    'used_balance' => $userBalance->used_balance,
+                    'remaining_balance' => $userBalance->remaining_balance,
+                ],
+                additionalData: [
+                    'transaction_id' => $transaction->id,
+                    'transaction_number' => $transaction->transaction_number,
+                    'income_amount' => $amount,
+                ]
+            );
 
             return $transaction;
         });

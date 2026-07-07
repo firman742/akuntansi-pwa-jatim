@@ -25,7 +25,7 @@ class UserAccountBalanceService
      */
     public function getIndexData(?string $periodId, ?string $subPeriodId, ?string $search = null): array
     {
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
         $subPeriods = collect();
 
         if ($periodId) {
@@ -84,7 +84,6 @@ class UserAccountBalanceService
     public function getCreateData(): array
     {
         $periods = Period::with('subPeriods')
-            ->where('is_closed', false)
             ->orderByDesc('created_at')
             ->get();
 

@@ -4,8 +4,16 @@
 
 @section('content')
 
-    <x-common.page-breadcrumb defaultTitle="Buat Transaksi Pengeluaran" pageTitle="Transaksi Pengeluaran"
-        pageDescription="Membuat Transaksi pengeluaran" pageIcon="transaction" />
+    <x-common.page-breadcrumb pageTitle="Tambah Transaksi Pengeluaran" defaultTitle="Tambah Transaksi Pengeluaran"
+        pageDescription="Monitoring transaksi penerimaan yang terjadi di sistem ini" pageIcon="transaction"
+        parentTitle="Transaksi Pengeluaran" :parentRoute="route('user.transactions.expenses.index')" currentTitle="Tambah" />
+
+    {{-- BACK --}}
+    <a href="{{ route('user.transactions.expenses.index') }}" class="mb-5">
+        <x-ui.button variant="outline" size="sm" class="mb-5">
+            ← Kembali
+        </x-ui.button>
+    </a>
 
     {{-- <pre>
     {{ print_r(session()->all(), true) }}
@@ -95,7 +103,8 @@
                                 <div class="grid md:grid-cols-12 gap-3">
 
                                     <div class="md:col-span-7">
-                                        <x-form.select name="" placeholder="-- Pilih Akun Keluar --" x-bind:name="`expense_lines[${index}][coa_id]`">
+                                        <x-form.select name="" placeholder="-- Pilih Akun Keluar --"
+                                            x-bind:name="`expense_lines[${index}][coa_id]`">
                                             @foreach ($expenseCoas as $coa)
                                                 <option value="{{ $coa->id }}">
                                                     {{ $coa->code }} - {{ $coa->name }}
@@ -151,10 +160,27 @@
                             </span>
                         </div>
 
-                        <button type="submit"
-                            class="w-full mt-6 bg-primary dark:bg-primary-dark hover:bg-primary-light dark:hover:bg-primary py-3 rounded-xl font-bold text-white dark:text-gray-100 border-2 border-white dark:border-gray-500 transition duration-300 ease-in-out">
-                            Simpan Transaksi
-                        </button>
+                        <div class="grid grid-cols-2 gap-3">
+
+                            <button type="submit" name="status" value="DRAFT"
+                                class="w-full mt-6 rounded-xl border border-blue-700 
+                                       bg-white py-3 font-semibold text-blue-700
+                                       text-xs
+                                       hover:bg-blue-200 hover:text-white
+                                       transition">
+                                Simpan sebagai Draft
+                            </button>
+
+                            <button type="submit" name="status" value="POSTED"
+                                class="w-full mt-6 rounded-xl border border-gray-25
+                                       bg-primary py-3 font-semibold text-white
+                                       text-xs
+                                       hover:bg-primary/90
+                                       transition">
+                                Simpan
+                            </button>
+
+                        </div>
                     </div>
                 </div>
             </div>

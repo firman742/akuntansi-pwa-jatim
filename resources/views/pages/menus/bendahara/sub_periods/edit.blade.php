@@ -174,12 +174,6 @@
                         <x-form.text-area name="description" label="Deskripsi" placeholder="Masukkan deskripsi...."
                             :value="old('description', $subPeriod->description)" rows="6" />
                     </div>
-
-                    {{-- Status --}}
-                    <div class="col-span-1 md:col-span-2">
-                        <x-form.toggle-switch name="is_active" label="Aktifkan Sub Periode" :value="old('is_active', $subPeriod->is_active)" />
-                    </div>
-
                 </div>
 
                 <div class="mt-6 flex justify-end gap-3">

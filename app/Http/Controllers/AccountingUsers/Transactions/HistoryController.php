@@ -55,7 +55,7 @@ class HistoryController extends Controller
             ->get();
 
         // ================= FILTER DATA =================
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
 
         $subPeriods = collect();
         if ($request->period_id) {

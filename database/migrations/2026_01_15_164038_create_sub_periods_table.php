@@ -18,13 +18,19 @@ return new class extends Migration
             $table->string("description")->nullable();
             $table->date("start_date");
             $table->date("end_date");
-            $table->boolean("is_active")->default(false);
+            $table->boolean("is_closed")->default(false);
+            $table->dateTime("closed_at")->nullable();
+            $table->uuid("closed_by")->nullable();
             $table->timestamps();
 
             $table->foreign("period_id")
                 ->references("id")
                 ->on("periods")
                 ->cascadeOnDelete();
+            $table->foreign("closed_by")
+                ->references("id")
+                ->on("users")
+                ->nullOnDelete();
         });
     }
 

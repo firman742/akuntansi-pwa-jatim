@@ -3,11 +3,16 @@
 namespace App\Services\Bendahara;
 
 use App\Enums\ActivityLogAction;
+use App\Enums\TransactionStatus;
+use App\Models\ChartOfAccount;
+use App\Models\ClosingBalance;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SubPeriodService extends BaseService
@@ -130,6 +135,88 @@ class SubPeriodService extends BaseService
         );
 
         $subPeriod->delete();
+    }
+
+    /**
+     * Close the specified sub-period. This method marks the sub-period as closed and records the closure time and user who performed the action.
+     *
+     * @param string $id
+     * @throws Exception if the sub-period is already closed.
+     */
+    public function close(string $id): void
+    {
+        DB::transaction(function () use ($id) {
+
+            $subPeriod = SubPeriod::with([
+                'coaBalances.chartOfAccount'
+            ])->findOrFail($id);
+    
+            if ($subPeriod->is_closed) {
+                throw new Exception('Sub periode sudah ditutup.');
+            }
+    
+            // cek apakah ada transaction / jurnal yang belum di posting, jika ada maka tidak bisa ditutup
+            $hasUnpostedTransactions = $subPeriod->transactions()
+                ->where('status', TransactionStatus::DRAFT->value)
+                ->exists();
+    
+            if ($hasUnpostedTransactions) {
+                throw new Exception('Sub periode tidak dapat ditutup karena masih ada transaksi yang belum diposting.');
+            }
+    
+            // check if the sub-period's end date is in the future
+            if ($subPeriod->end_date->isFuture()) {
+                throw new Exception('Sub periode tidak dapat ditutup karena tanggal selesai sub periode masih di masa mendatang.');
+            }
+    
+            // Check if there are any closing balances associated with this sub-period
+            $alreadyClosed = ClosingBalance::where('sub_period_id', $subPeriod->id)->exists();
+    
+            if ($alreadyClosed) {
+                throw new Exception('Sub periode sudah ditutup sebelumnya.');
+            }
+    
+            // Cek sisa saldo dari coa yang ada di sub periode ini (via coa balance / saldo berjalan), jika masih memiliki sisa saldo maka masukkan ke closing balance
+            $coaBalances = $subPeriod->coaBalances;
+
+            foreach ($coaBalances as $coaBalance) {
+                $balanceType = ChartOfAccount::find($coaBalance->chart_of_account_id)->normal_balance;
+
+                if ($coaBalance->current_balance != 0) {
+                    ClosingBalance::create([
+                        'period_id' => $subPeriod->period_id,
+                        'sub_period_id' => $subPeriod->id,
+                        'chart_of_account_id' => $coaBalance->chart_of_account_id,
+                        'created_by' => Auth::id(),
+                        'balance_type' => $balanceType,
+                        'amount' => $coaBalance->current_balance,
+                    ]);
+                }
+            }
+    
+            // Mark the sub-period as closed
+            $subPeriod->update([
+                'is_closed' => true,
+                'closed_at' => now(),
+                'closed_by' => Auth::id(),
+            ]);
+    
+            // activity log
+            $this->logger->log(
+                action: ActivityLogAction::CLOSED->value,
+                module: "SUB_PERIOD",
+                subject: $subPeriod,
+                description: "Sub periode {$subPeriod->name} berhasil ditutup.",
+                old: ['is_closed' => false],
+                new: ['is_closed' => true],
+                additionalData: [
+                    'period_id' => $subPeriod->period_id,
+                    'start_date' => $subPeriod->start_date,
+                    'end_date' => $subPeriod->end_date,
+                    'is_active' => $subPeriod->is_active,
+                ]
+            );
+        });
     }
 
     /**

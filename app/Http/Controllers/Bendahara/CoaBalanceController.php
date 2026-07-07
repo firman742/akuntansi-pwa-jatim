@@ -32,7 +32,7 @@ class CoaBalanceController extends Controller
         $coaId = $request->query('coa_id', null);
         $search = $request->query('search');
 
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
         $subPeriods = collect();
         $coas = ChartOfAccount::where('is_active', true)
             ->orderBy('code')
@@ -47,7 +47,7 @@ class CoaBalanceController extends Controller
         $query = CoaBalance::query()->with([
             'chartOfAccount:id,name,code',
             'subPeriod:id,name,period_id,start_date,end_date',
-            'subPeriod.period:id,is_closed'
+            'subPeriod.period:id,name,start_date,end_date',
         ]);
 
 

@@ -2,13 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Class Period
+ * @package App\Models
+ *
+ * @property string $id
+ * @property string $name
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon $start_date
+ * @property \Illuminate\Support\Carbon $end_date
+ *
+ * @property-read OpeningBalance[]|null $opening_balances
+ * @property-read Transaction[]|null $transactions
+ * @property-read Journal[]|null $journals
+ * @property-read SubPeriod[]|null $subPeriods
+ * @property-read CoaBalance[]|null $coaBalances
+ * @property-read BudgetAllocation[]|null $budgetAllocations
+ * @property-read CoaRequest[]|null $coaRequests
+ * @property-read AccountTopup[]|null $accountTopups
+ */
 class Period extends Model
 {
     /** @use HasFactory<\Database\Factories\PeriodFactory> */
@@ -21,37 +40,80 @@ class Period extends Model
         'description',
         'start_date',
         'end_date',
-        'is_closed',
-        'closed_at',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'is_closed' => 'boolean',
-        'closed_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'is_active',
+    ];
+
+    
     /**
-     * Get the user who closed the period.
-     * @return BelongsTo
-     * 
+     * Get the is_active attribute.
+     * @return Attribute
      */
-    public function closedByUser(): BelongsTo
+    protected function isActive(): Attribute
     {
-        return $this->belongsTo(User::class, 'closed_by');
+        return Attribute::make(
+            get: fn () => now()->between($this->start_date, $this->end_date),
+        );
     }
 
+    /**
+     * Scope a query to only include active periods.
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('start_date', '<=', now())
+            ->where('end_date', '>=', now());
+    }
+
+    /**
+     * Check if there is any active period.
+     * @return bool
+     */
+    public static function hasActivePeriod(): bool
+    {
+        return self::active()->exists();
+    }
+
+    /**
+     * Get the opening balances for the period.
+     * @return HasMany
+     */
     public function opening_balances(): HasMany
     {
         return $this->hasMany(OpeningBalance::class, 'period_id');
     }
 
+    /**
+     * Get the closing balances for the period.
+     * @return HasMany
+     */
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'period_id');
     }
 
+    /**
+     * Check if period has transactions.
+     * @return bool
+     */
+    public function hasTransactions(): bool
+    {
+        return $this->transactions()->exists();
+    }
+
+    /**
+     * Get the journals for the period.
+     * @return HasMany
+     */
     public function journals(): HasMany
     {
         return $this->hasMany(Journal::class, 'period_id');
@@ -103,42 +165,11 @@ class Period extends Model
     }
 
     /**
-     * Scope a query to only include active periods.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeActive(Builder $query): Builder
-    {
-        return $query
-            ->where('is_closed', false);
-    }
-
-    /**
-     * Check if period has transactions.
-     * @return bool
-     */
-    public function hasTransactions(): bool
-    {
-        return $this->transactions()->exists();
-    }
-
-    /**
      * Check if period can be edited.
      * @return bool
      */
     public function canBeEdited(): bool
     {
         return !$this->hasTransactions();
-    }
-
-    /**
-     * Check if period can be closed.
-     * @return bool
-     */
-    public function canBeClosed(): bool
-    {
-        return !$this->hasTransactions()
-            && now()->greaterThan($this->end_date);
     }
 }

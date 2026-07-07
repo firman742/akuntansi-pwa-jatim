@@ -10,6 +10,7 @@
 
     editUrl: '{{ route('bendahara.sub-periods.edit', ':id') }}',
     destroyUrl: '{{ route('bendahara.sub-periods.destroy', ':id') }}',
+    closeUrl: '{{ route('bendahara.sub-periods.close', ':id') }}',
 
     get totalPages() {
         return Math.ceil(this.tableRowData.length / this.itemsPerPage);
@@ -61,11 +62,11 @@
     },
     getStatusClass(status) {
         return status == 1 ?
-            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500' :
-            'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500';
+            'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500' :
+            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500';
     },
     getStatusLabel(status) {
-        return status == 1 ? 'Aktif' : 'Tidak Aktif';
+        return status == 1 ? 'Ditutup' : 'Aktif';
     },
 
     formatDate(date) {
@@ -94,6 +95,11 @@
     canDelete(row) {
         return row.transactions_count === 0 && !this.isExpired(row);
     },
+
+    canClose(row) {
+        return this.isExpired(row) && !row.is_closed;
+    },
+
     getLockReason(row) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -111,6 +117,17 @@
 
         return null;
     },
+
+    getCloseReason(row) {
+
+        if (row.is_closed)
+            return 'Sub periode sudah ditutup';
+
+        if (!this.isExpired(row))
+            return 'Sub periode belum dapat ditutup karena tanggal berakhir belum tercapai';
+
+        return null;
+    }
 }">
 
     <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
@@ -190,8 +207,9 @@
 
                                 <td class="px-4 sm:px-6 py-3.5">
 
-                                    <span class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
-                                        :class="getStatusClass(row.is_active)" x-text="getStatusLabel(row.is_active)">
+                                    <span
+                                        class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
+                                        :class="getStatusClass(row.is_closed)" x-text="getStatusLabel(row.is_closed)">
                                     </span>
 
                                 </td>
@@ -199,6 +217,38 @@
                                 <!-- Action -->
                                 <td class="px-4 sm:px-3 py-2.5">
                                     <div class="flex items-center gap-2">
+
+                                        <!-- Close -->
+                                        <form x-show="true"
+                                            :action="canClose(row) ?
+                                                closeUrl.replace(':id', row.id) :
+                                                '#'"
+                                            method="POST"
+                                            @submit.prevent="
+                                                        if (!canClose(row)) return;
+
+                                                        if (confirm('Apakah anda yakin MENUTUP Sub Periode ini?')) {
+                                                            $event.target.submit();
+                                                        }
+                                                    ">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            <button type="submit" :disabled="!canClose(row)"
+                                                :title="getCloseReason(row) || 'Tutup Sub Periode'"
+                                                :class="canClose(row) ?
+                                                    'text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-500/10' :
+                                                    'text-gray-300 cursor-not-allowed dark:text-gray-600'"
+                                                class="flex h-8 w-8 items-center justify-center rounded-md">
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                            </button>
+                                        </form>
+
                                         <!-- Edit -->
                                         <a :href="canEdit(row) ? editUrl.replace(':id', row.id) : 'javascript:void(0)'"
                                             :class="canEdit(row) ?
@@ -240,22 +290,12 @@
                                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862 a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6 m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862 a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6 m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
 
                                             </button>
                                         </form>
-
-                                        <!-- Badge jika sudah ditutup -->
-                                        <template x-if="row.is_closed">
-                                            <span
-                                                class="ml-2 inline-flex items-center rounded-full px-2.5 py-1
-                                                text-xs font-medium text-center
-                                                bg-gray-100 text-gray-600
-                                                dark:bg-gray-500/15 dark:text-gray-400">
-                                                Ditutup
-                                            </span>
-                                        </template>
 
                                     </div>
                                 </td>

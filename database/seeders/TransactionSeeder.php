@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\NormalBalanceEnum;
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\TransactionNumberHelper;
 use App\Models\ChartOfAccount;
@@ -68,6 +69,7 @@ class TransactionSeeder extends Seeder
                             $cash->code,
                             $periodCode
                         ),
+                        'status'              => rand(0, 1) ? TransactionStatus::POSTED->value : TransactionStatus::DRAFT->value,
                         'period_id'          => $period->id,
                     ]);
 
@@ -88,30 +90,32 @@ class TransactionSeeder extends Seeder
 
                     $trx->update(['total_amount' => $amount]);
 
-                    $journal = Journal::create([
-                        'journal_number' => 'JR-' . $trx->transaction_number,
-                        'journal_date'   => $trx->transaction_date,
-                        'description'    => $trx->description,
-                        'total_debit'    => $amount,
-                        'total_credit'   => $amount,
-                        'posted_by'      => $trx->created_by,
-                        'posted_at'      => now(),
-                        'period_id'      => $period->id,
-                        'transaction_id'=> $trx->id,
-                    ]);
-
-                    $journal->details()->createMany([
-                        [
-                            'coa_id' => $cash->id,
-                            'debit'  => $amount,
-                            'credit' => 0,
-                        ],
-                        [
-                            'coa_id' => $income->id,
-                            'debit'  => 0,
-                            'credit' => $amount,
-                        ],
-                    ]);
+                    if ($trx->status === TransactionStatus::POSTED->value) {
+                        $journal = Journal::create([
+                            'journal_number' => 'JR-' . $trx->transaction_number,
+                            'journal_date'   => $trx->transaction_date,
+                            'description'    => $trx->description,
+                            'total_debit'    => $amount,
+                            'total_credit'   => $amount,
+                            'posted_by'      => $trx->created_by,
+                            'posted_at'      => now(),
+                            'period_id'      => $period->id,
+                            'transaction_id'=> $trx->id,
+                        ]);
+    
+                        $journal->details()->createMany([
+                            [
+                                'coa_id' => $cash->id,
+                                'debit'  => $amount,
+                                'credit' => 0,
+                            ],
+                            [
+                                'coa_id' => $income->id,
+                                'debit'  => 0,
+                                'credit' => $amount,
+                            ],
+                        ]);
+                    }
                 }
 
                 // =====================
@@ -128,6 +132,7 @@ class TransactionSeeder extends Seeder
                             $cash->code,
                             $periodCode
                         ),
+                        'status'              => rand(0, 1) ? TransactionStatus::POSTED->value : TransactionStatus::DRAFT->value,
                         'period_id'          => $period->id,
                     ]);
 
@@ -148,30 +153,32 @@ class TransactionSeeder extends Seeder
 
                     $trx->update(['total_amount' => $amount]);
 
-                    $journal = Journal::create([
-                        'journal_number' => 'JR-' . $trx->transaction_number,
-                        'journal_date'   => $trx->transaction_date,
-                        'description'    => $trx->description,
-                        'total_debit'    => $amount,
-                        'total_credit'   => $amount,
-                        'posted_by'      => $trx->created_by,
-                        'posted_at'      => now(),
-                        'period_id'      => $period->id,
-                        'transaction_id'=> $trx->id,
-                    ]);
-
-                    $journal->details()->createMany([
-                        [
-                            'coa_id' => $expense->id,
-                            'debit'  => $amount,
-                            'credit' => 0,
-                        ],
-                        [
-                            'coa_id' => $cash->id,
-                            'debit'  => 0,
-                            'credit' => $amount,
-                        ],
-                    ]);
+                    if ($trx->status === TransactionStatus::POSTED->value) {
+                        $journal = Journal::create([
+                            'journal_number' => 'JR-' . $trx->transaction_number,
+                            'journal_date'   => $trx->transaction_date,
+                            'description'    => $trx->description,
+                            'total_debit'    => $amount,
+                            'total_credit'   => $amount,
+                            'posted_by'      => $trx->created_by,
+                            'posted_at'      => now(),
+                            'period_id'      => $period->id,
+                            'transaction_id'=> $trx->id,
+                        ]);
+    
+                        $journal->details()->createMany([
+                            [
+                                'coa_id' => $expense->id,
+                                'debit'  => $amount,
+                                'credit' => 0,
+                            ],
+                            [
+                                'coa_id' => $cash->id,
+                                'debit'  => 0,
+                                'credit' => $amount,
+                            ],
+                        ]);
+                    }
                 }
             }
         });

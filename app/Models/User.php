@@ -93,6 +93,14 @@ class User extends BaseModelAuthenticated
     /**
      * @return HasMany
      */
+    public function subPeriods(): HasMany
+    {
+        return $this->hasMany(SubPeriod::class, 'closed_by');
+    }
+
+    /**
+     * @return HasMany
+     */
     public function userAccounts(): HasMany
     {
         return $this->hasMany(UserAccount::class, 'user_id');

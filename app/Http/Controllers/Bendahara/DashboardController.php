@@ -17,7 +17,9 @@ class DashboardController extends Controller
         /**
          * Active Period
          */
-        $activePeriod = Period::active()->first();
+        $activePeriod = Period::where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->first();
 
         /**
          * Active Sub Periods
@@ -94,6 +96,59 @@ class DashboardController extends Controller
 
         $transferType = TransactionType::TRANSFER->value;
 
+        /*
+        * Closing Reminder: minimum 3 days before sub period end date, if sub period is not closed yet
+        */
+        $closingReminder = SubPeriod::query()
+            ->where('period_id', $activePeriod?->id)
+            ->where('is_closed', false)
+            ->whereDate('end_date', '<=', now()->addDays(3))
+            ->orderBy('end_date')
+            ->first();
+
+        $closingStatus = null;
+        if ($closingReminder) {
+            if ($closingReminder->end_date->isToday()) {
+
+                $closingStatus = 'today';
+            } elseif ($closingReminder->end_date->isPast()) {
+
+                $closingStatus = 'expired';
+            } else {
+
+                $closingStatus = 'warning';
+            }
+        }
+
+        /**
+         * Closing Checks label
+         * TODO: Need Improve with actual checks from database, not hardcoded
+         */
+        $closingChecks = [
+            [
+                'label' => 'Seluruh transaksi penerimaan dan pengeluaran telah tercatat',
+                'passed' => true,
+            ],
+            [
+                'label' => 'Seluruh jurnal telah diposting',
+                'passed' => true,
+            ],
+            [
+                'label' => 'Tidak ada draft transaksi',
+                'passed' => true,
+            ],
+            [
+                'label' => 'Saldo kas telah sesuai',
+                'passed' => true,
+            ],
+            [
+                'label' => 'Seluruh aktivitas pada sub periode telah selesai',
+                'passed' => true,
+            ],
+        ];
+
+        // dd($closingReminder, $closingStatus);
+
         return view('pages.menus.bendahara.dashboard', compact(
             'activePeriod',
             'subPeriods',
@@ -105,7 +160,11 @@ class DashboardController extends Controller
             'totalCashBalance',
             'recentTransactions',
             'recentJournals',
-            'transferType'
+            'transferType',
+
+            'closingReminder',
+            'closingStatus',
+            'closingChecks'
         ));
     }
 }

@@ -102,9 +102,6 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         Route::put('/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'update'])->name('update');
         Route::delete('/{id}', [App\Http\Controllers\Bendahara\PeriodController::class, 'destroy'])->name('destroy');
 
-        Route::patch('/{id}/close', [App\Http\Controllers\Bendahara\PeriodController::class, 'close'])
-            ->name('close');
-
         Route::get('/{id}/sub-periods', [App\Http\Controllers\Bendahara\PeriodController::class, 'getSubPeriods'])
             ->name('sub-periods');
     });
@@ -121,6 +118,9 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         Route::get('/{id}/edit', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'edit'])->name('edit');
         Route::put('/{id}', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'update'])->name('update');
         Route::delete('/{id}', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'destroy'])->name('destroy');
+
+        Route::patch('/{id}/close', [App\Http\Controllers\Bendahara\SubPeriodController::class, 'close'])
+            ->name('close');
     });
 
     /*
@@ -386,20 +386,24 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
     |--------------------------------------------------------------------------
     */
     Route::prefix('transactions')->name('transactions.')->group(function () {
-        // transaction
-        Route::get('/create', [App\Http\Controllers\AccountingUsers\Transactions\TransactionController::class, 'create'])->name('create');
-        Route::post('/', [App\Http\Controllers\AccountingUsers\Transactions\TransactionController::class, 'store'])->name('store');
-
         // // Income
         Route::prefix('incomes')->name('incomes.')->group(function () {
-            Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'getCashBalance'])->name('cash-balance');
+            Route::get('/', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'index'])->name('index');
             Route::get('/create', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'create'])->name('create');
+            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'show'])->name('show');
+            Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'getCashBalance'])->name('cash-balance');
             Route::post('/', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'store'])->name('store');
         });
 
         // Expense
         Route::prefix('expenses')->name('expenses.')->group(function () {
+            Route::get('/', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'index'])->name('index');
             Route::get('/create', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'create'])->name('create');
+            Route::get('/{id}', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'update'])->name('update');
+            Route::post('/{id}/post', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'post'])->name('post');
+            Route::post('/{id}/cancel', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'cancel'])->name('cancel');
             Route::post('/', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'store'])->name('store');
         });
 

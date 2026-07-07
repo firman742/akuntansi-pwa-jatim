@@ -42,7 +42,7 @@ class PeriodController extends Controller
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
             })
-            ->orderBy('is_closed', 'desc')
+            ->orderBy('start_date', 'desc')
             ->get();
 
         return view('pages.menus.bendahara.periods.index', compact('periods'));
@@ -117,30 +117,6 @@ class PeriodController extends Controller
     }
 
     /**
-     * Close period
-     * @param PeriodService $service
-     * @param string $id
-     * @return RedirectResponse
-     * @throws Exception
-     */
-    public function close(PeriodService $service, string $id)
-    {
-        $period = Period::findOrFail($id);
-
-        try {
-            $service->close($period);
-
-            return redirect()
-                ->route('bendahara.periods.index')
-                ->with('success', 'Periode - ' . ($period->name ?? '-') . ' berhasil ditutup');
-        } catch (\Exception $e) {
-            return back()->withInput()->withErrors([
-                'period' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id, PeriodService $service): RedirectResponse
@@ -168,7 +144,7 @@ class PeriodController extends Controller
     public function getSubPeriods(string $periodId): Collection
     {
         return SubPeriod::where('period_id', $periodId)
-            ->active()
+            ->where('is_closed', false)
             ->orderBy('start_date')
             ->get();
     }

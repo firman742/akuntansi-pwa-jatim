@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests\AccountingUsers;
+namespace App\Http\Requests\AccountingUsers\Transactions\Expenses;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreTransactionRequest extends FormRequest
+class StoreExpenseRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -67,6 +67,10 @@ class StoreTransactionRequest extends FormRequest
                 'required',
                 'exists:user_account_balances,id'
             ],
+            'status' => [
+                'required',
+                Rule::in(['DRAFT', 'POSTED'])
+            ]
         ];
     }
 

@@ -14,7 +14,8 @@ return new class extends Migration
     {
         Schema::create('closing_balances', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('period_id');
+            $table->uuid('period_id')->nullable();
+            $table->uuid('sub_period_id');
             $table->uuid('chart_of_account_id');
             $table->uuid('created_by')->nullable();
             $table->enum('balance_type', NormalBalanceEnum::values());
@@ -24,6 +25,10 @@ return new class extends Migration
             $table->foreign('period_id')
                 ->references('id')
                 ->on('periods')
+                ->onDelete('cascade');
+            $table->foreign('sub_period_id')
+                ->references('id')
+                ->on('sub_periods')
                 ->onDelete('cascade');
             $table->foreign('chart_of_account_id')
                 ->references('id')

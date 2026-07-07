@@ -45,6 +45,22 @@
                 defaultDate="{{ request('end_date') }}" />
         </x-slot>
 
+        {{-- SLOT Action --}}
+        <x-slot name="actions">
+            <a href="#">
+                <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
+                    Export PDF
+                </x-ui.button>
+            </a>
+
+            {{-- export as excel --}}
+            <a href="#">
+                <x-ui.button variant="outline" class="rounded-xl px-4 py-2">
+                    Export Excel
+                </x-ui.button>
+            </a>
+        </x-slot>
+
         <x-core.basic-tables.bendahara.journal-table :groupedJournals="$groupedJournals" :journals="$journals" />
     </x-core.basic-tables.core-table>
 

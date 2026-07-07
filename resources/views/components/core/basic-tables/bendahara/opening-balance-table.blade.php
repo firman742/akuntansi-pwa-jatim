@@ -115,14 +115,14 @@
     canEdit(row) {
         return !row.has_transaction &&
             !row.has_allocation &&
-            !row.period_closed &&
+            !row.sub_period_closed &&
             !row.sub_period_expired;
     },
 
     canDelete(row) {
         return !row.has_transaction &&
             !row.has_allocation &&
-            !row.period_closed &&
+            !row.sub_period_closed &&
             !row.sub_period_expired;
     },
     getLockReason(row) {
@@ -132,7 +132,7 @@
         if (row.has_allocation) {
             return 'Tidak dapat mengedit/hapus karena sudah ada alokasi pada sub periode ini.';
         }
-        if (row.period_closed) {
+        if (row.sub_period_closed) {
             return 'Tidak dapat mengedit/hapus karena periode ini sudah ditutup.';
         }
         if (row.sub_period_expired) {

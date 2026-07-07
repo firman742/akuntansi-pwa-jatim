@@ -7,7 +7,6 @@ use App\Enums\NormalBalanceEnum;
 use App\Models\BudgetAllocation;
 use App\Models\ChartOfAccount;
 use App\Models\CoaBalance;
-use App\Models\Journal;
 use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\SubPeriod;
@@ -29,7 +28,7 @@ class OpeningBalanceService extends BaseService
      */
     public function getIndexData(?string $periodId, ?string $subPeriodId, ?string $search = null): array
     {
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
 
         $subPeriods = collect();
 
@@ -40,8 +39,8 @@ class OpeningBalanceService extends BaseService
         }
         $openingBalanceQuery = OpeningBalance::with([
             'chartOfAccount:id,name,code',
-            'subPeriod:id,name,period_id,start_date,end_date',
-            'subPeriod.period:id,is_closed'
+            'subPeriod:id,name,period_id,start_date,end_date,is_closed',
+            'subPeriod.period:id,name,start_date,end_date',
         ]);
 
         // Filter & search
@@ -91,7 +90,7 @@ class OpeningBalanceService extends BaseService
                 $subPeriodExpired = $item->subPeriod?->end_date
                     ? Carbon::now()->gt(Carbon::parse($item->subPeriod->end_date))
                     : false;
-                $periodClosed = $item->subPeriod?->period?->is_closed ?? false;
+                $subPeriodClosed = $item->subPeriod->is_closed ?? false;
 
                 return [
                     'id' => $item->id,
@@ -109,18 +108,18 @@ class OpeningBalanceService extends BaseService
 
                     'has_transaction' => $hasTransaction,
                     'has_allocation' => $hasAllocation,
-                    'period_closed' => $periodClosed,
+                    'sub_period_closed' => $subPeriodClosed,
                     'sub_period_expired' => $subPeriodExpired,
 
                     'can_edit' => ! $hasTransaction
                         && ! $hasAllocation
                         && ! $subPeriodExpired
-                        && ! $periodClosed,
+                        && ! $subPeriodClosed,
 
                     'can_delete' => ! $hasTransaction
                         && ! $hasAllocation
                         && ! $subPeriodExpired
-                        && ! $periodClosed,
+                        && ! $subPeriodClosed,
                 ];
             });
 
@@ -138,14 +137,14 @@ class OpeningBalanceService extends BaseService
      */
     public function getCreateData(): array
     {
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
         $subPeriods = optional($periods->first())->subPeriods()->orderBy('start_date')->get();
 
         // just get coa debit
         $coaLists = ChartOfAccount::query()
             ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
-            ->whereNotNull('parent_id')
-            ->doesntHave('children')
+            // ->whereNotNull('parent_id')
+            // ->doesntHave('children')
             ->orderBy('code')
             ->get();
 
@@ -270,9 +269,9 @@ class OpeningBalanceService extends BaseService
             | Validasi Periode / Sub Periode
             |--------------------------------------------------------------------------
             */
-            if ($openingBalance->period?->is_closed) {
+            if ($openingBalance->subPeriod?->is_closed) {
                 throw new Exception(
-                    'Saldo awal tidak dapat diubah karena periode sudah ditutup.'
+                    'Saldo awal tidak dapat diubah karena sub periode sudah ditutup.'
                 );
             }
 

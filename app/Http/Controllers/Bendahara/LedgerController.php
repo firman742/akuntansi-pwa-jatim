@@ -36,7 +36,7 @@ class LedgerController extends Controller
         $subPeriods = collect();
         if ($periodId) {
             $subPeriods = SubPeriod::where('period_id', $periodId)
-                ->active()
+                ->where('is_closed', false)
                 ->orderBy('start_date')
                 ->get();
         }
@@ -52,6 +52,7 @@ class LedgerController extends Controller
         $endingBalance  = 0;
         $coa            = null;
         $openingBalanceCreatedBy = '-';
+        $openingBalanceDate = '-';
 
         /*
         |--------------------------------------------------------------------------
@@ -83,6 +84,7 @@ class LedgerController extends Controller
             }
 
             $openingBalanceCreatedBy = $opening?->creator?->name ?? '-';
+            $openingBalanceDate = $opening?->created_at ? Carbon::parse($opening->created_at)->format('d M Y') : '-';
 
             /*
             |--------------------------------------------------------------------------
@@ -191,7 +193,8 @@ class LedgerController extends Controller
             'subPeriodId',
             'startDate',
             'endDate',
-            'openingBalanceCreatedBy'
+            'openingBalanceCreatedBy',
+            'openingBalanceDate'
         ));
     }
 

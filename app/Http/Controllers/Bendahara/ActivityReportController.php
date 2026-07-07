@@ -26,7 +26,7 @@ class ActivityReportController extends Controller
             throw new Exception('Tidak ada periode aktif. Silakan buat periode terlebih dahulu.');
         }
         $periodId = $request->period_id;
-        $period = $periodId ? Period::findOrFail($periodId) : Period::active()->firstOrFail();
+        $period = $periodId ? Period::findOrFail($periodId) : Period::firstOrFail();
 
         $subPeriodId = $request->sub_period_id;
         $subPeriods = collect();
@@ -35,7 +35,7 @@ class ActivityReportController extends Controller
                 ->orderBy('id')
                 ->get();
         }
-        $subPeriod = $subPeriodId ? SubPeriod::findOrFail($subPeriodId) : SubPeriod::active()->firstOrFail();
+        $subPeriod = $subPeriodId ? SubPeriod::findOrFail($subPeriodId) : SubPeriod::where('is_closed', false)->firstOrFail();
 
 
         // Ambil semua COA Pendapatan & Biaya dengan sum mutasi

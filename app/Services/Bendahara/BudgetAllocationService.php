@@ -30,7 +30,7 @@ class BudgetAllocationService extends BaseService
      */
     public function getIndexData(?string $periodId, ?string $subPeriodId, ?string $search = null): array
     {
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
 
         $subPeriods = collect();
 
@@ -108,7 +108,7 @@ class BudgetAllocationService extends BaseService
      */
     public function getCreateData(): array
     {
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::all();
         $coaDebits = ChartOfAccount::where('normal_balance', NormalBalanceEnum::DEBIT->value)
             ->orderBy('code')
             ->get();

@@ -256,21 +256,21 @@ class menu
                 'name' => 'Transaksi',
                 'icon' => 'transaction',
                 'active_on' => [
-                    'user/transactions/incomes/create*',
-                    'user/transactions/expenses/create*'
+                    'user/transactions/incomes*',
+                    'user/transactions/expenses*'
                 ],
                 'subItems' => [
                     self::item(
                         'Transaksi Penerimaan',
                         null,
-                        '/user/transactions/incomes/create',
-                        ['user/transactions/incomes/create*']
+                        '/user/transactions/incomes',
+                        ['user/transactions/incomes*']
                     ),
                     self::item(
                         'Transaksi Pengeluaran',
                         null,
-                        '/user/transactions/expenses/create',
-                        ['user/transactions/expenses/create*']
+                        '/user/transactions/expenses',
+                        ['user/transactions/expenses*']
                     ),
                 ]
             ],

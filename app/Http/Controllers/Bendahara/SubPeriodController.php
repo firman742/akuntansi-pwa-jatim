@@ -33,7 +33,6 @@ class SubPeriodController extends Controller
             'name',
             'start_date',
             'end_date',
-            'is_closed'
         ])->orderBy('name')->get();
 
         $query = SubPeriod::with('period')->withCount('transactions');
@@ -61,15 +60,14 @@ class SubPeriodController extends Controller
      */
     public function create(): View
     {
-        $periods = Period::select(
+        $periods = Period::select([
             'id',
             'name',
             'start_date',
-            'end_date'
-        )->where('is_closed', false)->get();
+            'end_date',
+        ])->orderBy('name')->get();
 
-        return view(
-            'pages.menus.bendahara.sub_periods.create',
+        return view('pages.menus.bendahara.sub_periods.create',
             compact('periods')
         );
     }
@@ -107,15 +105,19 @@ class SubPeriodController extends Controller
     public function edit(string $id): View
     {
         $subPeriod = SubPeriod::findOrFail($id);
-        $periods = Period::where('is_closed', false)->get();
+        $periods = Period::select([
+            'id',
+            'name',
+            'start_date',
+            'end_date',
+        ])->orderBy('name')->get();
 
         $hasTransaction = $subPeriod->transactions()->exists();
         $isExpired = now()->startOfDay()->gt(Carbon::parse($subPeriod->end_date)->startOfDay());
 
         $isLocked = $hasTransaction || $isExpired;
 
-        return view(
-            'pages.menus.bendahara.sub_periods.edit',
+        return view('pages.menus.bendahara.sub_periods.edit',
             compact('subPeriod', 'periods', 'isLocked', 'hasTransaction', 'isExpired')
         );
     }
@@ -161,6 +163,31 @@ class SubPeriodController extends Controller
             return redirect()
                 ->route('bendahara.sub-periods.index')
                 ->with('success', 'Sub Periode berhasil dihapus');
+        } catch (Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'error' => $e->getMessage()
+                ]);
+        }
+    }
+
+    /**
+     * Close the specified sub-period.
+     * 
+     * @param string $id
+     * @param SubPeriodService $service
+     * @return RedirectResponse
+     * @throws Exception if the sub-period cannot be closed due to business rules.
+     */
+    public function close(string $id, SubPeriodService $service): RedirectResponse
+    {
+        try {
+            $service->close($id);
+
+            return redirect()
+                ->route('bendahara.sub-periods.index')
+                ->with('success', 'Sub Periode berhasil ditutup');
         } catch (Exception $e) {
             return back()
                 ->withInput()

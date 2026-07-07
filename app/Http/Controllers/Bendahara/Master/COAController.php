@@ -28,12 +28,18 @@ class COAController extends Controller
             'accountType',
             'creator',
             'parent',
-            'children.children'
+            'children' => function ($query) {
+                $query->orderBy('code');
+            },
+            'children.children' => function ($query) {
+                $query->orderBy('code');
+            }
         ])
             ->orderBy('code')
             ->get();
 
-        $groupedByType = $chartOfAccounts->groupBy(fn($coa) => $coa->accountType?->name ?? 'Uncategorized');
+        $groupedByType = $chartOfAccounts->groupBy(fn($coa) => $coa->accountType?->name ?? 'Uncategorized')
+            ->map(fn($group) => $group->sortBy('code'));
 
         return view('pages.menus.bendahara.master.coa.index', [
             'groupedByType' => $groupedByType

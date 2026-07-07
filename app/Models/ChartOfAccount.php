@@ -183,4 +183,9 @@ class ChartOfAccount extends Model
     {
         return $this->hasMany(AccountTopup::class, 'chart_of_account_id');
     }
+
+    public function childrenRecursive(): HasMany
+    {
+        return $this->children()->with('childrenRecursive');
+    }
 }

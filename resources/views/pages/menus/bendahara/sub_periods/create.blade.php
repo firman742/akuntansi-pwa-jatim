@@ -140,10 +140,6 @@
                             rows="6" />
                     </div>
 
-                    {{-- Is Active --}}
-                    <div class="col-span-1 md:col-span-2">
-                        <x-form.toggle-switch name="is_active" label="Aktifkan Sub Periode" :value="true" />
-                    </div>
                 </div>
 
                 <div class="mt-6 flex justify-end gap-3">

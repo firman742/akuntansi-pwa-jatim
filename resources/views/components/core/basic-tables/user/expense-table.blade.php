@@ -1,13 +1,17 @@
 @props([
-    'expenses' => collect(),
+    'transactions' => collect(),
 ])
 
 <div x-data="{
-    tableRowData: @js($expenses),
+    tableRowData: @js($transactions),
     itemsPerPage: 10,
     currentPage: 1,
+    selectedRows: [],
+    selectAll: false,
     showUrl: '{{ route('user.transactions.expenses.show', ':id') }}',
-    {{-- destroyUrl: '{{ route('user.expenses.destroy', ':id') }}', --}}
+    editUrl: '{{ route('user.transactions.expenses.edit', ':id') }}',
+    postUrl: '{{ route('user.transactions.expenses.post', ':id') }}',
+    cancelUrl: '{{ route('user.transactions.expenses.cancel', ':id') }}',
 
     get totalPages() {
         return Math.ceil(this.tableRowData.length / this.itemsPerPage);
@@ -54,25 +58,20 @@
             this.currentPage = page;
         }
     },
-    selectedRows: [],
-    selectAll: false,
-    handleSelectAll() {
-        this.selectAll = !this.selectAll;
-        if (this.selectAll) {
-            this.selectedRows = this.tableRowData.map(row => row.id);
-        } else {
-            this.selectedRows = [];
-        }
+    openDetail(row) {
+        this.selected = row;
     },
-    handleRowSelect(id) {
-        if (this.selectedRows.includes(id)) {
-            this.selectedRows = this.selectedRows.filter(rowId => rowId !== id);
-        } else {
-            this.selectedRows.push(id);
-        }
+    closeDetail() {
+        this.selected = null;
     },
-
-    formatCurrency(amount) {
+    formatDate(date) {
+        return new Date(date).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+        });
+    },
+    currency(amount) {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
@@ -80,146 +79,177 @@
         }).format(amount);
     },
 
-    statusBadge(status) {
-        switch (status) {
-            case 'POSTED':
-                return 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400';
-            case 'SUBMITTED':
-                return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400';
-            case 'REVERSED':
-                return 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400';
-            default:
-                return 'bg-gray-100 text-gray-700 dark:bg-gray-500/15 dark:text-gray-400';
-        }
+    statusClass(status) {
+        return {
+            'DRAFT': 'bg-gray-50 text-gray-700 border border-gray-500 dark:bg-gray-500/15 dark:text-gray-500 dark:border-gray-500',
+            'SUBMITTED': 'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500',
+            'POSTED': 'bg-yellow-50 text-yellow-700 border border-yellow-500 dark:bg-yellow-500/15 dark:text-yellow-500 dark:border-yellow-500',
+            'REVERSED': 'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500',
+        } [status] ?? 'bg-gray-50 text-gray-700 border border-gray-500 dark:bg-gray-500/15 dark:text-gray-500 dark:border-gray-500';
     },
+
     statusLabel(status) {
-        switch (status) {
-            case 'POSTED':
-                return 'Posted';
-            case 'SUBMITTED':
-                return 'Diajukan';
-            case 'REVERSED':
-                return 'Dibatalkan';
-            default:
-                return 'Draft';
-        }
-    },
-    formatDate(date) {
-        if (!date) return '-';
-        const d = new Date(date);
-        return d.toLocaleDateString('id-ID', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-        });
+        return {
+            'DRAFT': 'DRAFT',
+            'POSTED': 'DIPOSTING',
+            'REVERSED': 'DIBATALKAN',
+        } [status] ?? '-';
     },
 
+    transactionTypeLabel(type) {
+        return {
+            'INCOME': 'Penerimaan',
+            'EXPENSE': 'Pengeluaran',
+            'TRANSFER': 'Transfer',
+        } [type] ?? '-';
+    },
 
-
-    deleteRow(id) {
-        if (confirm('Are you sure you want to delete this order?')) {
-            this.tableRowData = this.tableRowData.filter(row => row.id !== id);
-            this.selectedRows = this.selectedRows.filter(rowId => rowId !== id);
-
-            if (this.currentPage > this.totalPages) {
-                this.currentPage = this.totalPages || 1;
-            }
-        }
+    transactionTypeClass(type) {
+        return {
+            'INCOME': 'bg-blue-50 text-blue-700 border border-blue-500 dark:bg-blue-500/15 dark:text-blue-500 dark:border-blue-500',
+            'EXPENSE': 'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500',
+            'TRANSFER': 'bg-yellow-50 text-yellow-700 border border-yellow-500 dark:bg-yellow-500/15 dark:text-yellow-500 dark:border-yellow-500',
+        } [type] ?? 'bg-gray-50 text-gray-700 border border-gray-500 dark:bg-gray-500/15 dark:text-gray-500 dark:border-gray-500';
     }
 }">
-    <div
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <!-- Table -->
+
+    {{-- TABLE --}}
+    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
         <div class="max-w-full overflow-x-auto">
-            <table class="w-full border-collapse">
-                <thead>
-                    <tr
-                        class="bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-600 border-b border-gray-200">
+            <table class="w-full">
+                <thead
+                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+                    <tr>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            <div class="flex items-center gap-3">
-                                <span class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">No</span>
-                            </div>
-                        </th>
+                            No</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            tanggal transaksi</th>
+                            Tanggal</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            deskripsi</th>
+                            Deskripsi</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            total</th>
+                            Tipe</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            pembuat</th>
-                        {{-- <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Status</th> --}}
+                            Total</th>
                         <th
                             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Action</th>
+                            Pembuat</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
+                            Status</th>
+                        <th
+                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-center">
+                            Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    <template x-for="(row, index) in paginatedData" :key="row.id">
-                        <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-    class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
-
-                            <!-- No Urut -->
-                            <td class="px-4 sm:px-6 py-3.5">
-                                <div class="flex items-center gap-3">
-                                    <span class="font-medium text-gray-700 text-theme-sm dark:text-gray-400"
+                    <template x-if="paginatedData.length > 0">
+                        <template x-for="(row, index) in paginatedData" :key="row.id">
+                            <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
+                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
+                                {{-- No --}}
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
                                         x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
+                                </td>
+
+                                {{-- TANGGAL --}}
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="formatDate(row.transaction_date)"></span>
+                                </td>
+
+                                {{-- DESKRIPSI --}}
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="row.description"></span>
+                                </td>
+
+                                {{-- TIPE --}}
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span
+                                        class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
+                                        :class="transactionTypeClass(row.transaction_type)"
+                                        x-text="transactionTypeLabel(row.transaction_type)">
+                                    </span>
+                                </td>
+
+                                {{-- TOTAL --}}
+                                <td class="px-4 sm:px-6 py-3.5 font-semibold">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        :class="{
+                                            'text-blue-700': row.transaction_type === 'INCOME',
+                                            'text-red-700': row.transaction_type === 'EXPENSE'
+                                        }"
+                                        x-text="currency(row.net_amount)">
+                                    </span>
+                                </td>
+
+                                {{-- CREATOR --}}
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="font-medium text-gray-700 dark:text-gray-400"
+                                        x-text="row.creator?.name ?? '-'"></span>
+                                </td>
+
+                                {{-- STATUS --}}
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium"
+                                        :class="statusClass(row.status)" x-text="statusLabel(row.status)">
+                                    </span>
+                                </td>
+
+                                {{-- AKSI --}}
+
+                                <td class="px-4 sm:px-6 py-3.5">
+                                    <div class="flex items-center gap-3">
+                                        {{-- Show --}}
+                                        <a :href="showUrl.replace(':id', row.id)" title="Lihat Detail"
+                                            class="flex h-8 w-8 items-center justify-center rounded-md text-blue-500 transition hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10"
+                                            title="Lihat Detail">
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5
+                                                c4.477 0 8.268 2.943 9.542 7
+                                                -1.274 4.057-5.065 7-9.542 7
+                                                -4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </template>
+
+                    {{-- Jika data kosong --}}
+                    <template x-if="paginatedData.length === 0">
+                        <tr>
+                            <td colspan="10" class="px-6 py-10 text-center">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                                    </svg>
+
+                                    <p class="text-sm font-medium text-gray-500">
+                                        Belum ada data transaksi yang tersedia
+                                    </p>
+
+                                    <p class="text-xs text-gray-400">
+                                        Data yang tersedia akan tampil di tabel ini
+                                    </p>
                                 </div>
                             </td>
-
-                            <!-- Tanggal Transaksi -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="formatDate(row.transaction_date)"></td>
-
-                            <!-- Deskripsi -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.description"></td>
-
-                            <!-- total -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="formatCurrency(row.total_amount)"></td>
-
-                            <!-- pembuat -->
-                            <td class="px-4 sm:px-6 py-3.5" x-text="row.creator.name"></td>
-
-                            {{-- <!-- status -->
-                            <td class="px-4 sm:px-6 py-3.5">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
-                                    :class="statusBadge(row.status)" x-text="statusLabel(row.status)">
-                                </span>
-                            </td> --}}
-
-                            <!-- Action -->
-                            <td class="px-4 sm:px-3 py-2.5">
-                                <div class="flex items-center gap-2">
-
-                                    <!-- Show -->
-                                    <a :href="showUrl.replace(':id', row.id)"
-                                        class="flex h-8 w-8 items-center justify-center rounded-md
-                                                    text-green-600 hover:bg-green-50
-                                                    dark:text-green-400 dark:hover:bg-green-500/10"
-                                        title="Edit Periode">
-                                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
-                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            fill="none" viewBox="0 0 24 24">
-                                            <path stroke="currentColor" stroke-width="2"
-                                                d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z" />
-                                            <path stroke="currentColor" stroke-width="2"
-                                                d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                        </svg>
-                                    </a>
-
-                                </div>
-                            </td>
-
                         </tr>
                     </template>
                 </tbody>
-
             </table>
         </div>
     </div>
@@ -270,33 +300,5 @@
             </button>
         </div>
     </div>
+
 </div>
-</div>
-
-<script>
-    const periodFilter = document.getElementById('filter_period');
-    const subPeriodFilter = document.getElementById('filter_sub_period');
-
-    periodFilter.addEventListener('change', async function() {
-
-        let periodId = this.value;
-
-        subPeriodFilter.innerHTML = '<option>Loading...</option>';
-
-        if (!periodId) {
-            subPeriodFilter.innerHTML = '<option value="">Semua</option>';
-            return;
-        }
-
-        const res = await fetch(`/user/periode/${periodId}/sub-periods`);
-        const data = await res.json();
-
-        subPeriodFilter.innerHTML = '<option value="">Semua</option>';
-
-        data.forEach(sub => {
-            subPeriodFilter.innerHTML += `
-                <option value="${sub.id}">${sub.name}</option>
-            `;
-        });
-    });
-</script>

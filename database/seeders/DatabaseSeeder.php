@@ -15,13 +15,13 @@ class DatabaseSeeder extends Seeder
             ConfigurationSeeder::class,
             RolePermissionSeeder::class,
             UserSeeder::class,
-            PeriodSeeder::class,
+            // PeriodSeeder::class,
             /** GROUP 1 : Master data coa & user account */
             AccountTypeSeeder::class,
             ChartOfAccountSeeder::class,
             UserAccountSeeder::class,
 
-            // /** Group 2 : Opening Balance & Coa Balance */
+            /** Group 2 : Opening Balance & Coa Balance */
             // OpeningBalanceSeeder::class,
 
             // /** Group 3 : Budget Allocation & Journal */
