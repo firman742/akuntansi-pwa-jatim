@@ -125,6 +125,26 @@
 
     {{-- JS --}}
     <script>
+        // TOOGLE Node
+        function toggleNode(id, button) {
+            const el = document.getElementById('node-' + id);
+
+            if (!el) return;
+
+            el.classList.toggle('hidden');
+
+            const text = button.querySelector('span');
+            const icon = button.querySelector('svg');
+
+            if (el.classList.contains('hidden')) {
+                text.textContent = 'Tampilkan';
+                icon.classList.remove('rotate-180');
+            } else {
+                text.textContent = 'Sembunyikan';
+                icon.classList.add('rotate-180');
+            }
+        }
+        
         // TOGGLE GROUP
         function toggleGroup(id, button) {
             const el = document.getElementById('group-' + id);

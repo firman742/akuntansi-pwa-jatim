@@ -46,6 +46,28 @@
             </div>
         </x-slot>
 
+        {{-- GRID 1 COLUMN --}}
+        <div class="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-1 gap-3 p-3">
+
+            <div class="mt-3 flex justify-end">
+
+                <button id="toggleAllGroupsBtn" onclick="toggleAllGroups(this)"
+                    class="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 underline">
+
+                    <span>Sembunyikan Semua</span>
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 rotate-180"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+
+                    </svg>
+
+                </button>
+
+            </div>
+        </div>
+
         {{-- GRID 2 COLUMN --}}
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 p-2">
 
@@ -98,6 +120,26 @@
 
     {{-- JS --}}
     <script>
+        // TOOGLE Node
+        function toggleNode(id, button) {
+            const el = document.getElementById('node-' + id);
+
+            if (!el) return;
+
+            el.classList.toggle('hidden');
+
+            const text = button.querySelector('span');
+            const icon = button.querySelector('svg');
+
+            if (el.classList.contains('hidden')) {
+                text.textContent = 'Tampilkan';
+                icon.classList.remove('rotate-180');
+            } else {
+                text.textContent = 'Sembunyikan';
+                icon.classList.add('rotate-180');
+            }
+        }
+        
         // TOGGLE GROUP
         function toggleGroup(id, button) {
             const el = document.getElementById('group-' + id);

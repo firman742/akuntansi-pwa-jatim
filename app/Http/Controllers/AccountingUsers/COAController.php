@@ -26,7 +26,12 @@ class COAController extends Controller
                 'accountType',
                 'creator',
                 'parent',
-                'children.children'
+                'children' => function ($query) {
+                    $query->orderBy('code');
+                },
+                'children.children' => function ($query) {
+                    $query->orderBy('code');
+                }
             ])
             ->orderBy('code')
             ->get();
