@@ -140,11 +140,9 @@ class OpeningBalanceService extends BaseService
         $periods = Period::all();
         $subPeriods = optional($periods->first())->subPeriods()->orderBy('start_date')->get();
 
-        // just get coa debit
+        // Ambil semua COA, urutkan berdasarkan kode
         $coaLists = ChartOfAccount::query()
-            ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
-            // ->whereNotNull('parent_id')
-            // ->doesntHave('children')
+            ->select('id', 'code', 'name', 'normal_balance')
             ->orderBy('code')
             ->get();
 

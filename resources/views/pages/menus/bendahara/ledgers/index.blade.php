@@ -97,29 +97,31 @@
         </form>
     </div>
 
-    {{-- Tombol export pdf & export excel --}}
-    <div class="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-end">
 
-        <div class="flex flex-col gap-2 sm:flex-row">
-            {{-- Export PDF --}}
-            <a href="#" target="_blank">
-                <x-ui.button variant="primary" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
-                    Export PDF
-                </x-ui.button>
-            </a>
-
-            {{-- Export Excel --}}
-            <a href="#">
-                <x-ui.button variant="outline" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
-                    Export Excel
-                </x-ui.button>
-            </a>
-        </div>
-    </div>
 
 
     {{-- LEDGER TABLE --}}
     @if ($coa)
+        {{-- Tombol export pdf & export excel --}}
+        <div class="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-end">
+
+            <div class="flex flex-col gap-2 sm:flex-row">
+                {{-- Export PDF --}}
+                <a href="#" target="_blank">
+                    <x-ui.button variant="primary" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
+                        Export PDF
+                    </x-ui.button>
+                </a>
+
+                {{-- Export Excel --}}
+                <a href="#">
+                    <x-ui.button variant="outline" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
+                        Export Excel
+                    </x-ui.button>
+                </a>
+            </div>
+        </div>
+
         <div
             class="overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 shadow-lg rounded-2xl">
             {{-- HEADER: Lebih Informatif --}}

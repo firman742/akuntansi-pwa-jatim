@@ -98,7 +98,8 @@ class ExpenseService extends TransactionBaseService
                     TransactionType::EXPENSE
                 );
 
-                // Update saldo user
+                // Update saldo user : 
+                // Pengeluaran -> Saldo digunakan Bertambah dan Saldo Tersisa Berkurang
                 $userBalance->increment('used_balance', $totalExpense);
                 $userBalance->decrement('remaining_balance', $totalExpense);
 

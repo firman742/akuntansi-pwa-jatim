@@ -17,8 +17,8 @@ class DashboardController extends Controller
         /**
          * Active Period
          */
-        $activePeriod = Period::where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+        $activePeriod = Period::query()
+            ->latest()
             ->first();
 
         /**

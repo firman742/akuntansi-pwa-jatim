@@ -4,6 +4,7 @@ namespace App\Services\AccountingUsers;
 
 use App\Enums\MetaTypeTransactionEnum;
 use App\Enums\NormalBalanceEnum;
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
@@ -43,6 +44,7 @@ class IncomeService extends TransactionBaseService
             ];
 
             $amount = (float) $data['amount'];
+            $data['status'] = TransactionStatus::POSTED->value;
 
             /*
             |--------------------------------------------------------------------------
@@ -84,23 +86,33 @@ class IncomeService extends TransactionBaseService
                 data: $data,
                 lines: $lines,
                 totalAmount: $amount,
-                type: TransactionType::INCOME
+                type: TransactionType::INCOME,
             );
 
             /*
             |--------------------------------------------------------------------------
-            | Update Saldo User
+            | Update Saldo User:
+            | Penerimaan -> Saldo Dialokasikan Bertambah & Saldo Tersisa Bertambah
             |--------------------------------------------------------------------------
             */
+            $userBalance->increment('allocated_balance', $amount);
+            $userBalance->increment('remaining_balance', $amount);
 
-            $userBalance->increment(
-                'allocated_balance',
-                $amount
-            );
-
-            $userBalance->increment(
-                'remaining_balance',
-                $amount
+            /**
+             * Create Journal Entries
+             */
+            $this->generateJournal(
+                [
+                    'transaction_date' => $transaction->transaction_date,
+                    'description' => $transaction->description,
+                    'period_id' => $transaction->period_id,
+                    'sub_period_id' => $transaction->sub_period_id,
+                ],
+                $lines,
+                collect($lines)->sum('debit'),
+                collect($lines)->sum('credit'),
+                "INC",
+                $transaction
             );
 
             /*
@@ -108,7 +120,6 @@ class IncomeService extends TransactionBaseService
             | Audit Log
             |--------------------------------------------------------------------------
             */
-
             $this->logger->log(
                 action: 'CREATE',
                 module: 'TRANSACTION_INCOME',

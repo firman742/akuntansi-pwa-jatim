@@ -31,8 +31,8 @@ class IncomeController extends Controller
         $query = Transaction::with([
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
-            'period:id,name',
-            'subPeriod:id,name'
+            'period:id,name,start_date,end_date',
+            'subPeriod:id,name,start_date,end_date'
         ])->where('transaction_type', TransactionType::INCOME);
 
         // =========== Filter by period and sub-period if provided
@@ -56,7 +56,7 @@ class IncomeController extends Controller
             $query->where('status', $request->status);
         }
 
-       
+
         // ========= Pagination and sorting
         $transactions = $query
             ->where('created_by', Auth::id())
@@ -74,13 +74,28 @@ class IncomeController extends Controller
                 ->get();
         }
 
-        return view('pages.menus.user.transactions.incomes.index',
+        return view(
+            'pages.menus.user.transactions.incomes.index',
             compact(
                 'transactions',
                 'periods',
                 'subPeriods'
             )
         );
+    }
+
+    public function show(string $id): View
+    {
+        $transaction = Transaction::with([
+            'creator:id,name',
+            'transactionLines.chartOfAccount:id,code,name',
+            'period:id,name,start_date,end_date',
+            'subPeriod:id,name,start_date,end_date'
+        ])
+        ->where('transaction_type', TransactionType::INCOME)
+        ->findOrFail($id);
+
+        return view('pages.menus.user.transactions.incomes.show', compact('transaction'));
     }
 
     /**
@@ -93,8 +108,7 @@ class IncomeController extends Controller
         $userId = Auth::id();
 
         $activePeriod = Period::query()
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->latest()
             ->first();
 
         if (!$activePeriod) {
@@ -135,12 +149,12 @@ class IncomeController extends Controller
             });
 
 
+        // All Akun Pendapatan
         $incomeCoas = ChartOfAccount::query()
             ->whereHas('accountType', function ($q) {
                 $q->where('name', 'PENDAPATAN');
             })
             ->where('is_active', true)
-            ->whereDoesntHave('children')
             ->orderBy('code')
             ->get();
 
@@ -168,7 +182,7 @@ class IncomeController extends Controller
             $service->handle($request->validated());
 
             return redirect()
-                ->route('user.transactions.incomes.create')
+                ->route('user.transactions.incomes.index')
                 ->with('success', 'Transaksi penerimaan berhasil disimpan');
         } catch (Exception $e) {
             return redirect()

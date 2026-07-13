@@ -64,9 +64,9 @@ class CoaBalanceController extends Controller
         }
 
         $coaBalances = $query->whereHas('chartOfAccount', function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-                ->orWhere('code', 'like', "%{$search}%");
-        })
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            })
             ->orderBy('created_at')
             ->get();
 
@@ -89,7 +89,7 @@ class CoaBalanceController extends Controller
     public function show(string $id): View
     {
         $coaBalance = CoaBalance::with([
-            'chartOfAccount:id,name,code',
+            'chartOfAccount:id,name,code,normal_balance',
             'period:id,name',
             'subPeriod:id,name,period_id,start_date,end_date',
         ])->findOrFail($id);
@@ -194,9 +194,9 @@ class CoaBalanceController extends Controller
             ->limit(10)
             ->get();
 
-        
 
-        
+
+
 
         /**
          * ==========================================================
@@ -215,7 +215,7 @@ class CoaBalanceController extends Controller
                 'data' => $openingBalance,
             ]);
         }
-        
+
 
         // Transaction
         foreach ($transactions as $transaction) {
@@ -250,10 +250,10 @@ class CoaBalanceController extends Controller
             ]);
         }
 
-        
+
         $timeline = $timeline
-        ->sortByDesc('date')
-        ->values();
+            ->sortByDesc('date')
+            ->values();
 
         /* ==========================================================
          * GRAFIK PERGERAKAN SALDO
@@ -278,7 +278,7 @@ class CoaBalanceController extends Controller
 
         $hasChartData = !empty($chartValues) && !empty($chartLabels);
 
-        
+
         return view('pages.menus.bendahara.coa_balances.show', [
             'coaBalance' => $coaBalance,
             'account' => $account,

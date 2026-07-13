@@ -79,6 +79,9 @@
                             <p class="text-lg font-medium text-gray-600 dark:text-gray-300">
                                 {{ $coaBalance->chartOfAccount->name }}
                             </p>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                {{ $coaBalance->chartOfAccount->normal_balance }}
+                            </p>
                         </div>
 
                         <div

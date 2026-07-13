@@ -26,7 +26,9 @@ class DashboardController extends Controller
         /**
          * Active Period
          */
-        $activePeriod = Period::active()->first();
+        $activePeriod = Period::query()
+            ->latest()
+            ->first();
 
         /**
          * Sub Periods

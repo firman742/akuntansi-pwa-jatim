@@ -81,7 +81,7 @@
                 <x-form.select id="select_coa" name="coa_id" label="Akun (COA)" placeholder="-- Pilih Akun --">
                     @foreach ($coaLists as $coa)
                         <option value="{{ $coa->id }}" data-balance="{{ $coa->normal_balance }}">
-                            {{ $coa->code }} — {{ $coa->name }}
+                            {{ $coa->code }} — {{ $coa->name }} ({{ $coa->normal_balance }})
                         </option>
                     @endforeach
                 </x-form.select>
@@ -129,12 +129,10 @@
 
                     {{-- TIPE SALDO --}}
                     <div>
-                        <x-form.select id="final_balance_type" name="balance_type" label="Tipe Saldo" disabled>
+                        <x-form.select id="final_balance_type" name="balance_type" label="Tipe Saldo">
                             <option value="DEBIT">DEBIT</option>
+                            <option value="CREDIT">CREDIT</option>
                         </x-form.select>
-
-                        <input type="hidden" name="balance_type" id="final_balance_type" value="DEBIT">
-
                     </div>
 
                     {{-- TOTAL PREVIEW --}}
@@ -172,17 +170,29 @@
 
         // Utils
         function formatRupiah(value) {
-            if (!value) return 'Rp 0';
-            let numberString = value.toString().replace(/[^0-9]/g, '');
-            let split = numberString.split(',');
-            let sisa = split[0].length % 3;
-            let rupiah = split[0].substr(0, sisa);
-            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-            if (ribuan) {
-                let separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
+            const number = Number(value);
+
+            if (isNaN(number)) {
+                return 'Rp 0';
             }
-            return 'Rp ' + rupiah;
+
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(number);
+
+            }
+
+        // Sync balance type based on selected COA
+        function syncBalanceType() {
+            const selectedOption = selectCoa.options[selectCoa.selectedIndex];
+
+            if (!selectedOption) return;
+
+            document.getElementById('final_balance_type').value =
+                selectedOption.dataset.balance;
         }
 
         // 1. Handle Dependent Dropdown (Sub Period)
@@ -261,7 +271,7 @@
                 document.getElementById('amount_hidden').value = data.amount;
                 document.getElementById('amount_display').value = formatRupiah(data.amount);
 
-                document.getElementById('final_balance_type').value = data.balance_type;
+                syncBalanceType();
 
                 document.getElementById('additional_hidden').value = 0;
                 document.getElementById('additional_display').value = '';
@@ -351,13 +361,8 @@
 
 
         // Auto set balance type berdasarkan normal balance COA
-        selectCoa.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const normalBalance = selectedOption.dataset.balance;
-
-            if (normalBalance) {
-                document.getElementById('final_balance_type').value = normalBalance;
-            }
+        selectCoa.addEventListener('change', function () {
+            syncBalanceType();
         });
     </script>
 @endsection

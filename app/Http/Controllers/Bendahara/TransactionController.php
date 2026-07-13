@@ -23,8 +23,8 @@ class TransactionController extends Controller
         $query = Transaction::with([
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
-            'period:id,name',
-            'subPeriod:id,name'
+            'period:id,name,start_date,end_date',
+            'subPeriod:id,name,start_date,end_date'
         ]);
 
         // ================= FILTER =================

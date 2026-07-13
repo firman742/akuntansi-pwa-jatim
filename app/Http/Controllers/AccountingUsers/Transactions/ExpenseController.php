@@ -93,8 +93,7 @@ class ExpenseController extends Controller
 
         // ── Period ─────────────────────────────────────────
         $activePeriod = Period::query()
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->latest()
             ->first();
 
         if (!$activePeriod) {
@@ -144,7 +143,6 @@ class ExpenseController extends Controller
         $expenseCoas = ChartOfAccount::query()
             ->where('normal_balance', NormalBalanceEnum::CREDIT->value)
             ->where('is_active', true)
-            ->whereDoesntHave('children')
             ->orderBy('code')
             ->get();
 
@@ -170,7 +168,9 @@ class ExpenseController extends Controller
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name',
             'subPeriod:id,name'
-        ])->findOrFail($id);
+        ])
+        ->where('trasaction_type', TransactionType::EXPENSE->value)
+        ->findOrFail($id);
 
         return view('pages.menus.user.transactions.expenses.show', compact(
             'transaction'

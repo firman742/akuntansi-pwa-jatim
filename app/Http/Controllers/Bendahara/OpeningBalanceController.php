@@ -47,8 +47,7 @@ class OpeningBalanceController extends Controller
      */
     public function create(OpeningBalanceService $service): View
     {
-        return view(
-            'pages.menus.bendahara.opening_balances.create',
+        return view('pages.menus.bendahara.opening_balances.create',
             $service->getCreateData()
         );
     }
