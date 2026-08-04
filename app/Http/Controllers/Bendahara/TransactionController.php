@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Bendahara;
 
+use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Period;
 use App\Models\SubPeriod;
@@ -27,7 +28,20 @@ class TransactionController extends Controller
             'subPeriod:id,name,start_date,end_date'
         ]);
 
-        // ================= FILTER =================
+        // ================= SEARCH (No. Transaksi / Deskripsi / COA) =================
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_number', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('transactionLines.chartOfAccount', function ($qCoa) use ($search) {
+                        $qCoa->where('code', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // ================= FILTERS =================
         if ($request->filled('period_id')) {
             $query->where('period_id', $request->period_id);
         }
@@ -48,16 +62,34 @@ class TransactionController extends Controller
             $query->where('transaction_type', $request->transaction_type);
         }
 
-        // ================= ORDER =================
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // ================= STATS AGGREGATION =================
+        $statsQuery = clone $query;
+
+        $totalIncome = (clone $statsQuery)->where('transaction_type', TransactionType::INCOME)->sum('net_amount');
+        $totalExpense = (clone $statsQuery)->where('transaction_type', TransactionType::EXPENSE)->sum('net_amount');
+
+        $stats = [
+            'total_count'   => (clone $statsQuery)->count(),
+            'total_income'  => $totalIncome,
+            'total_expense' => $totalExpense,
+            'net_balance'   => $totalIncome - $totalExpense,
+        ];
+
+        // ================= GET TRANSACTIONS =================
         $transactions = $query
-            ->orderBy('transaction_date', 'desc')
+            ->latest('transaction_date')
+            ->latest('created_at')
             ->get();
 
         // ================= FILTER DATA =================
-        $periods = Period::all();
+        $periods = Period::query()->select('id', 'name', 'start_date', 'end_date')->get();
 
         $subPeriods = collect();
-        if ($request->period_id) {
+        if ($request->filled('period_id')) {
             $subPeriods = SubPeriod::where('period_id', $request->period_id)
                 ->orderBy('start_date')
                 ->get();
@@ -65,13 +97,14 @@ class TransactionController extends Controller
 
         return view('pages.menus.bendahara.transactions.index', compact(
             'transactions',
+            'stats',
             'periods',
             'subPeriods'
         ));
     }
 
-    
-    
+
+
     /**
      * Display the specified resource.
      *
@@ -90,7 +123,8 @@ class TransactionController extends Controller
             'journal.details.chartOfAccount',
         ]);
 
-        return view('pages.menus.bendahara.transactions.show',
+        return view(
+            'pages.menus.bendahara.transactions.show',
             compact('transaction')
         );
     }

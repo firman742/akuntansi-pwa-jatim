@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\AccountingUsers\Transactions;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
@@ -33,7 +34,22 @@ class IncomeController extends Controller
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
             'subPeriod:id,name,start_date,end_date'
-        ])->where('transaction_type', TransactionType::INCOME);
+        ])
+            ->where('transaction_type', TransactionType::INCOME)
+            ->where('created_by', Auth::id());
+
+        // ================= SEARCH (COA / Deskripsi / No Transaksi) =================
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_number', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('transactionLines.chartOfAccount', function ($qCoa) use ($search) {
+                        $qCoa->where('code', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                    });
+            });
+        }
 
         // =========== Filter by period and sub-period if provided
         if ($request->filled('period_id')) {
@@ -57,29 +73,37 @@ class IncomeController extends Controller
         }
 
 
-        // ========= Pagination and sorting
+        // Menghitung statistik berdasarkan filter aktif
+        $statsQuery = clone $query;
+        $stats = [
+            'total_amount' => (clone $statsQuery)->sum('net_amount'),
+            'total_count'  => (clone $statsQuery)->count(),
+            'posted_count' => (clone $statsQuery)->where('status', TransactionStatus::POSTED)->count(),
+            'draft_count'  => (clone $statsQuery)->where('status', TransactionStatus::DRAFT)->count(),
+        ];
+
+        // ================= EXECUTE QUERY =================
         $transactions = $query
-            ->where('created_by', Auth::id())
-            ->orderBy('transaction_date', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->latest('transaction_date')
+            ->latest('created_at')
             ->get();
 
-        // ========= Get periods and sub-periods for filter dropdowns
-        $periods = Period::orderBy('start_date', 'desc')->get();
-        $subPeriods = collect();
+        // ================= FILTER DATA =================
+        $periods = Period::query()->select("id", "name", "start_date", "end_date")->get();
 
+        $subPeriods = collect();
         if ($request->filled('period_id')) {
-            $subPeriods = SubPeriod::where('period_id', $request->input('period_id'))
+            $subPeriods = SubPeriod::where('period_id', $request->period_id)
                 ->orderBy('start_date')
                 ->get();
         }
 
-        return view(
-            'pages.menus.user.transactions.incomes.index',
+        return view('pages.menus.user.transactions.incomes.index',
             compact(
                 'transactions',
                 'periods',
-                'subPeriods'
+                'subPeriods',
+                'stats'
             )
         );
     }

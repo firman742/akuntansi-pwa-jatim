@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -16,8 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $id
  * @property string $name
  * @property string|null $description
- * @property \Illuminate\Support\Carbon $start_date
- * @property \Illuminate\Support\Carbon $end_date
+ * @property Carbon $start_date
+ * @property Carbon $end_date
  *
  * @property-read OpeningBalance[]|null $opening_balances
  * @property-read Transaction[]|null $transactions
@@ -59,7 +60,13 @@ class Period extends Model
     protected function isActive(): Attribute
     {
         return Attribute::make(
-            get: fn () => now()->between($this->start_date, $this->end_date),
+            get: function () {
+                if (!$this->start_date || !$this->end_date) {
+                    return false;
+                }
+    
+                return now()->between($this->start_date, $this->end_date);
+            },
         );
     }
 

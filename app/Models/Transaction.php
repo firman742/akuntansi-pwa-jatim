@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -33,6 +34,7 @@ class Transaction extends Model implements HasMedia
         'transaction_date' => 'date',
         'total_amount' => 'decimal:2',
         'transaction_type' => TransactionType::class, // ⬅️ KUNCI
+        'status' => TransactionStatus::class,
         'receipt_path' => 'string', // For file path
     ];
 

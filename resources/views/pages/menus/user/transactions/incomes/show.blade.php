@@ -1,224 +1,366 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Transaksi Penerimaan')
+@section('title', 'Detail Transaksi Penerimaan - ' . $transaction->transaction_number)
 
 @section('content')
-    <div class="max-w-6xl mx-auto space-y-4">
+    <div class="space-y-6">
+        {{-- BREADCRUMB & TOP ACTIONS --}}
         <x-common.page-breadcrumb pageTitle="Detail Transaksi Penerimaan" defaultTitle="Detail Transaksi Penerimaan"
-            pageDescription="Monitoring transaksi penerimaan yang terjadi di sistem ini" pageIcon="transaction"
-            parentTitle="Transaksi Penerimaan" :parentRoute="route('user.transactions.incomes.index')" currentTitle="Detail" />
+            pageDescription="Rincian informasi lengkap, jurnal, dan lampiran transaksi penerimaan kas" pageIcon="transaction"
+            parentTitle="Transaksi Penerimaan" :parentRoute="route('user.transactions.incomes.index')" currentTitle="{{ $transaction->transaction_number }}" />
 
-        <div class="flex items-center space-x-4 gap-3 justify-end">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {{-- ACTION BUTTONS --}}
+            <div class="flex flex-wrap items-center gap-2.5">
+                {{-- BACK --}}
+                <a href="{{ route('user.transactions.incomes.index') }}">
+                    <x-ui.button variant="outline" size="sm" class="rounded-xl">
+                        <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Kembali
+                    </x-ui.button>
+                </a>
 
-            {{-- BACK --}}
-            <a href="{{ route('user.transactions.incomes.index') }}">
-                <x-ui.button variant="outline" size="sm">
-                    ← Kembali
-                </x-ui.button>
-            </a>
+                @if ($transaction->status === \App\Enums\TransactionStatus::DRAFT)
+                    {{-- EDIT --}}
+                    <a href="{{ route('user.transactions.incomes.edit', $transaction) }}">
+                        <x-ui.button variant="outline" size="sm"
+                            class="rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-400">
+                            <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit
+                        </x-ui.button>
+                    </a>
+
+                    {{-- POSTING --}}
+                    <form action="{{ route('user.transactions.incomes.post', $transaction) }}" method="POST"
+                        onsubmit="return confirm('Apakah Anda yakin ingin memposting transaksi penerimaan ini? Transaksi yang diposting akan langsung menambah saldo kas.')">
+                        @csrf
+                        <x-ui.button type="submit" variant="primary" size="sm"
+                            class="rounded-xl bg-emerald-600 hover:bg-emerald-700">
+                            <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Posting Transaksi
+                        </x-ui.button>
+                    </form>
+
+                    {{-- BATALKAN --}}
+                    <form action="{{ route('user.transactions.incomes.cancel', $transaction) }}" method="POST"
+                        onsubmit="return confirm('Apakah Anda yakin ingin membatalkan transaksi ini?')">
+                        @csrf
+                        <x-ui.button type="submit" variant="danger" size="sm" class="rounded-xl">
+                            <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Batalkan
+                        </x-ui.button>
+                    </form>
+                @endif
+            </div>
         </div>
 
+        {{-- ALERT MESSAGES --}}
         @if ($errors->any())
-            <div class="mb-6">
-                <x-ui.alert variant="error" title="Terjadi Kesalahan">
-                    <ul class="list-disc list-inside space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <li class="text-dark-500">{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </x-ui.alert>
-            </div>
+            <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
         @endif
-
 
         @if (session('success'))
-            <div class="mb-6">
-                <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
-            </div>
+            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
         @endif
 
-        {{-- MAIN CARD --}}
-        <div class="bg-white rounded-xl border p-6 space-y-6 pt-5 dark:bg-gray-800 dark:border-gray-700">
-
-            {{-- HEADER --}}
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
-
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">No Transaksi</div>
-                    <div class="font-semibold dark:text-gray-200">{{ $transaction->transaction_number }}</div>
-                </div>
-
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">Tanggal</div>
-                    <div class="font-semibold dark:text-gray-200">
-                        {{ $transaction->transaction_date->format('d F Y') }}
+        {{-- HEADER SUMMARY BANNER --}}
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
                     </div>
-                </div>
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                                {{ $transaction->transaction_number }}
+                            </h2>
 
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">Periode</div>
-                    <div class="font-semibold dark:text-gray-200">{{ $transaction->period->name }}</div>
-                </div>
-
-                {{-- ✅ SUB PERIOD --}}
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">Sub Periode</div>
-                    <div class="font-semibold dark:text-gray-200">
-                        {{ $transaction->subPeriod?->name ?? '-' }}
-                    </div>
-                </div>
-
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">Dibuat oleh</div>
-                    <div class="font-semibold dark:text-gray-200">{{ $transaction->creator?->name }}</div>
-                </div>
-
-                {{-- STATUS --}}
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">Status</div>
-                    <span
-                        class="inline-block px-3 py-1 text-xs rounded-full
-                    @if ($transaction->status === 'POSTED') bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-700
-                    @elseif($transaction->status === 'SUBMITTED')
-                        bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-700
-                    @elseif($transaction->status === 'REVERSED') 
-                        bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-700
-                    @else 
-                        bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-700 @endif
-                ">
-                        {{ $transaction->status }}
-                    </span>
-                </div>
-
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">Tipe</div>
-                    <span
-                        class="inline-block px-3 py-1 text-xs rounded-full
-                    bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-700">
-                        Penerimaan
-                    </span>
-                </div>
-
-                <div>
-                    <div class="text-gray-500 dark:text-gray-400">Total</div>
-                    <div class="font-semibold text-lg dark:text-gray-200">
-                        Rp {{ number_format($transaction->net_amount, 0, ',', '.') }}
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- DESCRIPTION --}}
-            @if ($transaction->description)
-                <div>
-                    <div class="text-gray-500 text-sm dark:text-gray-400">Keterangan</div>
-                    <div class="text-sm dark:text-gray-300">{{ $transaction->description }}</div>
-                </div>
-            @endif
-
-            <hr class="dark:border-gray-700">
-
-            {{-- TRANSACTION LINES --}}
-            <div class="border rounded-lg overflow-hidden dark:border-gray-700">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-gray-500 dark:text-gray-300">Akun</th>
-                            <th class="px-6 py-3 text-left text-gray-500 dark:text-gray-300">Deskripsi</th>
-                            <th class="px-6 py-3 text-right text-gray-500 dark:text-gray-300">Debit</th>
-                            <th class="px-6 py-3 text-right text-gray-500 dark:text-gray-300">Kredit</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y dark:divide-gray-700">
-                        @foreach ($transaction->transactionLines as $line)
+                            {{-- STATUS BADGE --}}
                             @php
-                                $line->debit_amount =
-                                    $line->position === App\Enums\NormalBalanceEnum::DEBIT ? $line->amount : 0;
-                                $line->credit_amount =
-                                    $line->position === App\Enums\NormalBalanceEnum::CREDIT ? $line->amount : 0;
+                                $statusClasses = [
+                                    \App\Enums\TransactionStatus::DRAFT->value =>
+                                        'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+                                    \App\Enums\TransactionStatus::POSTED->value =>
+                                        'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+                                    \App\Enums\TransactionStatus::REVERSED->value =>
+                                        'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
+                                ];
+                                $currentStatus =
+                                    $transaction->status instanceof \BackedEnum
+                                        ? $transaction->status->value
+                                        : $transaction->status;
                             @endphp
-                            <tr class="dark:bg-gray-800">
-                                <td class="px-6 py-4">
-                                    <div class="font-medium dark:text-gray-200">
-                                        {{ $line->chartOfAccount->code }}
-                                    </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $line->chartOfAccount->name }}
-                                    </div>
-                                </td>
+                            <span
+                                class="inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold {{ $statusClasses[$currentStatus] ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ $transaction->status instanceof \App\Enums\TransactionStatus ? $transaction->status->label() : $transaction->status }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Tanggal Transaksi: <span
+                                class="font-medium text-gray-700 dark:text-gray-300">{{ $transaction->transaction_date->format('d F Y') }}</span>
+                        </p>
+                    </div>
+                </div>
 
-                                <td class="px-6 py-4 dark:text-gray-300">
-                                    {{ $line->description ?? '-' }}
-                                </td>
+                {{-- TOTAL NOMINAL HIGHLIGHT --}}
+                <div class="border-t border-gray-100 pt-3 dark:border-gray-800 md:border-t-0 md:pt-0 md:text-right">
+                    <span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Total
+                        Penerimaan</span>
+                    <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        + Rp {{ number_format($transaction->net_amount, 0, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
 
-                                <td class="px-6 py-4 text-right dark:text-gray-300">
-                                    {{ $line->debit_amount > 0 ? number_format($line->debit_amount, 0, ',', '.') : '-' }}
-                                </td>
+        {{-- MAIN CONTENT GRID (2 COLUMNS) --}}
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-                                <td class="px-6 py-4 text-right dark:text-gray-300">
-                                    {{ $line->credit_amount > 0 ? number_format($line->credit_amount, 0, ',', '.') : '-' }}
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
+            {{-- LEFT COLUMN (2/3): INFORMASI UTAMA & RINCIAN JURNAL --}}
+            <div class="lg:col-span-2 space-y-6">
 
-                    <tfoot class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <td colspan="2" class="px-6 py-3 text-right font-semibold dark:text-gray-300">
-                                Total
-                            </td>
-                            <td class="px-6 py-3 text-right font-semibold dark:text-gray-300">
-                                Rp
-                                {{ number_format($transaction->transactionLines->sum('debit_amount'), 0, ',', '.') }}
-                            </td>
-                            <td class="px-6 py-3 text-right font-semibold dark:text-gray-300">
-                                Rp
-                                {{ number_format($transaction->transactionLines->sum('credit_amount'), 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                {{-- INFORMASI GENERAL CARD --}}
+                <div
+                    class="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                    <h3
+                        class="text-base font-semibold text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Informasi Umum Transaksi
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Periode Anggaran</span>
+                            <span class="font-medium text-gray-900 dark:text-white">{{ $transaction->period->name }}</span>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Sub Periode</span>
+                            <span
+                                class="font-medium text-gray-900 dark:text-white">{{ $transaction->subPeriod?->name ?? '-' }}</span>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Dibuat Oleh</span>
+                            <span
+                                class="font-medium text-gray-900 dark:text-white">{{ $transaction->creator?->name ?? '-' }}</span>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Nomor Referensi</span>
+                            <span
+                                class="font-medium text-gray-900 dark:text-white">{{ $transaction->referencree_number ?? '-' }}</span>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Deskripsi / Catatan
+                                Penerimaan</span>
+                            <p
+                                class="mt-1 text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800 text-xs sm:text-sm">
+                                {{ $transaction->description ?: 'Tidak ada catatan tambahan.' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- RINCIAN JURNAL / TRANSACTION LINES --}}
+                <div
+                    class="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                    <h3
+                        class="text-base font-semibold text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Rincian Jurnal & Posisi Akun
+                        </span>
+                        <span class="text-xs font-normal text-gray-500">({{ $transaction->transactionLines->count() }}
+                            Entri)</span>
+                    </h3>
+
+                    <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+                        <table class="min-w-full text-left text-sm text-gray-600 dark:text-gray-400">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-800/60 text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3.5">Kode & Nama Akun (COA)</th>
+                                    <th scope="col" class="px-4 py-3.5">Deskripsi Baris</th>
+                                    <th scope="col" class="px-4 py-3.5 text-right">Debit</th>
+                                    <th scope="col" class="px-4 py-3.5 text-right">Kredit</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                @php
+                                    $totalDebit = 0;
+                                    $totalCredit = 0;
+                                @endphp
+
+                                @foreach ($transaction->transactionLines as $line)
+                                    @php
+                                        $isDebit = $line->position === \App\Enums\NormalBalanceEnum::DEBIT;
+                                        $debitAmount = $isDebit ? $line->amount : 0;
+                                        $creditAmount = !$isDebit ? $line->amount : 0;
+
+                                        $totalDebit += $debitAmount;
+                                        $totalCredit += $creditAmount;
+                                    @endphp
+                                    <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
+                                        <td class="px-4 py-3.5">
+                                            <div class="flex flex-col">
+                                                <span
+                                                    class="font-semibold text-gray-900 dark:text-white">{{ $line->chartOfAccount->code }}</span>
+                                                <span
+                                                    class="text-xs text-gray-500 dark:text-gray-400">{{ $line->chartOfAccount->name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3.5 text-xs text-gray-700 dark:text-gray-300">
+                                            {{ $line->description ?? '-' }}
+                                        </td>
+                                        <td
+                                            class="px-4 py-3.5 text-right font-mono text-sm font-medium {{ $debitAmount > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-400' }}">
+                                            {{ $debitAmount > 0 ? 'Rp ' . number_format($debitAmount, 0, ',', '.') : '-' }}
+                                        </td>
+                                        <td
+                                            class="px-4 py-3.5 text-right font-mono text-sm font-medium {{ $creditAmount > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-400' }}">
+                                            {{ $creditAmount > 0 ? 'Rp ' . number_format($creditAmount, 0, ',', '.') : '-' }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot
+                                class="bg-gray-50 dark:bg-gray-800/80 font-bold border-t border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+                                <tr>
+                                    <td colspan="2" class="px-4 py-3.5 text-right text-xs uppercase tracking-wider">
+                                        Total Seimbang:</td>
+                                    <td class="px-4 py-3.5 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                                        Rp {{ number_format($totalDebit, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3.5 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                                        Rp {{ number_format($totalCredit, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
-            {{-- ========================================= --}}
-            {{-- RECEIPT CONTENT (PLACEHOLDER) --}}
-            {{-- ========================================= --}}
-            <div class="border rounded-lg p-4 space-y-3 dark:border-gray-700 dark:bg-gray-800">
+            {{-- RIGHT COLUMN (1/3): RINGKASAN NOMINAL & BUKTI TRANSAKSI --}}
+            <div class="space-y-6">
 
-                <div class="flex items-center justify-between">
-                    <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Bukti Transaksi :
+                {{-- RINGKASAN FINANSIAL CARD --}}
+                <div
+                    class="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                    <h3
+                        class="text-base font-semibold text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Ringkasan Nominal
+                    </h3>
+
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                            <span>Jumlah Kotor (Gross)</span>
+                            <span class="font-medium text-gray-900 dark:text-white">
+                                Rp {{ number_format($transaction->gross_amount ?? $transaction->net_amount, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <div
+                            class="border-t border-dashed border-gray-200 dark:border-gray-800 pt-3 flex justify-between items-center">
+                            <span class="font-bold text-gray-900 dark:text-white">Total Bersih Masuk</span>
+                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                                + Rp {{ number_format($transaction->net_amount, 0, ',', '.') }}
+                            </span>
+                        </div>
                     </div>
-
-                    <span class="text-xs text-gray-400 dark:text-gray-500">
-                        (Belum tersedia)
-                    </span>
                 </div>
 
-                <div class="text-sm text-gray-500 italic dark:text-gray-400">
-                    Data detail dari bukti transaksi seperti item, keterangan tambahan,
-                    atau hasil ekstraksi (OCR) akan ditampilkan di sini.
-                </div>
+                {{-- BUKTI TRANSAKSI / NOTA ATTACHMENT CARD --}}
+                <div
+                    class="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                    <h3
+                        class="text-base font-semibold text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Bukti Penerimaan / Transfer
+                        </span>
+                    </h3>
 
-                {{-- Placeholder table --}}
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm border rounded-lg overflow-hidden dark:border-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-gray-500 dark:text-gray-300">Item</th>
-                                <th class="px-4 py-2 text-left text-gray-500 dark:text-gray-300">Deskripsi</th>
-                                <th class="px-4 py-2 text-right text-gray-500 dark:text-gray-300">Jumlah</th>
-                            </tr>
-                        </thead>
-                        <tbody class="dark:bg-gray-800">
-                            <tr>
-                                <td colspan="3" class="px-4 py-6 text-center text-gray-400 dark:text-gray-500">
-                                    Belum ada data
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    @php
+                        $receiptUrl =
+                            $transaction->receipt_url ??
+                            ($transaction->hasMedia('receipts') ? $transaction->getFirstMediaUrl('receipts') : null);
+                    @endphp
+
+                    @if ($receiptUrl)
+                        <div class="space-y-3">
+                            <div
+                                class="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                <img src="{{ $receiptUrl }}" alt="Bukti Penerimaan"
+                                    class="w-full h-48 object-cover transition transform duration-300 group-hover:scale-105" />
+                                <div
+                                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                                    <a href="{{ $receiptUrl }}" target="_blank"
+                                        class="p-2 bg-white rounded-lg shadow-sm text-gray-800 hover:bg-gray-100 transition"
+                                        title="Buka Gambar">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                            <a href="{{ $receiptUrl }}" target="_blank"
+                                class="block w-full text-center text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+                                Lihat Ukuran Penuh (Tab Baru)
+                            </a>
+                        </div>
+                    @else
+                        <div
+                            class="flex flex-col items-center justify-center py-8 px-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 text-center">
+                            <div class="rounded-full bg-gray-100 dark:bg-gray-800 p-3 mb-2 text-gray-400">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Tidak ada lampiran bukti</p>
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Berkas struk / kwitansi belum
+                                diunggah saat pembuatan transaksi.</p>
+                        </div>
+                    @endif
                 </div>
 
             </div>

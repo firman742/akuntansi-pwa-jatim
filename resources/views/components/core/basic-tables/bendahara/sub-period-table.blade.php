@@ -282,10 +282,7 @@
 
                                             <button type="submit" :disabled="!canDelete(row)"
                                                 :title="getLockReason(row) || 'Hapus Sub Periode'"
-                                                :class="canDelete(row) ?
-                                                    'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10' :
-                                                    'text-gray-300 cursor-not-allowed dark:text-gray-600'"
-                                                class="flex h-8 w-8 items-center justify-center rounded-md">
+                                                class="text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 flex h-8 w-8 items-center justify-center rounded-md">
 
                                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">

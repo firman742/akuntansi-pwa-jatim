@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\AccountingUsers\Transactions;
 
 use App\Enums\NormalBalanceEnum;
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
@@ -28,16 +29,37 @@ class ExpenseController extends Controller
      * @param Request $request
      * @return View
      */
+    /**
+     * Display a listing of expense transactions for monitoring.
+     *
+     * @param Request $request
+     * @return View
+     */
     public function index(Request $request): View
     {
         $query = Transaction::with([
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
-            'period:id,name',
+            'period:id,name,start_date,end_date',
             'subPeriod:id,name'
-        ])->where('transaction_type', TransactionType::EXPENSE);
+        ])
+            ->where('transaction_type', TransactionType::EXPENSE)
+            ->where('created_by', Auth::id());
 
-        // ================= FILTER =================
+        // ================= SEARCH (COA / Deskripsi / No Transaksi) =================
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_number', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('transactionLines.chartOfAccount', function ($qCoa) use ($search) {
+                        $qCoa->where('code', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // ================= FILTERS =================
         if ($request->filled('period_id')) {
             $query->where('period_id', $request->period_id);
         }
@@ -58,17 +80,27 @@ class ExpenseController extends Controller
             $query->where('status', $request->status);
         }
 
-        // ================= ORDER =================
+        // ================= MONITORING STATS =================
+        // Menghitung statistik berdasarkan filter aktif
+        $statsQuery = clone $query;
+        $stats = [
+            'total_amount' => (clone $statsQuery)->sum('net_amount'),
+            'total_count'  => (clone $statsQuery)->count(),
+            'posted_count' => (clone $statsQuery)->where('status', TransactionStatus::POSTED)->count(),
+            'draft_count'  => (clone $statsQuery)->where('status', TransactionStatus::DRAFT)->count(),
+        ];
+
+        // ================= EXECUTE QUERY =================
         $transactions = $query
-            ->where('created_by', Auth::id())
-            ->latest()
+            ->latest('transaction_date')
+            ->latest('created_at')
             ->get();
 
         // ================= FILTER DATA =================
-        $periods = Period::all();
+        $periods = Period::query()->select("id", "name", "start_date", "end_date")->get();
 
         $subPeriods = collect();
-        if ($request->period_id) {
+        if ($request->filled('period_id')) {
             $subPeriods = SubPeriod::where('period_id', $request->period_id)
                 ->orderBy('start_date')
                 ->get();
@@ -76,6 +108,7 @@ class ExpenseController extends Controller
 
         return view('pages.menus.user.transactions.expenses.index', compact(
             'transactions',
+            'stats',
             'periods',
             'subPeriods'
         ));
@@ -164,17 +197,15 @@ class ExpenseController extends Controller
     public function show(string $id): View
     {
         $transaction = Transaction::with([
-            'creator:id,name',
+            'creator:id,name,email',
             'transactionLines.chartOfAccount:id,code,name',
-            'period:id,name',
-            'subPeriod:id,name'
+            'period:id,name,start_date,end_date',
+            'subPeriod:id,name,start_date,end_date'
         ])
-        ->where('trasaction_type', TransactionType::EXPENSE->value)
+        ->where('transaction_type', TransactionType::EXPENSE)
         ->findOrFail($id);
 
-        return view('pages.menus.user.transactions.expenses.show', compact(
-            'transaction'
-        ));
+        return view('pages.menus.user.transactions.expenses.show', compact('transaction'));
     }
 
     /**
