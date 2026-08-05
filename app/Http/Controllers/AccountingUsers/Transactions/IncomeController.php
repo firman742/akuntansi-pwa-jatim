@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\AccountingUsers\Transactions;
 
+use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
@@ -98,7 +99,8 @@ class IncomeController extends Controller
                 ->get();
         }
 
-        return view('pages.menus.user.transactions.incomes.index',
+        return view(
+            'pages.menus.user.transactions.incomes.index',
             compact(
                 'transactions',
                 'periods',
@@ -116,8 +118,8 @@ class IncomeController extends Controller
             'period:id,name,start_date,end_date',
             'subPeriod:id,name,start_date,end_date'
         ])
-        ->where('transaction_type', TransactionType::INCOME)
-        ->findOrFail($id);
+            ->where('transaction_type', TransactionType::INCOME)
+            ->findOrFail($id);
 
         return view('pages.menus.user.transactions.incomes.show', compact('transaction'));
     }
@@ -172,13 +174,14 @@ class IncomeController extends Controller
                 ];
             });
 
+        // 1. Ambil daftar COA ID dari semua akun kas user
+        $cashCoaIds = $cashCoas->pluck('coa_id')->toArray();
 
-        // All Akun Pendapatan
+        // 2. Query Akun Penerimaan (DEBIT) dengan mengecualikan semua COA Kas milik user
         $incomeCoas = ChartOfAccount::query()
-            ->whereHas('accountType', function ($q) {
-                $q->where('name', 'PENDAPATAN');
-            })
+            ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
             ->where('is_active', true)
+            ->whereNotIn('id', $cashCoaIds) // <-- PENAMBAHAN DI SINI
             ->orderBy('code')
             ->get();
 

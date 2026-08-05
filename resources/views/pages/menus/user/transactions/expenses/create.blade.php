@@ -5,7 +5,7 @@
 @section('content')
 
     {{-- HEADER & BACK BUTTON --}}
-    <x-common.page-breadcrumb pageTitle="Tambah Transaksi Pengeluaran" defaultTitle="Tambah Transaksi Pengeluaran"
+    <x-common.page-breadcrumb defaultTitle="Buat Transaksi Pengeluaran" pageTitle="Transaksi Pengeluaran"
         pageDescription="Monitoring dan pencatatan transaksi pengeluaran kas dalam sistem" pageIcon="transaction"
         parentTitle="Transaksi Pengeluaran" :parentRoute="route('user.transactions.expenses.index')" currentTitle="Tambah" />
 
@@ -39,77 +39,74 @@
     @endif
 
     {{-- FORM CONTAINER --}}
-    <div x-data="transactionForm()" x-init="init()" class="mx-auto pb-10">
-        <form method="POST" action="{{ route('user.transactions.expenses.store') }}">
+    <div class="mx-auto pb-10" x-data="expenseForm(@js($cashCoas))" x-init="init()">
+        <form action="{{ route('user.transactions.expenses.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
+            <input type="hidden" name="period_id" value="{{ $selectedPeriodId }}">
 
             <div class="grid lg:grid-cols-3 gap-8 items-start">
 
                 {{-- LEFT COLUMN: FORM INPUTS --}}
                 <div class="lg:col-span-2 space-y-6">
 
-                    {{-- CARD 1: INFORMASI UTAMA --}}
-                    <x-common.component-card title="Informasi Utama">
-                        <div class="space-y-5">
+                    {{-- CARD 1: INFORMASI TRANSAKSI --}}
+                    <x-common.component-card title="Informasi Transaksi" desc="Informasi dasar transaksi pengeluaran">
+                        <div class="grid md:grid-cols-2 gap-5">
 
-                            <div class="grid md:grid-cols-2 gap-5">
-                                <div class="space-y-1">
-                                    <x-form.select id="sub_period_id" name="sub_period_id" label="Sub Periode"
-                                        placeholder="Pilih Sub Periode" x-model="sub_period_id" required>
-                                        @foreach ($subPeriods as $s)
-                                            <option value="{{ $s->id }}">{{ $s->name }}</option>
-                                        @endforeach
-                                    </x-form.select>
-                                    <input type="hidden" name="period_id" value="{{ $selectedPeriodId }}">
-                                </div>
-
-                                <div>
-                                    <x-form.date-picker id="transaction_date" name="transaction_date"
-                                        label="Tanggal Transaksi" placeholder="Tentukan Tanggal Transaksi"
-                                        defaultDate="{{ now()->format('Y-m-d') }}" />
-                                </div>
+                            {{-- SUB PERIODE --}}
+                            <div class="space-y-1">
+                                <x-form.select id="sub_period_id" name="sub_period_id" label="Sub Periode"
+                                    placeholder="Pilih Sub Periode" x-model="subPeriod" required>
+                                    @foreach ($subPeriods as $s)
+                                        <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                    @endforeach
+                                </x-form.select>
                             </div>
 
-                            <div class="grid md:grid-cols-1 gap-5">
-                                <div>
-                                    <x-form.select name="user_account_balance_id" label="Pilih Sumber Kas"
-                                        placeholder="-- Pilih Sumber Kas --" x-model="selectedBalance"
-                                        @change="onCashChange" required>
-                                        @foreach ($cashCoas as $cash)
-                                            <option value="{{ $cash['user_account_balance_id'] }}"
-                                                data-balance="{{ $cash['remaining_balance'] }}">
-                                                {{ $cash['coa_code'] }} - {{ $cash['coa_name'] }} (Rp
-                                                {{ number_format($cash['remaining_balance']) }})
-                                            </option>
-                                        @endforeach
-                                    </x-form.select>
-
-                                    {{-- Live Balance Badge --}}
-                                    <div
-                                        class="mt-2.5 flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
-                                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Sisa Saldo Kas
-                                            Terpilih:</span>
-                                        <span class="text-xs font-bold px-2 py-0.5 rounded-md"
-                                            :class="balance > 0 ?
-                                                'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' :
-                                                'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'"
-                                            x-text="'Rp ' + formatRupiah(balance)">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
+                            {{-- TANGGAL TRANSAKSI --}}
                             <div>
-                                <x-form.text-area name="description" label="Deskripsi Transaksi"
-                                    placeholder="Masukkan penjelasan detail mengenai transaksi pengeluaran ini..."
-                                    rows="3" required />
+                                <x-form.date-picker id="transaction_date" name="transaction_date" label="Tanggal Transaksi"
+                                    placeholder="Tentukan Tanggal Transaksi"
+                                    defaultDate="{{ old('transaction_date', now()->format('Y-m-d')) }}" />
                             </div>
 
                         </div>
                     </x-common.component-card>
 
-                    {{-- CARD 2: RINCIAN PENGELUARAN --}}
-                    <x-common.component-card title="Rincian Pengeluaran">
+                    {{-- CARD 2: KAS SUMBER PENGELUARAN --}}
+                    <x-common.component-card title="Sumber Kas Pengeluaran"
+                        desc="Pilih akun kas yang digunakan untuk pengeluaran">
+                        <div class="space-y-4">
+                            <div>
+                                <x-form.select id="user_account_balance_id" name="user_account_balance_id"
+                                    label="Pilih Sumber Kas" x-model="selectedCash" required>
+                                    <option value="">-- Pilih Sumber Kas --</option>
+                                    @foreach ($cashCoas as $cash)
+                                        <option value="{{ $cash['user_account_balance_id'] }}">
+                                            {{ $cash['coa_code'] }} - {{ $cash['coa_name'] }}
+                                        </option>
+                                    @endforeach
+                                </x-form.select>
+                            </div>
+
+                            {{-- Live Balance Display --}}
+                            <div
+                                class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Sisa Saldo Kas
+                                        Terpilih:</span>
+                                </div>
+                                <span class="text-sm font-bold text-slate-900 dark:text-slate-100"
+                                    x-text="'Rp ' + format(balance)">
+                                </span>
+                            </div>
+                        </div>
+                    </x-common.component-card>
+
+                    {{-- CARD 3: RINCIAN PENGELUARAN --}}
+                    <x-common.component-card title="Rincian Pengeluaran"
+                        desc="Tambahkan rincian akun pengeluaran beserta nominalnya">
                         <div class="space-y-4">
 
                             {{-- Header Table (Desktop) --}}
@@ -120,11 +117,12 @@
                                 <div class="col-span-1 text-center">Aksi</div>
                             </div>
 
-                            {{-- Line Items --}}
+                            {{-- Line Items Loop --}}
                             <template x-for="(line, index) in lines" :key="index">
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 transition-all hover:border-slate-300">
 
+                                    {{-- COA Select --}}
                                     <div class="md:col-span-7">
                                         <label class="block md:hidden text-xs font-medium text-slate-500 mb-1">Akun
                                             Pengeluaran</label>
@@ -138,6 +136,7 @@
                                         </x-form.select>
                                     </div>
 
+                                    {{-- Nominal Input --}}
                                     <div class="md:col-span-4">
                                         <label
                                             class="block md:hidden text-xs font-medium text-slate-500 mb-1">Nominal</label>
@@ -147,6 +146,7 @@
                                             x-model="line.amount">
                                     </div>
 
+                                    {{-- Delete Button --}}
                                     <div class="md:col-span-1 flex justify-center">
                                         <button type="button" @click="removeLine(index)" :disabled="lines.length === 1"
                                             class="w-full md:w-auto p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
@@ -162,7 +162,7 @@
                             </template>
 
                             {{-- Add Line Button --}}
-                            <button type="button" @click="addLine"
+                            <button type="button" @click="addLine()"
                                 class="w-full group border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-xl py-3 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2 font-medium text-sm bg-white dark:bg-slate-800">
                                 <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
@@ -171,6 +171,108 @@
                                 </svg>
                                 Tambah Rincian Pengeluaran
                             </button>
+
+                        </div>
+                    </x-common.component-card>
+
+                    {{-- CARD 4: KETERANGAN & BUKTI TRANSAKSI --}}
+                    <x-common.component-card title="Keterangan & Bukti Transaksi"
+                        desc="Deskripsi pengeluaran dan lampiran bukti transaksi (Opsional)">
+                        <div class="space-y-5">
+
+                            {{-- DESKRIPSI --}}
+                            <div>
+                                <x-form.text-area name="description" label="Deskripsi Transaksi"
+                                    placeholder="Masukkan penjelasan detail mengenai transaksi pengeluaran ini..."
+                                    rows="3" required />
+                            </div>
+
+                            {{-- BUKTI TRANSAKSI FILE UPLOAD --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Unggah Bukti
+                                    Transaksi</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label for="proof_file"
+                                        class="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all relative overflow-hidden group">
+
+                                        {{-- State 1: Belum ada file --}}
+                                        <template x-if="!proofPreview && !proofFileName">
+                                            <div
+                                                class="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+                                                <div
+                                                    class="p-3 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 mb-3 group-hover:scale-110 transition-transform">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                                <p class="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                                    <span class="text-indigo-600 dark:text-indigo-400">Klik untuk
+                                                        unggah</span> atau seret file ke sini
+                                                </p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400">Format: JPG, PNG,
+                                                    JPEG, atau PDF (Maks. 2MB)</p>
+                                            </div>
+                                        </template>
+
+                                        {{-- State 2: Preview Gambar --}}
+                                        <template x-if="proofPreview">
+                                            <div class="relative w-full h-full p-2 flex items-center justify-center">
+                                                <img :src="proofPreview"
+                                                    class="max-h-full max-w-full object-contain rounded-lg shadow-sm"
+                                                    alt="Preview Bukti">
+                                            </div>
+                                        </template>
+
+                                        {{-- State 3: File Non-Gambar (PDF) --}}
+                                        <template x-if="!proofPreview && proofFileName">
+                                            <div class="flex flex-col items-center justify-center p-4 text-center">
+                                                <div
+                                                    class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 mb-2">
+                                                    <svg class="w-8 h-8" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                </div>
+                                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[200px]"
+                                                    x-text="proofFileName"></p>
+                                            </div>
+                                        </template>
+
+                                        <input id="proof_file" name="proof_file" type="file" class="hidden"
+                                            accept="image/*,.pdf" @change="handleFileChange($event)" />
+                                    </label>
+                                </div>
+
+                                {{-- Footer File Selected & Hapus --}}
+                                <template x-if="proofFileName">
+                                    <div
+                                        class="flex items-center justify-between p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
+                                        <div class="flex items-center gap-2 truncate pr-2">
+                                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span class="text-slate-700 dark:text-slate-300 font-medium truncate"
+                                                x-text="proofFileName"></span>
+                                        </div>
+                                        <button type="button" @click="removeFile()"
+                                            class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 font-semibold transition-colors shrink-0 flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
 
                         </div>
                     </x-common.component-card>
@@ -184,22 +286,50 @@
 
                         <div
                             class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700/60">
-                            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Ringkasan</h3>
+                            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Ringkasan Transaksi</h3>
                             <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400"
                                 x-text="lines.length + ' Item'"></span>
                         </div>
 
-                        {{-- Total Display Card --}}
-                        <div
-                            class="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50">
-                            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                Total Pengeluaran</div>
-                            <div class="mt-2 text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight"
-                                x-text="'Rp ' + formatRupiah(total)"></div>
+                        <div class="space-y-4">
+
+                            {{-- Saldo Kas Saat Ini --}}
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-slate-500 dark:text-slate-400">Saldo Kas Saat Ini:</span>
+                                <span class="font-semibold text-slate-700 dark:text-slate-300"
+                                    x-text="'Rp ' + format(balance)"></span>
+                            </div>
+
+                            {{-- Total Pengeluaran --}}
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-slate-500 dark:text-slate-400">Total Pengeluaran:</span>
+                                <span class="font-bold text-rose-600 dark:text-rose-400"
+                                    x-text="'- Rp ' + format(total)"></span>
+                            </div>
+
+                            {{-- Proyeksi Saldo Akhir --}}
+                            <div class="border-t border-slate-100 dark:border-slate-700/60 pt-4">
+                                <div class="p-4 rounded-xl border transition-colors space-y-1"
+                                    :class="afterBalance() < 0 ?
+                                        'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50' :
+                                        'bg-indigo-50/60 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50'">
+                                    <div class="text-xs font-semibold uppercase tracking-wider"
+                                        :class="afterBalance() < 0 ? 'text-rose-800 dark:text-rose-400' :
+                                            'text-indigo-800 dark:text-indigo-400'">
+                                        Proyeksi Saldo Akhir
+                                    </div>
+                                    <div class="text-2xl font-black tracking-tight"
+                                        :class="afterBalance() < 0 ? 'text-rose-600 dark:text-rose-400' :
+                                            'text-indigo-600 dark:text-indigo-400'"
+                                        x-text="'Rp ' + format(afterBalance())">
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
-                        {{-- Insufficient Balance Warning --}}
+                        {{-- Alert Jika Saldo Tidak Mencukupi --}}
                         <template x-if="balance > 0 && total > balance">
                             <div
                                 class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2.5">
@@ -212,7 +342,7 @@
                             </div>
                         </template>
 
-                        {{-- Distinct Action Buttons --}}
+                        {{-- Action Buttons --}}
                         <div class="space-y-3 pt-2">
 
                             {{-- PRIMARY BUTTON: SIMPAN --}}
@@ -242,73 +372,95 @@
                 </div>
 
             </div>
-
         </form>
     </div>
 
-    {{-- SCRIPT ALPINE.JS --}}
-    <script>
-        function transactionForm() {
-            return {
-                sub_period_id: '',
-                selectedBalance: '',
-                balance: 0,
-                total: 0,
-                lines: [{
-                    amount: 0
-                }],
-
-                init() {
-                    this.$nextTick(() => {
-                        const select = document.querySelector('[name="user_account_balance_id"]');
-                        if (select && select.selectedOptions.length) {
-                            this.balance = Number(select.selectedOptions[0].dataset.balance || 0);
-                        }
-                    });
-                },
-
-                formatRupiah(v) {
-                    return new Intl.NumberFormat('id-ID').format(v || 0);
-                },
-
-                strip(v) {
-                    return String(v).replace(/\D/g, '');
-                },
-
-                onCashChange(e) {
-                    const option = e.target.selectedOptions[0];
-                    this.balance = Number(option ? option.dataset.balance : 0);
-                },
-
-                onAmountInput(e, index) {
-                    let raw = this.strip(e.target.value);
-                    this.lines[index].amount = Number(raw);
-
-                    e.target.value = raw ? 'Rp ' + this.formatRupiah(raw) : '';
-                    this.calculate();
-                },
-
-                calculate() {
-                    this.total = this.lines.reduce(
-                        (sum, line) => sum + Number(line.amount || 0),
-                        0
-                    );
-                },
-
-                addLine() {
-                    this.lines.push({
+    @push('scripts')
+        <script>
+            function expenseForm(cashCoas = []) {
+                return {
+                    cashCoas: cashCoas,
+                    selectedCash: '',
+                    subPeriod: '{{ $selectedSubPeriodId }}',
+                    proofPreview: null,
+                    proofFileName: '',
+                    lines: [{
                         amount: 0
-                    });
-                },
+                    }],
 
-                removeLine(index) {
-                    if (this.lines.length > 1) {
-                        this.lines.splice(index, 1);
-                        this.calculate();
+                    init() {
+                        if (this.cashCoas.length > 0) {
+                            this.selectedCash = this.cashCoas[0].user_account_balance_id;
+                        }
+                    },
+
+                    get balance() {
+                        if (!this.selectedCash) return 0;
+                        const found = this.cashCoas.find(
+                            item => String(item.user_account_balance_id) === String(this.selectedCash)
+                        );
+                        return found ? Number(found.remaining_balance) : 0;
+                    },
+
+                    get total() {
+                        return this.lines.reduce(
+                            (sum, line) => sum + Number(line.amount || 0),
+                            0
+                        );
+                    },
+
+                    afterBalance() {
+                        return Number(this.balance) - Number(this.total);
+                    },
+
+                    onlyNumber(value) {
+                        return String(value).replace(/\D/g, '');
+                    },
+
+                    format(value) {
+                        return new Intl.NumberFormat('id-ID').format(Number(value) || 0);
+                    },
+
+                    onAmountInput(event, index) {
+                        const raw = this.onlyNumber(event.target.value);
+                        this.lines[index].amount = Number(raw);
+                        event.target.value = raw ? 'Rp ' + this.format(raw) : '';
+                    },
+
+                    addLine() {
+                        this.lines.push({
+                            amount: 0
+                        });
+                    },
+
+                    removeLine(index) {
+                        if (this.lines.length > 1) {
+                            this.lines.splice(index, 1);
+                        }
+                    },
+
+                    handleFileChange(event) {
+                        const file = event.target.files[0];
+                        if (!file) return;
+
+                        this.proofFileName = file.name;
+
+                        if (file.type.startsWith('image/')) {
+                            this.proofPreview = URL.createObjectURL(file);
+                        } else {
+                            this.proofPreview = null;
+                        }
+                    },
+
+                    removeFile() {
+                        this.proofPreview = null;
+                        this.proofFileName = '';
+                        const input = document.getElementById('proof_file');
+                        if (input) input.value = '';
                     }
-                }
+                };
             }
-        }
-    </script>
+        </script>
+    @endpush
 
 @endsection

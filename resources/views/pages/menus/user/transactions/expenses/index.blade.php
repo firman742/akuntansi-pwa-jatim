@@ -227,6 +227,15 @@
 
         {{-- TABLE CONTAINER --}}
         <x-core.basic-tables.core-table>
+            <x-slot name="actions">
+                <div class="flex gap-3">
+                    <a href="{{ route('user.transactions.expenses.create') }}">
+                        <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
+                            + Buat Transaksi Penerimaan Baru
+                        </x-ui.button>
+                    </a>
+                </div>
+            </x-slot>
             <x-core.basic-tables.user.history-table :transactions="$transactions" />
         </x-core.basic-tables.core-table>
     </div>
