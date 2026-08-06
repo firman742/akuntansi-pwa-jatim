@@ -179,7 +179,6 @@ class IncomeController extends Controller
 
         // 2. Query Akun Penerimaan (DEBIT) dengan mengecualikan semua COA Kas milik user
         $incomeCoas = ChartOfAccount::query()
-            ->where('normal_balance', NormalBalanceEnum::DEBIT->value)
             ->where('is_active', true)
             ->whereNotIn('id', $cashCoaIds) // <-- PENAMBAHAN DI SINI
             ->orderBy('code')

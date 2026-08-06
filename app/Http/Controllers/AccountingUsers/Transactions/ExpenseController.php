@@ -174,7 +174,6 @@ class ExpenseController extends Controller
 
         // ── Semua akun CREDIT ─────────────────────────────
         $expenseCoas = ChartOfAccount::query()
-            ->where('normal_balance', NormalBalanceEnum::CREDIT->value)
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
