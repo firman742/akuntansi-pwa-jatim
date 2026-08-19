@@ -4,19 +4,19 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Journal;
 use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
-use Illuminate\View\View;
+use App\Models\User;
+use Illuminate\Contracts\View\View;
 
 class DashboardController extends Controller
 {
     /**
-     * Show all data dashboard realtime
-     *
-     * @return View
+     * Show all data dashboard realtime for Superadmin POV
      */
     public function index(): View
     {
@@ -36,41 +36,25 @@ class DashboardController extends Controller
             ->get();
 
         /**
-         * Selected Sub Period
+         * Selected Sub Period Filter
          */
         $selectedSubPeriodId = request()->sub_period_id;
 
         /**
-         * Base Transaction Query
+         * Base Queries
          */
-        $transactionQuery = Transaction::query()
-            ->where('period_id', $activePeriod?->id);
+        $transactionQuery = Transaction::query()->where('period_id', $activePeriod?->id);
+        $journalQuery = Journal::query()->where('period_id', $activePeriod?->id);
+        $openingBalanceQuery = OpeningBalance::query()->where('period_id', $activePeriod?->id);
 
-        /**
-         * Base Journal Query
-         */
-        $journalQuery = Journal::query()
-            ->where('period_id', $activePeriod?->id);
-
-        /**
-         * Opening Balance Query
-         */
-        $openingBalanceQuery = OpeningBalance::query()
-            ->where('period_id', $activePeriod?->id);
-
-        /**
-         * Filter by Sub Period
-         */
         if ($selectedSubPeriodId) {
             $transactionQuery->where('sub_period_id', $selectedSubPeriodId);
-
             $journalQuery->where('sub_period_id', $selectedSubPeriodId);
-
             $openingBalanceQuery->where('sub_period_id', $selectedSubPeriodId);
         }
 
         /**
-         * Summary
+         * Summary Metrics
          */
         $totalIncome = (clone $transactionQuery)
             ->where('transaction_type', TransactionType::INCOME)
@@ -80,27 +64,57 @@ class DashboardController extends Controller
             ->where('transaction_type', TransactionType::EXPENSE)
             ->sum('gross_amount');
 
-        $totalOpeningBalance = $openingBalanceQuery
-            ->sum('amount');
-
+        $totalOpeningBalance = $openingBalanceQuery->sum('amount');
         $netBalance = $totalIncome - $totalExpense;
-
         $totalCashBalance = $totalOpeningBalance + $netBalance;
 
         /**
-         * Recent Data
+         * Superadmin Metrics
+         */
+        $totalUsersCount = User::count();
+
+        /**
+         * Recent Financial Data
          */
         $recentTransactions = (clone $transactionQuery)
+            ->with('creator')
             ->latest()
             ->take(5)
             ->get();
 
         $recentJournals = (clone $journalQuery)
+            ->with('postedBy')
             ->latest()
             ->take(5)
             ->get();
 
+        /**
+         * Recent System Activity Logs (Audit Trail)
+         */
+        $recentActivityLogs = ActivityLog::query()
+            ->with('user')
+            ->latest()
+            ->take(6)
+            ->get();
+
         $transferType = TransactionType::TRANSFER->value;
+
+        /**
+         * Chart Data Generation (Cashflow Trend across Sub-Periods)
+         */
+        $chartLabels = [];
+        $chartIncomeData = [];
+        $chartExpenseData = [];
+
+        foreach ($subPeriods as $sp) {
+            $chartLabels[] = $sp->name;
+            $chartIncomeData[] = Transaction::where('sub_period_id', $sp->id)
+                ->where('transaction_type', TransactionType::INCOME)
+                ->sum('gross_amount');
+            $chartExpenseData[] = Transaction::where('sub_period_id', $sp->id)
+                ->where('transaction_type', TransactionType::EXPENSE)
+                ->sum('gross_amount');
+        }
 
         return view('pages.menus.superadmin.dashboard', compact(
             'activePeriod',
@@ -111,9 +125,14 @@ class DashboardController extends Controller
             'totalOpeningBalance',
             'netBalance',
             'totalCashBalance',
+            'totalUsersCount',
             'recentTransactions',
             'recentJournals',
-            'transferType'
+            'recentActivityLogs',
+            'transferType',
+            'chartLabels',
+            'chartIncomeData',
+            'chartExpenseData'
         ));
     }
 }

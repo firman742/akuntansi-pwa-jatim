@@ -16,35 +16,27 @@ class DashboardController extends Controller
 {
     /**
      * Show user dashboard with personalized data
-     *
-     * @return View
      */
     public function index(): View
     {
         $user = Auth::user();
 
         /**
-         * Active Period
+         * Active Period & Sub Periods
          */
         $activePeriod = Period::query()
             ->latest()
             ->first();
 
-        /**
-         * Sub Periods
-         */
         $subPeriods = SubPeriod::query()
             ->where('period_id', $activePeriod?->id)
             ->orderBy('start_date')
             ->get();
 
-        /**
-         * Selected Sub Period
-         */
         $selectedSubPeriodId = request()->sub_period_id;
 
         /**
-         * User COA
+         * Get COA IDs assigned specifically to this user
          */
         $userCoaIds = ChartOfAccount::query()
             ->whereHas('userAccounts', function ($query) use ($user) {
@@ -53,29 +45,22 @@ class DashboardController extends Controller
             ->pluck('id');
 
         /**
-         * Transaction Query
+         * Base Transaction Query - Strictly personalized by logged-in user
          */
         $transactionQuery = Transaction::query()
             ->where('created_by', $user->id)
             ->where('period_id', $activePeriod?->id);
 
-        /**
-         * Optional:
-         * Pastikan transaksi memang menggunakan COA milik user
-         */
         $transactionQuery->whereHas('transactionLines', function ($query) use ($userCoaIds) {
             $query->whereIn('chart_of_account_id', $userCoaIds);
         });
 
-        /**
-         * Filter sub period
-         */
         if ($selectedSubPeriodId) {
             $transactionQuery->where('sub_period_id', $selectedSubPeriodId);
         }
 
         /**
-         * Summary
+         * Summary Metrics (Personal)
          */
         $totalTransactions = (clone $transactionQuery)->count();
 
@@ -90,7 +75,7 @@ class DashboardController extends Controller
         $netBalance = $totalIncome - $totalExpense;
 
         /**
-         * Recent Transactions
+         * Recent Personalized Transactions
          */
         $recentTransactions = (clone $transactionQuery)
             ->with('transactionLines.chartOfAccount')
@@ -99,7 +84,7 @@ class DashboardController extends Controller
             ->get();
 
         /**
-         * Related Journals
+         * Related Journals created/posted from user transactions
          */
         $recentJournals = Journal::query()
             ->whereHas('transaction', function ($query) use ($user) {
@@ -111,29 +96,48 @@ class DashboardController extends Controller
             ->get();
 
         /**
-         * User COA List
+         * User COA List (Active accounts assigned to user)
          */
         $userCoas = ChartOfAccount::query()
             ->whereIn('id', $userCoaIds)
             ->where('is_active', true)
             ->orderBy('code')
-            ->limit(5)
+            ->take(5)
             ->get();
+
+        /**
+         * Personal Cashflow Chart Data across Sub-Periods
+         */
+        $chartLabels = [];
+        $chartIncomeData = [];
+        $chartExpenseData = [];
+
+        foreach ($subPeriods as $sp) {
+            $chartLabels[] = $sp->name;
+            $chartIncomeData[] = Transaction::where('created_by', $user->id)
+                ->where('sub_period_id', $sp->id)
+                ->where('transaction_type', TransactionType::INCOME)
+                ->sum('gross_amount');
+            $chartExpenseData[] = Transaction::where('created_by', $user->id)
+                ->where('sub_period_id', $sp->id)
+                ->where('transaction_type', TransactionType::EXPENSE)
+                ->sum('gross_amount');
+        }
 
         return view('pages.menus.user.dashboard', compact(
             'activePeriod',
             'subPeriods',
             'selectedSubPeriodId',
-
             'totalTransactions',
             'totalIncome',
             'totalExpense',
             'netBalance',
-
             'recentTransactions',
             'recentJournals',
-
-            'userCoas'
+            'userCoas',
+            'chartLabels',
+            'chartIncomeData',
+            'chartExpenseData'
         ));
     }
 }

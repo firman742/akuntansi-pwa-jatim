@@ -61,6 +61,8 @@ class menu
 
     /* ================= BENDAHARA ================= */
 
+    /* ================= BENDAHARA ================= */
+
     private static function bendahara(): array
     {
         return [
@@ -71,8 +73,9 @@ class menu
                 ['bendahara/dashboard*']
             ),
 
+            // 1. PERIODE AKUNTANSI
             [
-                'name' => 'Periode',
+                'name' => 'Periode Akuntansi',
                 'icon' => 'calendar',
                 'active_on' => [
                     'bendahara/periods*',
@@ -80,20 +83,21 @@ class menu
                 ],
                 'subItems' => [
                     self::item(
-                        'Periode',
+                        'Tahun / Periode Utama',
                         null,
                         '/bendahara/periods',
                         ['bendahara/periods*']
                     ),
-
                     self::item(
-                        'Sub Periode',
+                        'Sub Periode (Bulan)',
                         null,
                         '/bendahara/sub-periods',
                         ['bendahara/sub-periods*']
                     ),
                 ]
             ],
+
+            // 2. MASTER DATA AKUNTANSI
             [
                 'name' => 'Master Data',
                 'icon' => 'book',
@@ -108,7 +112,7 @@ class menu
                         ['bendahara/master/account-types*']
                     ),
                     self::item(
-                        'Akun COA',
+                        'Daftar COA', // Diperbaiki dari "Akun COA"
                         null,
                         '/bendahara/master/coas',
                         ['bendahara/master/coas*'],
@@ -122,37 +126,41 @@ class menu
                         PermissionEnum::COA_ASSIGN_USER
                     ),
                     self::item(
-                        'Pengajuan Akun COA',
+                        'Pengajuan COA Baru',
                         null,
                         '/bendahara/master/requests/coas',
-                        ['bendahara/master/requests/coas*'],
+                        ['bendahara/master/requests/coas*']
                     ),
                 ],
             ],
+
+            // 3. SALDO & BUKU BESAR (GENERAL LEDGER)
             [
-                'name' => 'Manajemen Saldo',
+                'name' => 'Saldo & Buku Besar',
                 'icon' => 'money',
                 'active_on' => [
-                    'bendahara/coa-balances*',
                     'bendahara/opening-balances*',
+                    'bendahara/coa-balances*',
                 ],
                 'subItems' => [
                     self::item(
-                        'Saldo Akun',
-                        null,
-                        '/bendahara/coa-balances',
-                        ['bendahara/coa-balances*']
-                    ),
-                    self::item(
-                        'Saldo Awal',
+                        'Saldo Awal Periode',
                         null,
                         '/bendahara/opening-balances',
                         ['bendahara/opening-balances*']
                     ),
+                    self::item(
+                        'Monitoring Saldo COA',
+                        null,
+                        '/bendahara/coa-balances',
+                        ['bendahara/coa-balances*']
+                    ),
                 ]
             ],
+
+            // 4. ANGGARAN & KAS (TREASURY OPERATIONS)
             [
-                'name' => 'Manajemen Dana',
+                'name' => 'Anggaran & Kas',
                 'icon' => 'transaction',
                 'active_on' => [
                     'bendahara/budget-allocations*',
@@ -161,35 +169,31 @@ class menu
                 ],
                 'subItems' => [
                     self::item(
-                        'Alokasi Dana Akun',
+                        'Alokasi Anggaran',
                         null,
                         '/bendahara/budget-allocations',
                         ['bendahara/budget-allocations*']
                     ),
                     self::item(
-                        'Dana Operasional Pengguna',
+                        'Kas Operasional User',
                         null,
                         '/bendahara/user-account-balances',
                         ['bendahara/user-account-balances*']
                     ),
                     self::item(
-                        'Permintaan Dana',
+                        'Persetujuan Pencairan Dana',
                         null,
                         '/bendahara/requests/balances',
                         ['bendahara/requests/balances*']
                     ),
                 ]
             ],
-
-
-            // REPORTS
             self::item(
                 'Jurnal Umum',
                 'database',
                 '/bendahara/reports/journal',
                 ['bendahara/reports/journal*']
             ),
-
             self::item(
                 'Buku Besar',
                 'ledger',
@@ -198,24 +202,23 @@ class menu
             ),
 
             self::item(
-                'Laporan Aktifitas',
-                'ledger',
+                'Laporan Aktivitas', // Diperbaiki ejaan dari "Aktifitas"
+                'report',
                 '/bendahara/reports/activity',
                 ['bendahara/reports/activity*']
             ),
-
             self::item(
-                'Laporan Neraca',
+                'Neraca Saldo', // Diperbaiki dari "Laporan Neraca" jika isinya Trial Balance
                 'balance',
                 '/bendahara/reports/trial-balance',
                 ['bendahara/reports/trial-balance*']
             ),
             self::item(
-                'Laporan Transaksi',
+                'Laporan Rincian Transaksi',
                 'report',
                 '/bendahara/reports/transactions',
                 ['bendahara/reports/transactions*']
-            )
+            ),
         ];
     }
 

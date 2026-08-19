@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Bendahara;
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Journal;
+use App\Models\JournalDetail;
 use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\SubPeriod;
@@ -14,58 +15,27 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        /**
-         * Active Period
-         */
-        $activePeriod = Period::query()
-            ->latest()
-            ->first();
+        $activePeriod = Period::query()->latest()->first();
 
-        /**
-         * Active Sub Periods
-         */
         $subPeriods = SubPeriod::query()
             ->where('period_id', $activePeriod?->id)
             ->orderBy('start_date')
             ->get();
 
-        /**
-         * Selected Sub Period
-         */
         $selectedSubPeriodId = request()->sub_period_id;
 
-        /**
-         * Base Transaction Query
-         */
-        $transactionQuery = Transaction::query()
-            ->where('period_id', $activePeriod?->id);
+        // Base Queries
+        $transactionQuery = Transaction::query()->where('period_id', $activePeriod?->id);
+        $journalQuery = Journal::query()->where('period_id', $activePeriod?->id);
+        $openingBalanceQuery = OpeningBalance::query()->where('period_id', $activePeriod?->id);
 
-        /**
-         * Base Journal Query
-         */
-        $journalQuery = Journal::query()
-            ->where('period_id', $activePeriod?->id);
-
-        /**
-         * Opening Balance Query
-         */
-        $openingBalanceQuery = OpeningBalance::query()
-            ->where('period_id', $activePeriod?->id);
-
-        /**
-         * Filter by Sub Period
-         */
         if ($selectedSubPeriodId) {
             $transactionQuery->where('sub_period_id', $selectedSubPeriodId);
-
             $journalQuery->where('sub_period_id', $selectedSubPeriodId);
-
             $openingBalanceQuery->where('sub_period_id', $selectedSubPeriodId);
         }
 
-        /**
-         * Summary
-         */
+        // Summary Calculations
         $totalIncome = (clone $transactionQuery)
             ->where('transaction_type', TransactionType::INCOME)
             ->sum('gross_amount');
@@ -74,31 +44,16 @@ class DashboardController extends Controller
             ->where('transaction_type', TransactionType::EXPENSE)
             ->sum('gross_amount');
 
-        $totalOpeningBalance = $openingBalanceQuery
-            ->sum('amount');
-
+        $totalOpeningBalance = $openingBalanceQuery->sum('amount');
         $netBalance = $totalIncome - $totalExpense;
-
         $totalCashBalance = $totalOpeningBalance + $netBalance;
 
-        /**
-         * Recent Data
-         */
-        $recentTransactions = (clone $transactionQuery)
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $recentJournals = (clone $journalQuery)
-            ->latest()
-            ->take(5)
-            ->get();
-
+        // Recent Data
+        $recentTransactions = (clone $transactionQuery)->with('creator')->latest()->take(5)->get();
+        $recentJournals = (clone $journalQuery)->with('postedBy')->latest()->take(5)->get();
         $transferType = TransactionType::TRANSFER->value;
 
-        /*
-        * Closing Reminder: minimum 3 days before sub period end date, if sub period is not closed yet
-        */
+        // Closing Reminder Logic (Minimum 3 hari sebelum sub-periode selesai)
         $closingReminder = SubPeriod::query()
             ->where('period_id', $activePeriod?->id)
             ->where('is_closed', false)
@@ -109,45 +64,52 @@ class DashboardController extends Controller
         $closingStatus = null;
         if ($closingReminder) {
             if ($closingReminder->end_date->isToday()) {
-
                 $closingStatus = 'today';
             } elseif ($closingReminder->end_date->isPast()) {
-
                 $closingStatus = 'expired';
             } else {
-
                 $closingStatus = 'warning';
             }
         }
 
-        /**
-         * Closing Checks label
-         * TODO: Need Improve with actual checks from database, not hardcoded
-         */
+        // Dynamic Closing Checks
+        $totalDebitJournal = JournalDetail::whereHas('journal', fn ($q) => $q->where('period_id', $activePeriod?->id))->sum('debit');
+        $totalCreditJournal = JournalDetail::whereHas('journal', fn ($q) => $q->where('period_id', $activePeriod?->id))->sum('credit');
+        $isJournalBalanced = abs($totalDebitJournal - $totalCreditJournal) < 0.01;
+
         $closingChecks = [
             [
-                'label' => 'Seluruh transaksi penerimaan dan pengeluaran telah tercatat',
-                'passed' => true,
+                'label' => 'Seluruh transaksi penerimaan & pengeluaran telah terverifikasi',
+                'passed' => $transactionQuery->count() > 0,
             ],
             [
-                'label' => 'Seluruh jurnal telah diposting',
-                'passed' => true,
+                'label' => 'Keseimbangan Jurnal Umum (Total Debit = Total Kredit)',
+                'passed' => $isJournalBalanced,
             ],
             [
-                'label' => 'Tidak ada draft transaksi',
-                'passed' => true,
+                'label' => 'Saldo Awal Periode telah terinput & valid',
+                'passed' => $totalOpeningBalance > 0,
             ],
             [
-                'label' => 'Saldo kas telah sesuai',
-                'passed' => true,
-            ],
-            [
-                'label' => 'Seluruh aktivitas pada sub periode telah selesai',
-                'passed' => true,
+                'label' => 'Seluruh aktivitas jurnal sub-periode siap ditutup',
+                'passed' => $closingStatus !== 'expired',
             ],
         ];
 
-        // dd($closingReminder, $closingStatus);
+        // Chart Data (Breakdown Sub Period / Monthly Cash Flow)
+        $chartLabels = [];
+        $chartIncomeData = [];
+        $chartExpenseData = [];
+
+        foreach ($subPeriods as $sp) {
+            $chartLabels[] = $sp->name;
+            $chartIncomeData[] = Transaction::where('sub_period_id', $sp->id)
+                ->where('transaction_type', TransactionType::INCOME)
+                ->sum('gross_amount');
+            $chartExpenseData[] = Transaction::where('sub_period_id', $sp->id)
+                ->where('transaction_type', TransactionType::EXPENSE)
+                ->sum('gross_amount');
+        }
 
         return view('pages.menus.bendahara.dashboard', compact(
             'activePeriod',
@@ -161,10 +123,12 @@ class DashboardController extends Controller
             'recentTransactions',
             'recentJournals',
             'transferType',
-
             'closingReminder',
             'closingStatus',
-            'closingChecks'
+            'closingChecks',
+            'chartLabels',
+            'chartIncomeData',
+            'chartExpenseData'
         ));
     }
 }

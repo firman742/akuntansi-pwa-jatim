@@ -9,14 +9,13 @@ use App\Models\SubPeriod;
 use Exception;
 use Illuminate\Http\Request;
 
-
 class ActivityReportController extends Controller
 {
     /**
      * Get data untuk laporan aktivitas keuangan (Laporan Laba Rugi) berdasarkan periode dan sub periode yang dipilih.
      *
-     * @param Request $request
      * @return void
+     *
      * @throws Exception
      */
     public function index(Request $request)
@@ -25,54 +24,47 @@ class ActivityReportController extends Controller
         if ($periods->isEmpty()) {
             throw new Exception('Tidak ada periode aktif. Silakan buat periode terlebih dahulu.');
         }
+
         $periodId = $request->period_id;
-        $period = $periodId ? Period::findOrFail($periodId) : Period::firstOrFail();
+        $period = $periodId ? Period::findOrFail($periodId) : Period::first();
 
         $subPeriodId = $request->sub_period_id;
         $subPeriods = collect();
-        if ($periodId) {
-            $subPeriods = SubPeriod::where('period_id', $periodId)
+
+        if ($period) {
+            $subPeriods = SubPeriod::where('period_id', $period->id)
                 ->orderBy('id')
                 ->get();
         }
-        $subPeriod = $subPeriodId ? SubPeriod::findOrFail($subPeriodId) : SubPeriod::where('is_closed', false)->firstOrFail();
 
+        $subPeriod = $subPeriodId
+            ? SubPeriod::find($subPeriodId)
+            : SubPeriod::where('period_id', $period->id)->where('is_closed', false)->first();
 
-        // Ambil semua COA Pendapatan & Biaya dengan sum mutasi
+        // Query COA Pendapatan & Biaya beserta mutasinya
         $query = ChartOfAccount::query()
-            ->withSum(['journalDetails as total_debit' => function ($q) use ($periodId, $subPeriodId) {
-                    $q->whereHas('journal', function ($j) use ($periodId, $subPeriodId) {
-                        $j->where('period_id', $periodId)
-                            ->when($subPeriodId, function ($q) use ($subPeriodId) {
-                                $q->where('sub_period_id', $subPeriodId);
-                            });
-                    });
-                }
-            ], 'debit')
-            ->withSum(['journalDetails as total_credit' => function ($q) use ($periodId, $subPeriodId) {
-                    $q->whereHas('journal', function ($j) use ($periodId, $subPeriodId) {
-                        $j->where('period_id', $periodId)
-                            ->when($subPeriodId, function ($q) use ($subPeriodId) {
-                                $q->where('sub_period_id', $subPeriodId);
-                            });
-                    });
-                }
-            ], 'credit')
+            ->withSum(['journalDetails as total_debit' => function ($q) use ($period, $subPeriodId) {
+                $q->whereHas('journal', function ($j) use ($period, $subPeriodId) {
+                    $j->where('period_id', $period->id)
+                        ->when($subPeriodId, fn ($sq) => $sq->where('sub_period_id', $subPeriodId));
+                });
+            }], 'debit')
+            ->withSum(['journalDetails as total_credit' => function ($q) use ($period, $subPeriodId) {
+                $q->whereHas('journal', function ($j) use ($period, $subPeriodId) {
+                    $j->where('period_id', $period->id)
+                        ->when($subPeriodId, fn ($sq) => $sq->where('sub_period_id', $subPeriodId));
+                });
+            }], 'credit')
             ->orderBy('code');
 
         $revenueData = (clone $query)->where('code', 'like', '4%')->get();
         $expenseData = (clone $query)->where('code', 'like', '5%')->get();
 
-        // Hitung Total
-        $totalRevenue = 0;
-        foreach ($revenueData as $r) {
-            $totalRevenue += ($r->total_credit - $r->total_debit);
-        }
+        // Hitung Total Pendapatan (Kredit - Debit)
+        $totalRevenue = $revenueData->sum(fn ($r) => ($r->total_credit ?? 0) - ($r->total_debit ?? 0));
 
-        $totalExpense = 0;
-        foreach ($expenseData as $e) {
-            $totalExpense += ($e->total_debit - $e->total_credit);
-        }
+        // Hitung Total Biaya (Debit - Kredit)
+        $totalExpense = $expenseData->sum(fn ($e) => ($e->total_debit ?? 0) - ($e->total_credit ?? 0));
 
         $surplusDeficit = $totalRevenue - $totalExpense;
 

@@ -1,256 +1,236 @@
-@props(['groupedJournals', 'journals'])
+@props(['groupedJournals', 'journals', 'grandTotalDebit' => 0, 'grandTotalCredit' => 0])
 
-<div class="overflow-hidden border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900 shadow-sm rounded-lg">
+<div class="overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm rounded-xl">
     <div class="max-w-full overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full text-xs md:text-sm border-collapse">
             {{-- TABLE HEADER --}}
-            <thead class="bg-gray-100 dark:bg-gray-800">
+            <thead
+                class="bg-gray-100 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                 <tr>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-center">
-                        No
-                    </th>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-center">
-                        Tanggal
-                    </th>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-left">
-                        Nama Rekening / Akun
-                    </th>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-left">
-                        Nama Pengguna
-                    </th>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-left">
-                        Ref
-                    </th>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-left">
-                        Keterangan
-                    </th>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-right">
-                        Debit
-                    </th>
-                    <th class="px-6 py-3 font-medium text-gray-700 dark:text-gray-300 text-right">
-                        Kredit
-                    </th>
+                    <th class="px-3 py-3.5 font-bold text-center w-12">No</th>
+                    <th class="px-4 py-3.5 font-bold text-center w-28 whitespace-nowrap">Tanggal</th>
+                    <th class="px-5 py-3.5 font-bold text-left min-w-[220px]">Nama Rekening / Akun</th>
+                    <th class="px-4 py-3.5 font-bold text-left min-w-[180px]">Keterangan</th>
+                    <th class="px-4 py-3.5 font-bold text-left w-36 whitespace-nowrap">Pembuat</th>
+                    <th class="px-3 py-3.5 font-bold text-center w-24">Ref</th>
+                    <th class="px-5 py-3.5 font-bold text-right w-36">Debit</th>
+                    <th class="px-5 py-3.5 font-bold text-right w-36">Kredit</th>
                 </tr>
             </thead>
 
-            <tbody class="text-sm">
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                 @forelse ($groupedJournals as $group)
-                    {{-- HEADER GRUP KAS --}}
-                    <tr class="bg-gray-200 dark:bg-gray-700">
-                        <td colspan="8"
-                            class="px-6 py-3 text-center text-[11px] font-bold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                            {{ $group['account_info'] }}
+                    @php
+                        $groupCode = $group['account_code'];
+                    @endphp
+
+                    {{-- HEADER GRUP COA ASET --}}
+                    <tr
+                        class="bg-indigo-50/70 dark:bg-slate-800/80 font-bold border-y border-indigo-100 dark:border-slate-700">
+                        <td colspan="2"
+                            class="px-4 py-3 text-indigo-900 dark:text-indigo-300 text-xs font-mono tracking-wider">
                         </td>
+                        <td
+                            class="px-5 py-3 text-indigo-950 dark:text-indigo-200 font-extrabold uppercase tracking-wide text-sm">
+                            {{ $group['account_name'] }}
+                        </td>
+                        <td colspan="2" class="px-4 py-3"></td>
+                        <td class="px-3 py-3 text-center">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                {{ $groupCode }}
+                            </span>
+                        </td>
+                        <td colspan="2" class="px-5 py-3"></td>
                     </tr>
 
                     @php
                         $subTotalDebit = 0;
                         $subTotalCredit = 0;
-                        $no = 1;
+                        $entryNumber = 1;
                     @endphp
 
                     @foreach ($group['data'] as $journal)
-                        @foreach ($journal->details as $index => $detail)
-                            @php $isCreditRow = $detail->credit > 0; @endphp
+                        @php
+                            // 1. Cek apakah transaksi memiliki detail akun selain Aset (Non-Asset)
+                            $hasNonAssetDetail = $journal->details->contains(function ($d) {
+                                $coa = $d->chartOfAccount;
+                                if (!$coa) {
+                                    return false;
+                                }
 
-                            <tr
-                                class="{{ $index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900' }} border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                                {{-- NO --}}
-                                <td class="px-6 py-4 text-center text-gray-600 dark:text-gray-400 font-medium">
-                                    {{ $index === 0 ? $no++ : '' }}
+                                $typeName = strtoupper($coa->accountType->name ?? '');
+                                $isAsset =
+                                    str_contains($typeName, 'ASET') ||
+                                    str_contains($typeName, 'ASSET') ||
+                                    str_starts_with((string) $coa->code, '1');
+
+                                return !$isAsset;
+                            });
+
+                            // 2. Cek apakah ada akun COA yang sama digunakan di posisi Debit dan Kredit
+                            $debitCoas = $journal->details
+                                ->filter(fn($d) => (float) $d->debit > 0)
+                                ->pluck('chartOfAccount.code')
+                                ->filter();
+
+                            $creditCoas = $journal->details
+                                ->filter(fn($d) => (float) $d->credit > 0)
+                                ->pluck('chartOfAccount.code')
+                                ->filter();
+
+                            $hasSameAccountInDebitCredit = $debitCoas->intersect($creditCoas)->isNotEmpty();
+                        @endphp
+
+                        @foreach ($journal->details as $index => $detail)
+                            @php
+                                $isCreditRow = $detail->credit > 0;
+                                $detailCoaCode = $detail->chartOfAccount?->code ?? '';
+
+                                // LOGIKA REF:
+                                // Tampilkan Ref untuk SEMUA baris jika:
+                                // A. Transaksi mengandung akun Non-Aset
+                                // B. Transaksi memiliki akun yang sama di Debit & Kredit
+                                // C. Jika transaksi antar-Aset yang berbeda -> Sembunyikan HANYA jika kodenya sama dengan Header Grup
+                                if ($detailCoaCode === '') {
+                                    $showRef = '';
+                                } elseif ($hasNonAssetDetail || $hasSameAccountInDebitCredit) {
+                                    $showRef = $detailCoaCode;
+                                } else {
+                                    $showRef = $detailCoaCode !== $groupCode ? $detailCoaCode : '';
+                                }
+                            @endphp
+
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
+                                {{-- NO (Hanya di baris pertama entri jurnal) --}}
+                                <td class="px-3 py-3 text-center text-gray-400 font-mono text-xs">
+                                    {{ $index === 0 ? $entryNumber++ : '' }}
                                 </td>
 
                                 {{-- TANGGAL --}}
-                                <td class="px-6 py-4 text-center text-gray-700 dark:text-gray-300">
-                                    {{ $index === 0 ? $journal->journal_date->format('d M Y') : '' }}
+                                <td
+                                    class="px-4 py-3 text-center text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs">
+                                    {{ $index === 0 && $journal->journal_date ? $journal->journal_date->format('d/m/Y') : '' }}
                                 </td>
 
                                 {{-- NAMA REKENING --}}
-                                <td class="px-6 py-4 {{ $isCreditRow ? 'pl-14' : '' }}">
-                                    <span
-                                        class="{{ $isCreditRow ? 'text-gray-600 dark:text-gray-400 italic' : 'font-bold text-gray-800 dark:text-gray-200' }}">
-                                        {{ $detail->chartOfAccount?->name }}
-                                    </span>
-                                </td>
-
-                                {{-- NAMA PENGGUNA --}}
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-400">
-                                    {{ $index === 0 ? $journal->postedBy?->name : '' }}
-                                </td>
-
-                                {{-- REF --}}
                                 <td
-                                    class="px-6 py-4 text-center font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                                    {{ $detail->chartOfAccount?->code }}
+                                    class="px-5 py-3 {{ $isCreditRow ? 'pl-10 text-gray-600 dark:text-gray-400 font-normal' : 'font-semibold text-gray-900 dark:text-gray-100' }}">
+                                    {{ $detail->chartOfAccount?->name ?? '-' }}
                                 </td>
 
                                 {{-- KETERANGAN --}}
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-400 text-xs">
-                                    {{ $detail->description ?? $journal->description }}
+                                <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
+                                    {{ $detail->description ?? ($index === 0 ? $journal->description : '') }}
+                                </td>
+
+                                {{-- PEMBUAT (POSTED BY) --}}
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    @if ($index === 0)
+                                        <div class="flex items-center gap-1.5">
+                                            <div
+                                                class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                {{ strtoupper(substr($journal->postedBy->name ?? 'S', 0, 1)) }}
+                                            </div>
+                                            <span
+                                                class="text-xs text-gray-600 dark:text-gray-300 font-medium truncate max-w-[110px]"
+                                                title="{{ $journal->postedBy->name ?? 'System' }}">
+                                                {{ $journal->postedBy->name ?? 'System' }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                </td>
+
+                                {{-- REF --}}
+                                <td class="px-3 py-3 text-center font-mono text-xs font-semibold">
+                                    @if ($showRef !== '')
+                                        <span
+                                            class="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-900">
+                                            {{ $showRef }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-300 dark:text-gray-600">-</span>
+                                    @endif
                                 </td>
 
                                 {{-- DEBIT --}}
-                                <td class="px-6 py-4 text-right font-medium text-green-600 dark:text-green-400">
+                                <td
+                                    class="px-5 py-3 text-right font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                                     @if ($detail->debit > 0)
-                                        {{ number_format($detail->debit, 0, ',', '.') }}
+                                        Rp{{ number_format($detail->debit, 0, ',', '.') }}
                                         @php $subTotalDebit += $detail->debit @endphp
                                     @else
-                                        <span class="text-gray-400 dark:text-gray-600">-</span>
+                                        <span class="text-gray-300 dark:text-gray-700">-</span>
                                     @endif
                                 </td>
 
                                 {{-- KREDIT --}}
-                                <td class="px-6 py-4 text-right font-medium text-red-600 dark:text-red-400">
+                                <td
+                                    class="px-5 py-3 text-right font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                                     @if ($detail->credit > 0)
-                                        {{ number_format($detail->credit, 0, ',', '.') }}
+                                        Rp{{ number_format($detail->credit, 0, ',', '.') }}
                                         @php $subTotalCredit += $detail->credit @endphp
                                     @else
-                                        <span class="text-gray-400 dark:text-gray-600">-</span>
+                                        <span class="text-gray-300 dark:text-gray-700">-</span>
                                     @endif
                                 </td>
                             </tr>
                         @endforeach
                     @endforeach
 
-                    {{-- SUBTOTAL PER GRUP --}}
-                    <tr class="bg-gray-100 dark:bg-gray-800">
+                    {{-- SUBTOTAL PER GRUP COA ASET --}}
+                    <tr
+                        class="bg-slate-100/90 dark:bg-slate-800/90 font-bold border-b-2 border-slate-300 dark:border-slate-600">
                         <td colspan="6"
-                            class="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300">
-                            Subtotal {{ $group['account_info'] }}
+                            class="px-6 py-3 text-right uppercase tracking-wider text-xs text-gray-600 dark:text-gray-400">
+                            Subtotal {{ $group['account_name'] }}
                         </td>
-                        <td class="px-6 py-4 text-right font-black text-gray-800 dark:text-gray-200">
+                        <td
+                            class="px-5 py-3 text-right text-emerald-700 dark:text-emerald-400 whitespace-nowrap font-bold">
                             Rp{{ number_format($subTotalDebit, 0, ',', '.') }}
                         </td>
-                        <td class="px-6 py-4 text-right font-black text-gray-800 dark:text-gray-200">
+                        <td class="px-5 py-3 text-right text-rose-700 dark:text-rose-400 whitespace-nowrap font-bold">
                             Rp{{ number_format($subTotalCredit, 0, ',', '.') }}
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-20 text-center text-gray-500 dark:text-gray-400">
-                            <svg class="w-12 h-12 mx-auto mb-4 opacity-20 dark:opacity-30" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            <p>Data jurnal tidak ditemukan untuk periode ini.</p>
+                        <td colspan="8" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
+                            <div class="flex flex-col items-center justify-center space-y-2">
+                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p class="font-semibold text-gray-700 dark:text-gray-300">Tidak ada data jurnal umum
+                                    ditemukan</p>
+                                <p class="text-xs text-gray-400">Coba ubah kata kunci pencarian atau sesuaikan rentang
+                                    tanggal filter Anda.</p>
+                            </div>
                         </td>
                     </tr>
                 @endforelse
             </tbody>
+
+            {{-- GRAND TOTAL KESELURUHAN --}}
+            @if (count($groupedJournals) > 0)
+                <tfoot
+                    class="bg-slate-200 dark:bg-slate-800 font-black text-gray-900 dark:text-white border-t-2 border-slate-400 dark:border-slate-600">
+                    <tr>
+                        <td colspan="6" class="px-6 py-3.5 text-center uppercase tracking-wider text-xs md:text-sm">
+                            GRAND TOTAL MUTASI JURNAL
+                        </td>
+                        <td
+                            class="px-5 py-3.5 text-right text-emerald-700 dark:text-emerald-300 whitespace-nowrap text-sm">
+                            Rp{{ number_format($grandTotalDebit, 0, ',', '.') }}
+                        </td>
+                        <td
+                            class="px-5 py-3.5 text-right text-emerald-700 dark:text-emerald-300 whitespace-nowrap text-sm">
+                            Rp{{ number_format($grandTotalCredit, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
-    </div>
-</div>
-
-<!-- Pagination -->
-<div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
-    <div class="flex items-center justify-between">
-
-        {{-- Previous --}}
-        @if ($journals->onFirstPage())
-            <button disabled
-                class="opacity-50 cursor-not-allowed flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M2.58301 9.99868C2.58272 10.1909 2.65588 10.3833 2.80249 10.53L7.79915 15.5301C8.09194 15.8231 8.56682 15.8233 8.85981 15.5305C9.15281 15.2377 9.15297 14.7629 8.86018 14.4699L5.14009 10.7472L16.6675 10.7472C17.0817 10.7472 17.4175 10.4114 17.4175 9.99715C17.4175 9.58294 17.0817 9.24715 16.6675 9.24715L5.14554 9.24715L8.86017 5.53016C9.15297 5.23717 9.15282 4.7623 8.85983 4.4695C8.56684 4.1767 8.09197 4.17685 7.79917 4.46984L2.84167 9.43049C2.68321 9.568 2.58301 9.77087 2.58301 9.99715C2.58301 9.99766 2.58301 9.99817 2.58301 9.99868Z"
-                        fill="currentColor" />
-                </svg>
-                <span class="hidden sm:inline">Previous</span>
-            </button>
-        @else
-            <a href="{{ $journals->previousPageUrl() }}"
-                class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M2.58301 9.99868C2.58272 10.1909 2.65588 10.3833 2.80249 10.53L7.79915 15.5301C8.09194 15.8231 8.56682 15.8233 8.85981 15.5305C9.15281 15.2377 9.15297 14.7629 8.86018 14.4699L5.14009 10.7472L16.6675 10.7472C17.0817 10.7472 17.4175 10.4114 17.4175 9.99715C17.4175 9.58294 17.0817 9.24715 16.6675 9.24715L5.14554 9.24715L8.86017 5.53016C9.15297 5.23717 9.15282 4.7623 8.85983 4.4695C8.56684 4.1767 8.09197 4.17685 7.79917 4.46984L2.84167 9.43049C2.68321 9.568 2.58301 9.77087 2.58301 9.99715C2.58301 9.99766 2.58301 9.99817 2.58301 9.99868Z"
-                        fill="currentColor" />
-                </svg>
-                <span class="hidden sm:inline">Previous</span>
-            </a>
-        @endif
-
-        {{-- Mobile --}}
-        <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden">
-            Page {{ $journals->currentPage() }}
-            of
-            {{ $journals->lastPage() }}
-        </span>
-
-        {{-- Desktop --}}
-        <ul class="hidden items-center gap-0.5 sm:flex">
-
-            @php
-                $current = $journals->currentPage();
-                $last = $journals->lastPage();
-
-                $start = max(1, $current - 2);
-                $end = min($last, $current + 2);
-
-                if ($current <= 3) {
-                    $end = min($last, 5);
-                }
-
-                if ($current >= $last - 2) {
-                    $start = max(1, $last - 4);
-                }
-            @endphp
-
-            @for ($page = $start; $page <= $end; $page++)
-                <li>
-                    @if ($page == $current)
-                        <span
-                            class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white text-theme-sm font-medium">
-                            {{ $page }}
-                        </span>
-                    @else
-                        <a href="{{ $journals->url($page) }}"
-                            class="flex h-10 w-10 items-center justify-center rounded-lg text-theme-sm font-medium text-gray-700 hover:bg-green-500/10 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500">
-                            {{ $page }}
-                        </a>
-                    @endif
-                </li>
-            @endfor
-
-        </ul>
-
-        {{-- Next --}}
-        @if ($journals->hasMorePages())
-            <a href="{{ $journals->nextPageUrl() }}"
-                class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                <span class="hidden sm:inline">Next</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M17.4175 9.9986C17.4178 10.1909 17.3446 10.3832 17.198 10.53L12.2013 15.5301C11.9085 15.8231 11.4337 15.8233 11.1407 15.5305C10.8477 15.2377 10.8475 14.7629 11.1403 14.4699L14.8604 10.7472L3.33301 10.7472C2.91879 10.7472 2.58301 10.4114 2.58301 9.99715C2.58301 9.58294 2.91879 9.24715 3.33301 9.24715L14.8549 9.24715L11.1403 5.53016C10.8475 5.23717 10.8477 4.7623 11.1407 4.4695C11.4336 4.1767 11.9085 4.17685 12.2013 4.46984L17.1588 9.43049C17.3173 9.568 17.4175 9.77087 17.4175 9.99715C17.4175 9.99763 17.4175 9.99812 17.4175 9.9986Z"
-                        fill="currentColor" />
-                </svg>
-            </a>
-        @else
-            <button disabled
-                class="opacity-50 cursor-not-allowed flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                <span class="hidden sm:inline">Next</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M17.4175 9.9986C17.4178 10.1909 17.3446 10.3832 17.198 10.53L12.2013 15.5301C11.9085 15.8231 11.4337 15.8233 11.1407 15.5305C10.8477 15.2377 10.8475 14.7629 11.1403 14.4699L14.8604 10.7472L3.33301 10.7472C2.91879 10.7472 2.58301 10.4114 2.58301 9.99715C2.58301 9.58294 2.91879 9.24715 3.33301 9.24715L14.8549 9.24715L11.1403 5.53016C10.8475 5.23717 10.8477 4.7623 11.1407 4.4695C11.4336 4.1767 11.9085 4.17685 12.2013 4.46984L17.1588 9.43049C17.3173 9.568 17.4175 9.77087 17.4175 9.99715C17.4175 9.99763 17.4175 9.99812 17.4175 9.9986Z"
-                        fill="currentColor" />
-                </svg>
-            </button>
-        @endif
-
-    </div>
-
-    {{-- Info --}}
-    <div class="mt-4 text-sm text-gray-500">
-        Menampilkan
-        <span class="font-medium">{{ $journals->firstItem() }}</span>
-        -
-        <span class="font-medium">{{ $journals->lastItem() }}</span>
-        dari
-        <span class="font-medium">{{ $journals->total() }}</span>
-        data
     </div>
 </div>

@@ -15,16 +15,23 @@ class JournalController extends Controller
 {
     public function index(Request $request)
     {
-        $periodId =  $request->period_id;
-        $subPeriodId =  $request->sub_period_id;
-        $startDate =  $request->start_date;
-        $endDate = $request->end_date;
-        $search = $request->search;
+        $periodId    = $request->input('period_id');
+        $subPeriodId = $request->input('sub_period_id');
+        $startDate   = $request->input('start_date');
+        $endDate     = $request->input('end_date');
+        $search      = $request->input('search');
 
-        // Initial Query
-        $query  = Journal::with(['details.chartOfAccount.accountType', 'postedBy']);
+        // Dynamic Sorting
+        $sortBy  = $request->get('sort_by', 'journal_date');
+        $sortDir = $request->get('sort_dir', 'desc');
 
-        // ================= FILTER =================
+        // Eager load relations secara efisien
+        $query = Journal::with([
+            'details.chartOfAccount.accountType',
+            'postedBy'
+        ]);
+
+        // ================= FILTERS =================
         if ($request->filled('period_id')) {
             $query->where('period_id', $periodId);
         }
@@ -41,61 +48,103 @@ class JournalController extends Controller
             $query->whereDate('journal_date', '<=', $endDate);
         }
 
-        // ======================= ORDER ============
-        $journals = $query
-            ->where(function ($q) use ($search) {
-                if ($search) {
-                    $q->where('description', 'like', "%{$search}%")
-                        ->orWhereHas('details.chartOfAccount', function ($q2) use ($search) {
-                            $q2->where('name', 'like', "%{$search}%")
-                                ->orWhere('code', 'like', "%{$search}%");
-                        });
-                }
-            })
-            ->orderBy('journal_date', 'desc')
-            ->paginate(20)
-            ->withQueryString();
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                    ->orWhere('journal_number', 'like', "%{$search}%")
+                    ->orWhereHas('postedBy', function ($qUser) use ($search) {
+                        $qUser->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('details.chartOfAccount', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
+                    });
+            });
+        }
 
-        $periods = Period::get();
+        $journals = $query->orderBy($sortBy, $sortDir)->get();
+
+        // Master Data Periode
+        $periods = Period::all();
         $subPeriods = collect();
-        if ($request->period_id) {
-            $subPeriods = SubPeriod::where('period_id', $request->period_id)
+        if ($periodId) {
+            $subPeriods = SubPeriod::where('period_id', $periodId)
                 ->orderBy('start_date')
                 ->get();
         }
 
-        // --- GROUPING (tetap sama) ---
-        $groupedJournals = [];
+        // ================= GROUPING KHUSUS COA BERTIPE ASET =================
+        $groupedJournals  = [];
+        $grandTotalDebit  = 0;
+        $grandTotalCredit = 0;
 
-        foreach ($journals->items() as $journal) {
-            $kasDetail = $journal->details->first(function ($detail) {
-                return $detail->chartOfAccount?->accountType?->name === 'ASET';
-            });
+        foreach ($journals as $journal) {
+            foreach ($journal->details as $detail) {
+                $coa = $detail->chartOfAccount;
+                if (!$coa) continue;
 
-            if ($kasDetail) {
-                $coaId = $kasDetail->coa_id;
-                $coaName = $kasDetail->chartOfAccount->name . ' (' . $kasDetail->chartOfAccount->code . ')';
+                $typeName = strtoupper($coa->accountType->name ?? '');
+                $isAsset  = str_contains($typeName, 'ASET') ||
+                    str_contains($typeName, 'ASSET') ||
+                    str_starts_with((string)$coa->code, '1');
+
+                if (!$isAsset) continue;
+
+                $coaId   = $detail->chart_of_account_id;
+                $coaCode = $coa->code ?? '-';
+                $coaName = $coa->name ?? 'Tanpa Nama Akun';
 
                 if (!isset($groupedJournals[$coaId])) {
                     $groupedJournals[$coaId] = [
-                        'account_info' => $coaName,
-                        'data' => []
+                        'account_id'      => $coaId,
+                        'account_code'    => $coaCode,
+                        'account_name'    => $coaName,
+                        'account_info'    => "{$coaName} ({$coaCode})",
+                        'subtotal_debit'  => 0,
+                        'subtotal_credit' => 0,
+                        'data'            => []
                     ];
                 }
 
-                $groupedJournals[$coaId]['data'][] = $journal;
+                // Masukkan jurnal ke grup COA terkait (cekal duplikasi jurnal dalam grup yang sama)
+                $alreadyAdded = collect($groupedJournals[$coaId]['data'])->contains('id', $journal->id);
+                if (!$alreadyAdded) {
+                    $groupedJournals[$coaId]['data'][] = $journal;
+                }
             }
         }
 
+        // Kalkulasi Subtotal per Grup COA dan Grand Total Keseluruhan
+        foreach ($groupedJournals as $coaId => &$group) {
+            foreach ($group['data'] as $journal) {
+                foreach ($journal->details as $detail) {
+                    $group['subtotal_debit']  += $detail->debit;
+                    $group['subtotal_credit'] += $detail->credit;
+                }
+            }
+            $grandTotalDebit  += $group['subtotal_debit'];
+            $grandTotalCredit += $group['subtotal_credit'];
+        }
+        unset($group);
+
+        // Urutkan grup secara alami berdasarkan Kode COA (misal: 11100, 11110, 11120, dst.)
+        uasort($groupedJournals, function ($a, $b) {
+            return strnatcmp($a['account_code'], $b['account_code']);
+        });
+
         return view('pages.menus.bendahara.journals.index', [
-            'journals' => $journals,
-            'groupedJournals' => $groupedJournals,
-            'periods' => $periods,
-            'subPeriods' => $subPeriods, // ⬅️ tambahan
-            'periodId' => $periodId,
-            'subPeriodId' => $subPeriodId, // ⬅️ tambahan
-            'startDate' => $startDate,
-            'endDate' => $endDate
+            'journals'         => $journals,
+            'groupedJournals'  => $groupedJournals,
+            'grandTotalDebit'  => $grandTotalDebit,
+            'grandTotalCredit' => $grandTotalCredit,
+            'periods'          => $periods,
+            'subPeriods'       => $subPeriods,
+            'periodId'         => $periodId,
+            'subPeriodId'      => $subPeriodId,
+            'startDate'        => $startDate,
+            'endDate'          => $endDate,
+            'sortBy'           => $sortBy,
+            'sortDir'          => $sortDir,
         ]);
     }
 

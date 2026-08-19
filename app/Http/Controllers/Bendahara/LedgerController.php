@@ -17,22 +17,16 @@ class LedgerController extends Controller
 {
     public function index(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | MASTER DATA
-        |--------------------------------------------------------------------------
-        */
-        $periods = Period::get();
+        $periods = Period::orderBy('created_at', 'desc')->get();
 
-        $periodId = $request->period_id;
-        $coaId       = $request->coa_id;
+        $periodId = $request->period_id ?? optional(Period::first())->id;
+        $coaId = $request->coa_id;
         $subPeriodId = $request->sub_period_id;
-        $startDate   = $request->start_date;
-        $endDate     = $request->end_date;
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
 
         $coas = ChartOfAccount::orderBy('code')->get();
 
-        // Sub Periods (dependent dropdown)
         $subPeriods = collect();
         if ($periodId) {
             $subPeriods = SubPeriod::where('period_id', $periodId)
@@ -41,44 +35,29 @@ class LedgerController extends Controller
                 ->get();
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | DEFAULT RESPONSE
-        |--------------------------------------------------------------------------
-        */
-        $ledger         = [];
+        $ledger = [];
         $openingBalance = 0;
         $runningBalance = 0;
-        $endingBalance  = 0;
-        $coa            = null;
+        $endingBalance = 0;
+        $totalDebitMutation = 0;
+        $totalCreditMutation = 0;
+        $coa = null;
         $openingBalanceCreatedBy = '-';
         $openingBalanceDate = '-';
 
-        /*
-        |--------------------------------------------------------------------------
-        | PROCESS LEDGER
-        |--------------------------------------------------------------------------
-        */
         if ($coaId) {
-
             $coa = ChartOfAccount::findOrFail($coaId);
+            $normalBalance = is_object($coa->normal_balance) ? $coa->normal_balance->value : $coa->normal_balance;
 
-            /*
-            |--------------------------------------------------------------------------
-            | 1️⃣ OPENING BALANCE (MANUAL)
-            |--------------------------------------------------------------------------
-            */
+            // 1. OPENING BALANCE
             $opening = OpeningBalance::where('chart_of_account_id', $coaId)
                 ->where('period_id', $periodId)
-                ->whereHas('subPeriod', function ($q) use ($subPeriodId) {
-                    if ($subPeriodId) {
-                        $q->where('id', $subPeriodId);
-                    }
-                })
+                ->when($subPeriodId, fn ($q) => $q->where('sub_period_id', $subPeriodId))
                 ->first();
 
             if ($opening) {
-                $openingBalance = $opening->balance_type === NormalBalanceEnum::DEBIT->value
+                $openingType = is_object($opening->balance_type) ? $opening->balance_type->value : $opening->balance_type;
+                $openingBalance = ($openingType === NormalBalanceEnum::DEBIT->value || $openingType === 'DEBIT')
                     ? $opening->amount
                     : -1 * $opening->amount;
             }
@@ -86,94 +65,75 @@ class LedgerController extends Controller
             $openingBalanceCreatedBy = $opening?->creator?->name ?? '-';
             $openingBalanceDate = $opening?->created_at ? Carbon::parse($opening->created_at)->format('d M Y') : '-';
 
-            /*
-            |--------------------------------------------------------------------------
-            | 2️⃣ MUTASI SEBELUM FILTER (DATE RANGE)
-            |--------------------------------------------------------------------------
-            */
-            $mutationQuery = JournalDetail::where('chart_of_account_id', $coaId)
-                ->whereHas('journal', function ($q) use ($periodId, $subPeriodId, $startDate) {
-                    $q->where('period_id', $periodId);
-
-                    if ($subPeriodId) {
-                        $q->where('sub_period_id', $subPeriodId);
-                    }
-
-                    if ($startDate) {
-                        $q->where('journal_date', '<', Carbon::parse($startDate)->startOfDay());
-                    }
-                });
-
+            // 2. MUTASI SEBELUM START DATE
             $runningBalance = $openingBalance;
             if ($startDate) {
-                $mutationDebit  = (clone $mutationQuery)->sum('debit');
-                $mutationCredit = (clone $mutationQuery)->sum('credit');
+                $priorMutation = JournalDetail::where('chart_of_account_id', $coaId)
+                    ->whereHas('journal', function ($q) use ($periodId, $subPeriodId, $startDate) {
+                        $q->where('period_id', $periodId);
+                        if ($subPeriodId) {
+                            $q->where('sub_period_id', $subPeriodId);
+                        }
+                        $q->where('journal_date', '<', Carbon::parse($startDate)->startOfDay());
+                    });
 
-                if ($coa->normal_balance === NormalBalanceEnum::DEBIT->value) {
-                    $runningBalance += $mutationDebit - $mutationCredit;
+                $priorDebit = (clone $priorMutation)->sum('debit');
+                $priorCredit = (clone $priorMutation)->sum('credit');
+
+                if ($normalBalance === 'DEBIT') {
+                    $runningBalance += ($priorDebit - $priorCredit);
                 } else {
-                    $runningBalance += $mutationCredit - $mutationDebit;
+                    $runningBalance += ($priorCredit - $priorDebit);
                 }
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | 3️⃣ TRANSAKSI BERJALAN
-            |--------------------------------------------------------------------------
-            */
-            $transactions = JournalDetail::with('journal')
+            // 3. TRANSAKSI PERIODE BERJALAN
+            $transactions = JournalDetail::with(['journal.postedBy'])
                 ->where('chart_of_account_id', $coaId)
                 ->whereHas('journal', function ($q) use ($periodId, $subPeriodId, $startDate, $endDate) {
-
                     $q->where('period_id', $periodId);
-
                     if ($subPeriodId) {
                         $q->where('sub_period_id', $subPeriodId);
                     }
-
                     if ($startDate && $endDate) {
                         $q->whereBetween('journal_date', [
                             Carbon::parse($startDate)->startOfDay(),
-                            Carbon::parse($endDate)->endOfDay()
+                            Carbon::parse($endDate)->endOfDay(),
                         ]);
                     }
                 })
                 ->join('journals', 'journals.id', '=', 'journal_details.journal_id')
-                ->orderBy('journals.journal_date')
-                ->orderBy('journals.id')
+                ->orderBy('journals.journal_date', 'asc')
+                ->orderBy('journals.created_at', 'asc')
                 ->select('journal_details.*')
                 ->get();
 
-            /*
-            |--------------------------------------------------------------------------
-            | 4️⃣ RUNNING BALANCE
-            |--------------------------------------------------------------------------
-            */
+            // 4. HITUNG RUNNING BALANCE & AKUN LAWAN
             foreach ($transactions as $trx) {
+                $totalDebitMutation += $trx->debit;
+                $totalCreditMutation += $trx->credit;
 
-                // Hitung saldo berjalan
-                if ($coa->normal_balance === NormalBalanceEnum::DEBIT->value) {
+                if ($normalBalance === 'DEBIT') {
                     $runningBalance += ($trx->debit - $trx->credit);
                 } else {
                     $runningBalance += ($trx->credit - $trx->debit);
                 }
 
-                // Ambil akun lawan
                 $opposingTrx = JournalDetail::where('journal_id', $trx->journal_id)
                     ->where('chart_of_account_id', '!=', $coaId)
                     ->with('chartOfAccount')
                     ->first();
 
                 $ledger[] = [
-                    'date'            => $trx->journal->journal_date,
-                    'description'     => $trx->description ?? $trx->journal->description,
-                    'posted_by'       => $trx->journal->postedBy?->name ?? '-',
-                    'ref_code'        => $opposingTrx?->chartOfAccount?->code ?? '-',
-                    'ref_name'        => $opposingTrx?->chartOfAccount?->name ?? '-',
-                    'debit'           => $trx->debit,
-                    'credit'          => $trx->credit,
+                    'date' => $trx->journal->journal_date,
+                    'description' => $trx->description ?? $trx->journal->description,
+                    'posted_by' => $trx->journal->postedBy?->name ?? '-',
+                    'ref_code' => $opposingTrx?->chartOfAccount?->code ?? '-',
+                    'ref_name' => $opposingTrx?->chartOfAccount?->name ?? '-',
+                    'debit' => $trx->debit,
+                    'credit' => $trx->credit,
                     'current_balance' => $runningBalance,
-                    'normal_balance'  => $coa->normal_balance
+                    'normal_balance' => $normalBalance,
                 ];
             }
 
@@ -189,6 +149,8 @@ class LedgerController extends Controller
             'openingBalance',
             'runningBalance',
             'endingBalance',
+            'totalDebitMutation',
+            'totalCreditMutation',
             'subPeriods',
             'subPeriodId',
             'startDate',
@@ -201,7 +163,7 @@ class LedgerController extends Controller
     public function export(Request $request, string $type)
     {
         $periodId = $request->period_id;
-        $month    = $request->month;
+        $month = $request->month;
 
         $journals = Journal::with(['details.coa.accountType'])
             ->where('period_id', $periodId)
@@ -215,7 +177,7 @@ class LedgerController extends Controller
 
         return match ($type) {
             'excel' => app()->download($journals),
-            'pdf'   => app()->download($journals),
+            'pdf' => app()->download($journals),
             default => abort(404),
         };
     }

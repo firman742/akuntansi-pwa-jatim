@@ -4,296 +4,281 @@
 
 @section('content')
     <x-common.page-breadcrumb defaultTitle="Buku Besar" pageTitle="Monitoring Buku Besar"
-        pageDescription="Monitoring Buku Besar berdasarkan periode" pageIcon="ledger" />
+        pageDescription="Rincian Transaksi dan Mutasi Per Akun (General Ledger)" pageIcon="ledger" />
 
-    {{-- FILTER CARD --}}
-    <div class="mb-8 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-sm p-6">
-        <form method="GET" class="space-y-6">
+    {{-- FILTER CARD CONTAINER --}}
+    <div class="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <form method="GET" action="{{ route('bendahara.reports.ledger.index') }}" id="filterForm" class="space-y-4">
+            {{-- ROW 1: PERIODE, SUB PERIODE, AKUN --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-form.select id="filter_period" name="period_id" label="Periode">
+                    @foreach ($periods as $p)
+                        <option value="{{ $p->id }}" @selected($periodId == $p->id)>
+                            {{ $p->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
 
-            {{-- ===================== --}}
-            {{-- 1. CONTEXT (PERIOD - SUB - AKUN) --}}
-            {{-- ===================== --}}
-            <div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {{-- PERIOD --}}
-                    <div class="flex flex-col gap-2">
-                        <x-form.select id="filter_period" name="period_id" label="Periode" placeholder="Pilih Periode">
-                            @foreach ($periods as $period)
-                                <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
-                                    {{ $period->name }}
-                                </option>
-                            @endforeach
-                        </x-form.select>
-                    </div>
+                <x-form.select id="filter_sub_period" name="sub_period_id" label="Sub Periode"
+                    onchange="this.form.submit()">
+                    <option value="">Semua Sub Periode</option>
+                    @foreach ($subPeriods as $sp)
+                        <option value="{{ $sp->id }}" @selected($subPeriodId == $sp->id)>
+                            {{ $sp->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
 
-                    {{-- SUB PERIOD --}}
-                    <div class="flex flex-col gap-2">
-                        <x-form.select id="filter_sub_period" name="sub_period_id" label="Sub Periode"
-                            placeholder="Pilih Sub Periode">
-                            <option value="">Semua</option>
-                            @foreach ($subPeriods as $subPeriod)
-                                <option value="{{ $subPeriod->id }}" @selected(request('sub_period_id') == $subPeriod->id)>
-                                    {{ $subPeriod->name }}
-                                </option>
-                            @endforeach
-                        </x-form.select>
-                    </div>
-
-                    {{-- AKUN --}}
-                    <div class="flex flex-col gap-2">
-                        <x-form.select id="filter_coa" name="coa_id" label="Akun" placeholder="Pilih Akun">
-                            @foreach ($coas as $c)
-                                <option value="{{ $c->id }}" @selected(optional($coa)->id === $c->id)>
-                                    {{ $c->code }} - {{ $c->name }}
-                                </option>
-                            @endforeach
-                        </x-form.select>
-                    </div>
-
-                </div>
+                <x-form.select id="filter_coa" name="coa_id" label="Akun (COA)" onchange="this.form.submit()">
+                    <option value="">-- Pilih Akun --</option>
+                    @foreach ($coas as $c)
+                        <option value="{{ $c->id }}" @selected(optional($coa)->id === $c->id)>
+                            {{ $c->code }} - {{ $c->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
             </div>
 
-            {{-- ===================== --}}
-            {{-- 2. DATE RANGE --}}
-            {{-- ===================== --}}
-            <div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-                    {{-- START DATE --}}
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                            Dari Tanggal
-                        </label>
-                        <x-form.date-picker id="start_date" name="start_date" defaultDate="{{ request('start_date') }}" />
-                    </div>
-
-                    {{-- END DATE --}}
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                            Sampai Tanggal
-                        </label>
-                        <x-form.date-picker id="end_date" name="end_date" defaultDate="{{ request('end_date') }}" />
-                    </div>
-
+            {{-- ROW 2: TANGGAL & ACTIONS --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 dark:text-gray-400">
+                        Dari Tanggal
+                    </label>
+                    <x-form.date-picker id="start_date" name="start_date" defaultDate="{{ $startDate }}" />
                 </div>
-            </div>
-            <div>
-                <div class="grid grid-cols md:grid-cols-2 gap-5">
-                    {{-- FILTER ACTION --}}
-                    <div class="flex items-end gap-3 col-span-1 md:col-span-2 lg:col-span-2">
-                        <x-ui.button type="submit" variant="primary"
-                            class="flex-1 justify-center rounded-xl px-5 py-2.5 shadow-sm">
-                            Tampilkan
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 dark:text-gray-400">
+                        Sampai Tanggal
+                    </label>
+                    <x-form.date-picker id="end_date" name="end_date" defaultDate="{{ $endDate }}" />
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <x-ui.button type="submit" variant="primary" class="flex-1 justify-center rounded-xl py-2.5 text-xs">
+                        Tampilkan Ledger
+                    </x-ui.button>
+                    <a href="{{ route('bendahara.reports.ledger.index') }}" class="flex-1">
+                        <x-ui.button type="button" variant="outline"
+                            class="w-full justify-center rounded-xl py-2.5 text-xs">
+                            Reset
                         </x-ui.button>
-
-                        <a href="{{ route('bendahara.reports.ledger.index') }}" class="flex-1">
-                            <x-ui.button variant="outline" class="w-full justify-center rounded-xl px-5 py-2.5">
-                                Reset
-                            </x-ui.button>
-                        </a>
-                    </div>
+                    </a>
                 </div>
             </div>
         </form>
     </div>
 
-
-
-
-    {{-- LEDGER TABLE --}}
     @if ($coa)
-        {{-- Tombol export pdf & export excel --}}
-        <div class="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-end">
+        @php
+            $normalBalStr = is_object($coa->normal_balance) ? $coa->normal_balance->value : $coa->normal_balance;
+            $isDebitAcc = strtoupper($normalBalStr) === 'DEBIT';
+        @endphp
 
-            <div class="flex flex-col gap-2 sm:flex-row">
-                {{-- Export PDF --}}
-                <a href="#" target="_blank">
-                    <x-ui.button variant="primary" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
-                        Export PDF
-                    </x-ui.button>
-                </a>
+        {{-- METRIC SUMMARY CARDS --}}
+        <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- Saldo Awal --}}
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Saldo Awal</p>
+                <h4 class="text-xl font-black text-gray-800 dark:text-gray-100 mt-1 tabular-nums font-mono">
+                    Rp{{ number_format(abs($openingBalance), 0, ',', '.') }}
+                </h4>
+                <p class="text-[10px] text-gray-400 mt-0.5">Oleh: {{ $openingBalanceCreatedBy }}</p>
+            </div>
 
-                {{-- Export Excel --}}
-                <a href="#">
-                    <x-ui.button variant="outline" class="flex items-center gap-2 rounded-xl px-4 py-2 shadow-sm">
-                        Export Excel
-                    </x-ui.button>
-                </a>
+            {{-- Total Mutasi Debit --}}
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Mutasi
+                    Debit</p>
+                <h4 class="text-xl font-black text-blue-600 dark:text-blue-400 mt-1 tabular-nums font-mono">
+                    Rp{{ number_format($totalDebitMutation, 0, ',', '.') }}
+                </h4>
+                <p class="text-[10px] text-gray-400 mt-0.5">Total Penambahan/Pengurangan</p>
+            </div>
+
+            {{-- Total Mutasi Kredit --}}
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Total Mutasi
+                    Kredit</p>
+                <h4 class="text-xl font-black text-rose-600 dark:text-rose-400 mt-1 tabular-nums font-mono">
+                    Rp{{ number_format($totalCreditMutation, 0, ',', '.') }}
+                </h4>
+                <p class="text-[10px] text-gray-400 mt-0.5">Total Penambahan/Pengurangan</p>
+            </div>
+
+            {{-- Saldo Akhir --}}
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Saldo Akhir
+                    Kumulatif</p>
+                <h4 class="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums font-mono">
+                    Rp{{ number_format(abs($endingBalance), 0, ',', '.') }}
+                </h4>
+                <p class="text-[10px] text-gray-400 mt-0.5">Posisi: {{ $isDebitAcc ? 'DEBIT' : 'KREDIT' }}</p>
             </div>
         </div>
 
+        {{-- MAIN TABLE CARD --}}
         <div
-            class="overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 shadow-lg rounded-2xl">
-            {{-- HEADER: Lebih Informatif --}}
+            class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900">
+            {{-- BANNER HEADER --}}
             <div
-                class="flex flex-col justify-between border-b border-gray-200 dark:border-gray-700
-                bg-gray-50 dark:bg-gray-900
-                p-6 sm:flex-row sm:items-center">
-                <div class="flex items-center gap-4">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-gray-800 dark:text-gray-100">{{ $coa->name }}</h2>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Kode Akun: <span
-                                class="font-mono font-bold text-primary dark:text-primary-light">{{ $coa->code }}</span>
-                            <span class="mx-2 text-gray-300 dark:text-gray-500">|</span>
-                            Normal: <span
-                                class="badge {{ $coa->normal_balance === 'DEBIT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' }} px-2 py-0.5 rounded text-xs font-bold">{{ $coa->normal_balance }}</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="mt-4 flex flex-col items-end sm:mt-0">
-                    <p class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Saldo
-                        Akhir</p>
-                    <div class="flex items-baseline gap-1">
-                        <span class="text-sm font-bold text-gray-500 dark:text-gray-400">Rp</span>
-                        <span class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
-                            {{ number_format($endingBalance, 0, ',', '.') }}
+                class="border-b border-gray-200 bg-gray-50/80 p-5 dark:border-gray-800 dark:bg-gray-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded">
+                            {{ $coa->code }}
+                        </span>
+                        <span
+                            class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded {{ $isDebitAcc ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }}">
+                            Saldo Normal: {{ strtoupper($normalBalStr) }}
                         </span>
                     </div>
+                    <h2 class="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight mt-1">
+                        {{ $coa->name }}
+                    </h2>
+                </div>
+
+                {{-- EXPORT BUTTONS --}}
+                <div class="flex items-center gap-2">
+                    <a href="#" target="_blank">
+                        <x-ui.button type="button" variant="outline" class="rounded-xl px-3 py-1.5 text-xs">
+                            PDF
+                        </x-ui.button>
+                    </a>
+                    <a href="#">
+                        <x-ui.button type="button" variant="outline" class="rounded-xl px-3 py-1.5 text-xs">
+                            Excel
+                        </x-ui.button>
+                    </a>
                 </div>
             </div>
 
-            {{-- TABLE AREA --}}
+            {{-- TABLE LEDGER --}}
             <div class="overflow-x-auto">
-                <table class="w-full border-separate border-spacing-0">
+                <table class="w-full border-collapse text-sm">
                     <thead>
                         <tr
-                            class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                            class="bg-gray-100/70 dark:bg-gray-800/80 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                             <th rowspan="2"
-                                class="sticky top-0 border-b border-gray-200 dark:border-gray-600 px-6 py-4 text-center">
-                                Tanggal
+                                class="w-32 px-4 py-3 text-center border-r border-gray-200 dark:border-gray-700">Tanggal
                             </th>
+                            <th rowspan="2" class="px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">
+                                Keterangan & Akun Lawan</th>
                             <th rowspan="2"
-                                class="sticky top-0 border-b border-gray-200 dark:border-gray-600 px-6 py-4 text-left">
-                                Keterangan
-                            </th>
-                            <th rowspan="2"
-                                class="sticky top-0 border-b border-gray-200 dark:border-gray-600 px-6 py-4 text-left">
-                                Pembuat
+                                class="w-36 px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">Posting Oleh
                             </th>
                             <th rowspan="2"
-                                class="sticky top-0 border-b border-gray-200 dark:border-gray-600 px-6 py-4 text-center">
-                                Debit
+                                class="w-36 px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700">Debit (Rp)
                             </th>
                             <th rowspan="2"
-                                class="sticky top-0 border-b border-gray-200 dark:border-gray-600 px-6 py-4 text-center border-r">
-                                Kredit
+                                class="w-36 px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700">Kredit (Rp)
                             </th>
-                            <th colspan="2"
-                                class="sticky top-0 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-6 py-3 text-center font-semibold">
-                                Saldo Kumulatif
-                            </th>
+                            <th colspan="2" class="px-4 py-2 text-center bg-gray-200/50 dark:bg-gray-700/50">Saldo
+                                Kumulatif (Rp)</th>
                         </tr>
                         <tr
-                            class="bg-gray-100 dark:bg-gray-800 text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
-                            <th
-                                class="border-b border-gray-200 dark:border-gray-600 px-6 py-2 text-center bg-gray-100/30 dark:bg-gray-700/30">
-                                Saldo Debit
+                            class="bg-gray-200/40 dark:bg-gray-700/40 text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                            <th class="w-36 px-4 py-2 text-right border-r border-gray-200 dark:border-gray-700">Saldo Debit
                             </th>
-                            <th
-                                class="border-b border-gray-200 dark:border-gray-600 px-6 py-2 text-center bg-gray-100/30 dark:bg-gray-700/30 border-l">
-                                Saldo Kredit
-                            </th>
+                            <th class="w-36 px-4 py-2 text-right">Saldo Kredit</th>
                         </tr>
                     </thead>
 
-                    <tbody class="text-sm">
-                        {{-- OPENING BALANCE --}}
-                        @if ($coa)
-                            <tr class="border-b border-blue-100 bg-blue-50 dark:border-blue-900 dark:bg-blue-500/10">
-                                <td class="px-6 py-4 text-center font-medium text-blue-700 dark:text-blue-400">
-                                    {{ $openingBalanceDate ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="font-bold text-blue-700 dark:text-blue-300 dark:text-blue-300">
-                                        Saldo Awal
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-center">
-                                    {{ $openingBalanceCreatedBy ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4 text-right font-semibold text-blue-700 dark:text-blue-400">
-                                    {{ $coa->normal_balance === 'DEBIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
-                                </td>
-                                <td class="px-6 py-4 text-right font-semibold text-blue-700 dark:text-blue-400 border-r">
-                                    {{ $coa->normal_balance === 'CREDIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-right font-bold text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/10">
-                                    {{ $coa->normal_balance === 'DEBIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
-                                </td>
-                                <td
-                                    class="px-6 py-4 text-right font-bold text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/10 border-l">
-                                    {{ $coa->normal_balance === 'CREDIT' ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
-                                </td>
-                            </tr>
-                        @endif
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        {{-- BARIS SALDO AWAL --}}
+                        <tr
+                            class="bg-blue-50/50 dark:bg-blue-950/20 font-semibold border-b border-blue-100 dark:border-blue-900">
+                            <td class="px-4 py-3 text-center text-xs font-mono text-blue-700 dark:text-blue-300">
+                                {{ $openingBalanceDate }}
+                            </td>
+                            <td class="px-4 py-3 text-blue-900 dark:text-blue-200">
+                                Saldo Awal Periode
+                            </td>
+                            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                                {{ $openingBalanceCreatedBy }}
+                            </td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-gray-400 dark:text-gray-600 border-r border-gray-100 dark:border-gray-800">
+                                -</td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-gray-400 dark:text-gray-600 border-r border-gray-100 dark:border-gray-800">
+                                -</td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-blue-700 dark:text-blue-300 border-r border-gray-100 dark:border-gray-800">
+                                {{ $isDebitAcc ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-right font-mono text-purple-700 dark:text-purple-300">
+                                {{ !$isDebitAcc ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
+                            </td>
+                        </tr>
 
-                        {{-- DATA TRANSAKSI --}}
-                        @forelse ($ledger as $index => $row)
-                            <tr
-                                class="{{ $index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800' }}
-                                border-b border-gray-200 dark:border-gray-700
-                                hover:bg-gray-100 dark:hover:bg-gray-800
-                                transition-colors">
-                                <td class="px-6 py-4 text-center text-gray-600 dark:text-gray-400">
-                                    {{ $row['date']->format('d M Y') }}
+                        {{-- BARIS TRANSAKSI --}}
+                        @forelse ($ledger as $row)
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+                                <td
+                                    class="px-4 py-2.5 text-center font-mono text-xs text-gray-500 border-r border-gray-100 dark:border-gray-800">
+                                    {{ $row['date']->format('d/m/Y') }}
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $row['description'] }}
-                                    </div>
-                                    <div class="mt-1 font-light text-gray-700 dark:text-blue-500 tracking-tighter">
-                                        {{ $row['ref_code'] }} - {{ $row['ref_name'] }}
-                                    </div>
+                                <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
+                                    <p class="font-medium text-gray-800 dark:text-gray-200">{{ $row['description'] }}</p>
+                                    <p class="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5">
+                                        Law: {{ $row['ref_code'] }} - {{ $row['ref_name'] }}
+                                    </p>
                                 </td>
-                                <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                                <td
+                                    class="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['posted_by'] }}
                                 </td>
-                                <td class="px-6 py-4 text-right font-medium text-gray-700 dark:text-gray-300">
+                                <td
+                                    class="px-4 py-2.5 text-right font-mono text-gray-800 dark:text-gray-200 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['debit'] > 0 ? number_format($row['debit'], 0, ',', '.') : '-' }}
                                 </td>
-                                <td class="px-6 py-4 text-right font-medium text-red-600/80 dark:text-red-400 border-r">
+                                <td
+                                    class="px-4 py-2.5 text-right font-mono text-rose-600 dark:text-rose-400 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['credit'] > 0 ? number_format($row['credit'], 0, ',', '.') : '-' }}
                                 </td>
+                                {{-- SALDO KUMULATIF DEBIT --}}
                                 <td
-                                    class="px-6 py-4 text-right font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800">
-                                    {{ $row['normal_balance'] === 'DEBIT' ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
+                                    class="px-4 py-2.5 text-right font-mono font-bold text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+                                    {{ $isDebitAcc ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
                                 </td>
+                                {{-- SALDO KUMULATIF KREDIT --}}
                                 <td
-                                    class="px-6 py-4 text-right font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 border-l">
-                                    {{ $row['normal_balance'] === 'KREDIT' ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
+                                    class="px-4 py-2.5 text-right font-mono font-bold text-gray-900 dark:text-gray-100 bg-gray-50/50 dark:bg-gray-800/30">
+                                    {{ !$isDebitAcc ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-20 text-center text-gray-400 dark:text-gray-500">
-                                    <svg class="w-12 h-12 mx-auto mb-4 opacity-20 dark:opacity-30" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <p class="text-sm font-medium">Tidak ada transaksi ditemukan pada periode ini.</p>
+                                <td colspan="7" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
+                                    Tidak ada transaksi untuk akun ini pada periode yang dipilih.
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
+
                     <tfoot>
-                        <tr class="border-t-2 border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-900">
-                            <td colspan="5"
-                                class="px-6 py-5 text-right text-base font-bold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                                Total Saldo
+                        <tr class="bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-700 font-bold">
+                            <td colspan="3"
+                                class="px-4 py-3 text-right uppercase text-xs tracking-wider text-gray-700 dark:text-gray-300">
+                                Total Akhir Mutasi & Saldo
                             </td>
-
                             <td
-                                class="px-6 py-5 text-right text-lg font-extrabold text-primary dark:text-primary-400 bg-gray-50 dark:bg-gray-800">
-                                {{ $coa->normal_balance === 'DEBIT' ? number_format(abs($endingBalance), 0, ',', '.') : '-' }}
+                                class="px-4 py-3 text-right font-mono text-blue-600 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700">
+                                {{ number_format($totalDebitMutation, 0, ',', '.') }}
                             </td>
-
                             <td
-                                class="border-l border-gray-300 px-6 py-5 text-right text-lg font-extrabold text-primary dark:border-gray-600 dark:text-primary-400 bg-gray-50 dark:bg-gray-800">
-                                {{ $coa->normal_balance === 'CREDIT' ? number_format(abs($endingBalance), 0, ',', '.') : '-' }}
+                                class="px-4 py-3 text-right font-mono text-rose-600 dark:text-rose-400 border-r border-gray-200 dark:border-gray-700">
+                                {{ number_format($totalCreditMutation, 0, ',', '.') }}
+                            </td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-base text-emerald-600 dark:text-emerald-400 border-r border-gray-200 dark:border-gray-700">
+                                {{ $isDebitAcc ? number_format(abs($endingBalance), 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-right font-mono text-base text-emerald-600 dark:text-emerald-400">
+                                {{ !$isDebitAcc ? number_format(abs($endingBalance), 0, ',', '.') : '-' }}
                             </td>
                         </tr>
                     </tfoot>
@@ -302,31 +287,41 @@
         </div>
     @endif
 
-
-    {{-- SCRIPT: DEPENDENT SUB PERIOD --}}
+    {{-- SCRIPT AUTO SUBMIT FOR SUB PERIOD --}}
     <script>
-        const periodFilter = document.getElementById('filter_period');
-        const subPeriodFilter = document.getElementById('filter_sub_period');
+        document.addEventListener('DOMContentLoaded', function() {
+            const periodFilter = document.getElementById('filter_period');
+            const subPeriodFilter = document.getElementById('filter_sub_period');
+            const filterForm = document.getElementById('filterForm');
 
-        periodFilter.addEventListener('change', async function() {
+            if (periodFilter && subPeriodFilter) {
+                periodFilter.addEventListener('change', async function() {
+                    let periodId = this.value;
+                    subPeriodFilter.innerHTML = '<option value="">Memuat...</option>';
 
-            let periodId = this.value;
+                    if (!periodId) {
+                        subPeriodFilter.innerHTML = '<option value="">Semua Sub Periode</option>';
+                        filterForm.submit();
+                        return;
+                    }
 
-            subPeriodFilter.innerHTML = '<option>Loading...</option>';
+                    try {
+                        const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
+                        const data = await res.json();
 
-            if (!periodId) {
-                subPeriodFilter.innerHTML = '<option value="">Semua</option>';
-                return;
+                        subPeriodFilter.innerHTML = '<option value="">Semua Sub Periode</option>';
+                        data.forEach(sub => {
+                            subPeriodFilter.innerHTML +=
+                                `<option value="${sub.id}">${sub.name}</option>`;
+                        });
+                    } catch (err) {
+                        subPeriodFilter.innerHTML =
+                        '<option value="">Gagal memuat sub periode</option>';
+                    } finally {
+                        filterForm.submit();
+                    }
+                });
             }
-
-            const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
-            const data = await res.json();
-
-            subPeriodFilter.innerHTML = '';
-
-            data.forEach(sub => {
-                subPeriodFilter.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
-            });
         });
     </script>
 @endsection

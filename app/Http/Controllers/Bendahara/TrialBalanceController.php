@@ -21,53 +21,34 @@ class TrialBalanceController extends Controller
         $periodId = $request->period_id ?? optional(Period::first())->id;
         $subPeriodId = $request->sub_period_id;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Get SUB PERIOD 
-        |--------------------------------------------------------------------------
-        */
+        $selectedPeriod = Period::find($periodId);
+
         $subPeriods = SubPeriod::where('period_id', $periodId)
             ->orderBy('id')
             ->get();
 
         $coas = ChartOfAccount::orderBy('code')->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | INIT DATA
-        |--------------------------------------------------------------------------
-        */
         $data = [
-            'aset_lancar' => [],
+            'aset_lancar'       => [],
             'aset_tidak_lancar' => [],
-            'hutang' => [],
-            'modal' => []
+            'hutang'            => [],
+            'modal'             => []
         ];
 
         foreach ($coas as $coa) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | OPENING BALANCE
-            |--------------------------------------------------------------------------
-            */
+            // Opening Balance
             $opening = OpeningBalance::where('chart_of_account_id', $coa->id)
                 ->where('period_id', $periodId)
-                ->where('sub_period_id', $subPeriodId)
+                ->when($subPeriodId, fn($q) => $q->where('sub_period_id', $subPeriodId))
                 ->first();
 
             $openingAmount = $opening ? $opening->amount : 0;
 
-            /*
-            |--------------------------------------------------------------------------
-            | MUTATION QUERY (SUDAH PAKAI FILTER BARU)
-            |--------------------------------------------------------------------------
-            */
+            // Mutation Query
             $mutationQuery = JournalDetail::where('chart_of_account_id', $coa->id)
                 ->whereHas('journal', function ($q) use ($periodId, $subPeriodId) {
-
                     $q->where('period_id', $periodId);
-
                     if ($subPeriodId) {
                         $q->where('sub_period_id', $subPeriodId);
                     }
@@ -76,11 +57,7 @@ class TrialBalanceController extends Controller
             $debit  = (clone $mutationQuery)->sum('debit');
             $credit = (clone $mutationQuery)->sum('credit');
 
-            /*
-            |--------------------------------------------------------------------------
-            | ENDING BALANCE
-            |--------------------------------------------------------------------------
-            */
+            // Ending Balance
             if ($coa->normal_balance === 'DEBIT') {
                 $balance = $openingAmount + $debit - $credit;
             } else {
@@ -88,8 +65,8 @@ class TrialBalanceController extends Controller
             }
 
             $row = [
-                'code' => $coa->code,
-                'name' => $coa->name,
+                'code'   => $coa->code,
+                'name'   => $coa->name,
                 'amount' => $balance
             ];
 
@@ -104,18 +81,12 @@ class TrialBalanceController extends Controller
             }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | SURPLUS DEFICIT (PAKAI FILTER)
-        |--------------------------------------------------------------------------
-        */
+        // Surplus / Defisit Query
         $journalFilter = function ($q) use ($periodId, $subPeriodId) {
             $q->where('period_id', $periodId);
-
             if ($subPeriodId) {
                 $q->where('sub_period_id', $subPeriodId);
             }
-
         };
 
         $totalRevenue = JournalDetail::whereHas('chartOfAccount', fn($q) => $q->where('code', 'like', '4%'))
@@ -128,28 +99,34 @@ class TrialBalanceController extends Controller
 
         $surplusDeficit = $totalRevenue - $totalExpense;
 
-        /*
-        |--------------------------------------------------------------------------
-        | MODAL LOGIC
-        |--------------------------------------------------------------------------
-        */
+        // Balance Totals
         $totalAsetLancar      = collect($data['aset_lancar'])->sum('amount');
         $totalAsetTidakLancar = collect($data['aset_tidak_lancar'])->sum('amount');
-        $totalAset            = $totalAsetLancar + $totalAsetTidakLancar;
+        $totalAktiva          = $totalAsetLancar + $totalAsetTidakLancar;
         $totalHutang          = collect($data['hutang'])->sum('amount');
 
         $modalTetap  = $totalAsetTidakLancar;
-        $modalLancar = $totalAset - $modalTetap - $surplusDeficit - $totalHutang;
+        $modalLancar = $totalAktiva - $modalTetap - $surplusDeficit - $totalHutang;
+        $totalPasiva = $modalTetap + $modalLancar + $surplusDeficit + $totalHutang;
+
+        $isBalanced = abs($totalAktiva - $totalPasiva) < 0.01;
 
         return view('pages.menus.bendahara.trial-balances.index', compact(
             'data',
             'surplusDeficit',
             'modalTetap',
             'modalLancar',
+            'totalAsetLancar',
+            'totalAsetTidakLancar',
+            'totalAktiva',
+            'totalHutang',
+            'totalPasiva',
+            'isBalanced',
             'periods',
             'periodId',
+            'selectedPeriod',
             'subPeriods',
-            'subPeriodId',
+            'subPeriodId'
         ));
     }
 
