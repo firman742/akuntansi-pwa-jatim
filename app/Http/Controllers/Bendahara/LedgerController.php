@@ -75,6 +75,14 @@ class LedgerController extends Controller
                             $q->where('sub_period_id', $subPeriodId);
                         }
                         $q->where('journal_date', '<', Carbon::parse($startDate)->startOfDay());
+
+                        // ── FILTER HANYA TRANSAKSI ───────────────────────────────────────
+                        // Opsi A: Jika jurnal transaksi memiliki relasi/kolom transaction_id
+                        $q->whereNotNull('transaction_id');
+
+                        // Opsi B: Jika ada kolom type / source_type di tabel journals
+                        // $q->where('type', 'TRANSACTION');
+                        // ─────────────────────────────────────────────────────────────────
                     });
 
                 $priorDebit = (clone $priorMutation)->sum('debit');
@@ -101,6 +109,14 @@ class LedgerController extends Controller
                             Carbon::parse($endDate)->endOfDay(),
                         ]);
                     }
+
+                    // ── FILTER HANYA TRANSAKSI ───────────────────────────────────────
+                    // Opsi A: Jika jurnal transaksi memiliki relasi/kolom transaction_id
+                    $q->whereNotNull('transaction_id');
+
+                    // Opsi B: Jika ada kolom type / source_type di tabel journals
+                    // $q->where('type', 'TRANSACTION');
+                    // ─────────────────────────────────────────────────────────────────
                 })
                 ->join('journals', 'journals.id', '=', 'journal_details.journal_id')
                 ->orderBy('journals.journal_date', 'asc')

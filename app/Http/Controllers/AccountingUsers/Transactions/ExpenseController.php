@@ -115,8 +115,8 @@ class ExpenseController extends Controller
 
         // ── Period ─────────────────────────────────────────
         $activePeriod = Period::query()
-            ->latest()
-            ->get();
+            ->orderByDesc('start_date') // Urutkan dari periode paling baru
+            ->first(); // Ambil 1 record object (atau null)
 
         if (! $activePeriod) {
             throw new Exception(

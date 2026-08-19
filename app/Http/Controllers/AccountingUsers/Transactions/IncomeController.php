@@ -124,8 +124,8 @@ class IncomeController extends Controller
         $userId = Auth::id();
 
         $activePeriod = Period::query()
-            ->latest()
-            ->first();
+            ->orderByDesc('start_date') // Urutkan dari periode paling baru
+            ->first(); // Ambil 1 record object (atau null)
 
         if (! $activePeriod) {
             throw new Exception(
