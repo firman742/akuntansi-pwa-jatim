@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\AccountingUsers\Transactions;
 
-use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
@@ -22,19 +21,13 @@ use Illuminate\View\View;
 
 class IncomeController extends Controller
 {
-    /**
-     * Display a listing of the income transactions for the authenticated user.
-     *
-     * @param Request $request
-     * @return View
-     */
     public function index(Request $request): View
     {
         $query = Transaction::with([
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
-            'subPeriod:id,name,start_date,end_date'
+            'subPeriod:id,name,start_date,end_date',
         ])
             ->where('transaction_type', TransactionType::INCOME)
             ->where('created_by', Auth::id());
@@ -52,7 +45,7 @@ class IncomeController extends Controller
             });
         }
 
-        // =========== Filter by period and sub-period if provided
+        // ================= FILTERS =================
         if ($request->filled('period_id')) {
             $query->where('period_id', $request->period_id);
         }
@@ -73,14 +66,13 @@ class IncomeController extends Controller
             $query->where('status', $request->status);
         }
 
-
-        // Menghitung statistik berdasarkan filter aktif
+        // ================= MONITORING STATS (SPESIFIK PENERIMAAN) =================
         $statsQuery = clone $query;
         $stats = [
-            'total_amount' => (clone $statsQuery)->sum('net_amount'),
-            'total_count'  => (clone $statsQuery)->count(),
+            'total_amount' => (clone $statsQuery)->sum('gross_amount'),
+            'total_count' => (clone $statsQuery)->count(),
             'posted_count' => (clone $statsQuery)->where('status', TransactionStatus::POSTED)->count(),
-            'draft_count'  => (clone $statsQuery)->where('status', TransactionStatus::DRAFT)->count(),
+            'draft_count' => (clone $statsQuery)->where('status', TransactionStatus::DRAFT)->count(),
         ];
 
         // ================= EXECUTE QUERY =================
@@ -90,7 +82,7 @@ class IncomeController extends Controller
             ->get();
 
         // ================= FILTER DATA =================
-        $periods = Period::query()->select("id", "name", "start_date", "end_date")->get();
+        $periods = Period::query()->select('id', 'name', 'start_date', 'end_date')->get();
 
         $subPeriods = collect();
         if ($request->filled('period_id')) {
@@ -116,7 +108,7 @@ class IncomeController extends Controller
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
-            'subPeriod:id,name,start_date,end_date'
+            'subPeriod:id,name,start_date,end_date',
         ])
             ->where('transaction_type', TransactionType::INCOME)
             ->findOrFail($id);
@@ -126,8 +118,6 @@ class IncomeController extends Controller
 
     /**
      * Show the form for creating a new income transaction.
-     *
-     * @return View
      */
     public function create(): View
     {
@@ -137,7 +127,7 @@ class IncomeController extends Controller
             ->latest()
             ->first();
 
-        if (!$activePeriod) {
+        if (! $activePeriod) {
             throw new Exception(
                 'Anda tidak bisa melakukan transaksi karena tidak ada periode aktif.'
             );
@@ -162,7 +152,7 @@ class IncomeController extends Controller
             ->where('period_id', $selectedPeriodId)
             ->where('sub_period_id', $selectedSubPeriodId)
             ->get()
-            ->sortBy(fn($balance) => $balance->userAccount->coa->code)
+            ->sortBy(fn ($balance) => $balance->userAccount->coa->code)
             ->values()
             ->map(function ($balance) {
                 return [
@@ -180,7 +170,6 @@ class IncomeController extends Controller
         // 2. Query Akun Penerimaan (DEBIT) dengan mengecualikan semua COA Kas milik user
         $incomeCoas = ChartOfAccount::query()
             ->where('is_active', true)
-            ->whereNotIn('id', $cashCoaIds) // <-- PENAMBAHAN DI SINI
             ->orderBy('code')
             ->get();
 
@@ -197,10 +186,6 @@ class IncomeController extends Controller
 
     /**
      * Store a newly created income transaction in storage. This method handles the complex logic of saving the transaction,
-     * 
-     * @param IncomeService $service
-     * @param StoreIncomeRequest $request
-     * @return RedirectResponse
      */
     public function store(IncomeService $service, StoreIncomeRequest $request): RedirectResponse
     {
@@ -214,22 +199,20 @@ class IncomeController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi penerimaan: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi penerimaan: '.$e->getMessage());
         }
     }
-
 
     /**
      * FOR AJAX:
      * Get the current cash balance for a given chart of account and period. This is used for real-time validation when creating income transactions.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function getCashBalance(Request $request)
     {
-        $coaId       = $request->coa_id;
-        $periodId    = $request->period_id;
+        $coaId = $request->coa_id;
+        $periodId = $request->period_id;
         $subPeriodId = $request->sub_period_id;
 
         if (! $coaId || ! $periodId) {

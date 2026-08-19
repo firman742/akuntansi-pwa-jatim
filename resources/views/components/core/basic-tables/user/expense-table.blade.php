@@ -76,18 +76,34 @@
             const coa = row.transaction_lines[0].chart_of_account;
             if (coa) {
                 const countExtra = row.transaction_lines.length - 1;
-                return coa.code + ' - ' + coa.name + (countExtra > 0 ? ` (+${countExtra} lainnya)` : '');
+                return coa.code + ' - ' + coa.name + (countExtra > 0 ? ` (+${countExtra})` : '');
             }
         }
         return '-';
     },
 
+    typeBadgeClass(type) {
+        return {
+            'INCOME': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+            'EXPENSE': 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
+            'TRANSFER': 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+        } [type] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+    },
+
+    typeLabel(type) {
+        return {
+            'INCOME': 'Pemasukan',
+            'EXPENSE': 'Pengeluaran',
+            'TRANSFER': 'Transfer',
+        } [type] ?? type;
+    },
+
     statusBadgeClass(status) {
         return {
-            'DRAFT': 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
-            'POSTED': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
-            'REVERSED': 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
-        } [status] ?? 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400';
+            'DRAFT': 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400',
+            'POSTED': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400',
+            'REVERSED': 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400',
+        } [status] ?? 'bg-gray-50 text-gray-700 border-gray-200';
     },
 
     statusLabel(status) {
@@ -96,6 +112,10 @@
             'POSTED': 'Diposting',
             'REVERSED': 'Dibatalkan',
         } [status] ?? status;
+    },
+
+    getDetailUrl(row) {
+        return this.showUrl.replace(':id', row.id);
     }
 }">
 
@@ -108,10 +128,11 @@
                     class="border-b border-gray-200 bg-gray-50/80 dark:border-gray-800 dark:bg-gray-800/50 text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">
                     <tr>
                         <th scope="col" class="px-6 py-4">No</th>
-                        <th scope="col" class="px-6 py-4">No. & Tanggal Transaksi</th>
+                        <th scope="col" class="px-6 py-4">No. & Tanggal</th>
+                        <th scope="col" class="px-6 py-4">Jenis Transaksi</th>
                         <th scope="col" class="px-6 py-4">Akun (COA)</th>
                         <th scope="col" class="px-6 py-4">Deskripsi / Catatan</th>
-                        <th scope="col" class="px-6 py-4 text-right">Nominal Pengeluaran</th>
+                        <th scope="col" class="px-6 py-4 text-right">Nominal</th>
                         <th scope="col" class="px-6 py-4 text-center">Status</th>
                         <th scope="col" class="px-6 py-4 text-center">Aksi</th>
                     </tr>
@@ -130,10 +151,19 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <span class="font-semibold text-gray-900 dark:text-white"
-                                            x-text="row.transaction_number || 'TRX-EXP'"></span>
+                                            x-text="row.transaction_number || 'TRX'"></span>
                                         <span class="text-xs text-gray-500 dark:text-gray-400"
                                             x-text="formatDate(row.transaction_date)"></span>
                                     </div>
+                                </td>
+
+                                {{-- JENIS TRANSAKSI --}}
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold"
+                                        :class="typeBadgeClass(row.transaction_type)"
+                                        x-text="typeLabel(row.transaction_type)">
+                                    </span>
                                 </td>
 
                                 {{-- AKUN (COA) --}}
@@ -150,8 +180,14 @@
                                 </td>
 
                                 {{-- NOMINAL --}}
-                                <td class="px-6 py-4 text-right font-bold text-rose-600 dark:text-rose-400">
-                                    <span x-text="currency(row.net_amount)"></span>
+                                <td class="px-6 py-4 text-right font-bold"
+                                    :class="{
+                                        'text-emerald-600 dark:text-emerald-400': row.transaction_type === 'INCOME',
+                                        'text-rose-600 dark:text-rose-400': row.transaction_type === 'EXPENSE',
+                                        'text-gray-900 dark:text-white': row.transaction_type === 'TRANSFER'
+                                    }">
+                                    <span
+                                        x-text="(row.transaction_type === 'INCOME' ? '+ ' : (row.transaction_type === 'EXPENSE' ? '- ' : '')) + currency(row.net_amount)"></span>
                                 </td>
 
                                 {{-- STATUS --}}
@@ -165,7 +201,7 @@
                                 {{-- AKSI --}}
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex items-center justify-center">
-                                        <a :href="showUrl.replace(':id', row.id)" title="Lihat Detail Transaksi"
+                                        <a :href="getDetailUrl(row)" title="Lihat Detail Transaksi"
                                             class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-2xs transition hover:bg-gray-50 hover:text-blue-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400">
                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
@@ -184,7 +220,7 @@
                     {{-- JIKA DATA KOSONG --}}
                     <template x-if="paginatedData.length === 0">
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
+                            <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="rounded-full bg-gray-100 dark:bg-gray-800 p-3 mb-3">
                                         <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
@@ -193,10 +229,10 @@
                                                 d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
                                         </svg>
                                     </div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Tidak ada transaksi
-                                        pengeluaran ditemukan</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Coba ubah kata kunci
-                                        pencarian atau sesuaikan filter periode Anda.</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Tidak ada riwayat
+                                        transaksi ditemukan</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Coba sesuaikan kata kunci
+                                        pencarian atau rentang tanggal filter Anda.</p>
                                 </div>
                             </td>
                         </tr>

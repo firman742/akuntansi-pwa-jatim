@@ -1,77 +1,75 @@
 @php
-    $hasChildren = $coa->children->count() > 0;
-    $showAction = $showAction ?? true;
+    $hasChildren = $coa->children && $coa->children->count() > 0;
+    $showAction = $showAction ?? false;
 @endphp
 
-<div id="coa-item-{{ $coa->id }}" class="coa-node border-l pl-3 py-1 ml-{{ $level * 4 }}"
-    data-id="{{ $coa->id }}" data-parent="{{ $coa->parent_id }}" data-name="{{ strtolower($coa->name) }}"
-    data-code="{{ strtolower($coa->code) }}">
+<div id="coa-item-{{ $coa->id }}"
+    class="coa-node border-l-2 border-gray-100 dark:border-gray-800 pl-3 py-1.5 transition-all my-1"
+    style="margin-left: {{ $level * 16 }}px;" data-id="{{ $coa->id }}" data-parent="{{ $coa->parent_id }}"
+    data-name="{{ strtolower($coa->name) }}" data-code="{{ strtolower($coa->code) }}">
 
-    <div class="flex items-center justify-between rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/[0.07]">
+    <div
+        class="flex items-center justify-between rounded-2xl p-2.5 bg-gray-50/50 hover:bg-blue-50/50 dark:bg-gray-800/30 dark:hover:bg-blue-950/20 border border-gray-100 dark:border-gray-800 transition-colors">
 
-        <div class="flex items-center gap-2">
-
+        <div class="flex items-center gap-2.5">
+            {{-- EXPAND/COLLAPSE ICON FOR PARENT NODE --}}
             @if ($hasChildren)
-                <button onclick="toggleNode('{{ $coa->id }}')" class="text-xs text-gray-500 dark:text-white/90">
-                    ▸
+                <button type="button" onclick="toggleNode('{{ $coa->id }}', this)"
+                    class="p-1 rounded-lg text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer">
+                    <svg class="w-4 h-4 transform transition-transform duration-200 rotate-90" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
                 </button>
+            @else
+                <span class="w-6 text-center text-gray-300 dark:text-gray-600 text-xs">&bull;</span>
             @endif
 
             <div>
-                <div class="text-sm font-medium text-gray-800 dark:text-white/90">
-                    {{ $coa->code }} - {{ $coa->name }}
+                <div class="flex items-center gap-2">
+                    <span
+                        class="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-md">
+                        {{ $coa->code }}
+                    </span>
+                    <h4 class="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        {{ $coa->name }}
+                    </h4>
                 </div>
 
-                <div class="text-xs text-gray-500 dark:text-white/90">
-                    {{ strtoupper($coa->normal_balance) }}
-                </div>
+                <p class="text-[10px] text-gray-400 mt-0.5">
+                    Normal Balance: <span
+                        class="font-semibold text-gray-600 dark:text-gray-300">{{ strtoupper($coa->normal_balance) }}</span>
+                </p>
             </div>
-
         </div>
 
         <div class="flex items-center gap-2">
-
+            {{-- STATUS BADGE --}}
             <span
-                class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase
                 {{ $coa->is_active
-                    ? 'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500'
-                    : 'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-' }}">
-                {{ $coa->is_active ? 'Active' : 'Inactive' }}
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                    : 'bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' }}">
+                {{ $coa->is_active ? 'Aktif' : 'Non-Aktif' }}
             </span>
 
+            {{-- ACTION BUTTONS (IF PERMITTED) --}}
             @if ($showAction)
-                {{-- EDIT --}}
                 <a href="{{ route('bendahara.master.coas.edit', $coa->id) }}"
-                    class="flex h-8 w-8 items-center justify-center rounded-md text-blue-500 hover:bg-green-50 dark:text-blue-400 dark:hover:bg-green-500/10"
-                    title="Edit akun coa">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                    title="Edit COA">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                 </a>
-
-                {{-- Delete --}}
-                <form action="{{ route('bendahara.master.coas.destroy', $coa->id) }}" method="POST"
-                    onsubmit="return confirm('Yakin ingin menghapus COA ini?')" class="inline-flex">
-                    @csrf
-                    @method('DELETE')
-
-                    <button type="submit"
-                        class="flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                        title="hapus akun coa">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862
-                                                    a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6
-                                                    m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
-                </form>
             @endif
         </div>
     </div>
 
+    {{-- RECURSIVE CHILD NODES --}}
     @if ($hasChildren)
-        <div id="node-{{ $coa->id }}" class="ml-4 mt-1 space-y-1">
+        <div id="node-{{ $coa->id }}" class="mt-1 space-y-1">
             @foreach ($coa->children as $child)
                 @include('components.core.lists.partials.coa-node', [
                     'coa' => $child,

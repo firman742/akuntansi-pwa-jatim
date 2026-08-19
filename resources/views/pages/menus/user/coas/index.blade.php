@@ -3,160 +3,250 @@
 @section('title', 'Daftar COA Saya')
 
 @section('content')
-    <x-common.page-breadcrumb defaultTitle="Akun COA" pageTitle="Manajemen Daftar Akun COA Saya"
-        pageDescription="Monitoring dan kelola akun coa yang terdaftar di sistem" pageIcon="money" />
+    <div class="space-y-6">
 
-    @if ($errors->any())
-        <div class="mb-4">
-            <x-ui.alert variant="error" title="Terjadi Kesalahan">
-                <ul class="list-disc list-inside space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <li class="text-danger-500">{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </x-ui.alert>
-        </div>
-    @endif
+        {{-- BREADCRUMB --}}
+        <x-common.page-breadcrumb defaultTitle="Akun COA Saya" pageTitle="Manajemen Akun COA Terlampir"
+            pageDescription="Pusat informasi dan pemetaan Chart of Accounts yang diotorisasikan untuk Anda"
+            pageIcon="money" />
 
-    @if (session('success'))
-        <div class="mb-4">
-            <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
-        </div>
-    @endif
-
-    @php
-        use Illuminate\Support\Str;
-    @endphp
-
-    <x-core.basic-tables.core-table>
-        {{-- SLOT search --}}
-        <x-slot name="search">
-            <x-form.input id="searchId" name="name" placeholder="Cari berdasarkan kode atau nama COA..." startIconSearch
-                endIconSearch />
-        </x-slot>
-
-
-        <x-slot name="actions">
-            <div class="flex gap-3">
-                <a href="{{ route('user.requests.coas.index') }}">
-                    <x-ui.button variant="primary" class="rounded-xl px-4 py-2">
-                        + Ajukan COA Baru
-                    </x-ui.button>
-                </a>
+        {{-- ALERTS --}}
+        @if ($errors->any())
+            <div class="mb-4">
+                <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                    <ul class="list-disc list-inside space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li class="text-rose-500">{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </x-ui.alert>
             </div>
-        </x-slot>
+        @endif
 
-        {{-- GRID 1 COLUMN --}}
-        <div class="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-1 gap-3 p-3">
+        @if (session('success'))
+            <div class="mb-4">
+                <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+            </div>
+        @endif
 
-            <div class="mt-3 flex justify-end">
+        {{-- KPI SUMMARY METRICS --}}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {{-- TOTAL COA --}}
+            <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Total Akun Saya</p>
+                        <h3 class="mt-2 text-2xl font-black text-gray-900 dark:text-white font-mono tabular-nums">
+                            {{ number_format($stats['total_coa'] ?? 0) }} <span
+                                class="text-xs font-normal text-gray-400">COA</span>
+                        </h3>
+                    </div>
+                    <div class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl dark:bg-blue-900/30 dark:text-blue-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Dapat digunakan untuk transaksi</p>
+            </div>
 
-                <button id="toggleAllGroupsBtn" onclick="toggleAllGroups(this)"
-                    class="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 underline">
+            {{-- AKUN AKTIF --}}
+            <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Akun
+                            Aktif</p>
+                        <h3 class="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
+                            {{ number_format($stats['active_coa'] ?? 0) }} <span
+                                class="text-xs font-normal text-gray-400">COA</span>
+                        </h3>
+                    </div>
+                    <div
+                        class="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl dark:bg-emerald-900/30 dark:text-emerald-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Siap digunakan pada entri</p>
+            </div>
 
-                    <span>Sembunyikan Semua</span>
+            {{-- AKUN NON-AKTIF --}}
+            <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Akun
+                            Non-Aktif</p>
+                        <h3 class="mt-2 text-2xl font-black text-rose-600 dark:text-rose-400 font-mono tabular-nums">
+                            {{ number_format($stats['inactive_coa'] ?? 0) }} <span
+                                class="text-xs font-normal text-gray-400">COA</span>
+                        </h3>
+                    </div>
+                    <div class="p-2.5 bg-rose-50 text-rose-600 rounded-2xl dark:bg-rose-900/30 dark:text-rose-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Diarsipkan / Dibekukan</p>
+            </div>
 
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 rotate-180"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-
-                    </svg>
-
-                </button>
-
+            {{-- TOTAL TIPE AKUN --}}
+            <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Kategori
+                            Tipe Akun</p>
+                        <h3 class="mt-2 text-2xl font-black text-purple-600 dark:text-purple-400 font-mono tabular-nums">
+                            {{ number_format($stats['total_types'] ?? 0) }} <span
+                                class="text-xs font-normal text-gray-400">Kelompok</span>
+                        </h3>
+                    </div>
+                    <div class="p-2.5 bg-purple-50 text-purple-600 rounded-2xl dark:bg-purple-900/30 dark:text-purple-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 7h.01M7 11h.01M7 15h.01M11 7h8M11 11h8M11 15h8" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Pengelompokan struktur COA</p>
             </div>
         </div>
 
-        {{-- GRID 2 COLUMN --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 p-2">
+        {{-- TOOLBAR: SEARCH & ACTIONS --}}
+        <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                {{-- SEARCH INPUT --}}
+                <div class="relative flex-1 max-w-md">
+                    <x-form.input id="searchId" name="search" placeholder="Cari berdasarkan kode atau nama akun COA..."
+                        startIconSearch />
+                </div>
 
-            @foreach ($groupedByType as $type => $coas)
+                <div class="flex items-center gap-3 justify-end">
+                    {{-- TOGGLE ALL GROUPS BUTTON --}}
+                    <button id="toggleAllGroupsBtn" onclick="toggleAllGroups(this)"
+                        class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                        <span>Sembunyikan Semua Kategori</span>
+                        <svg class="w-4 h-4 transform transition-transform duration-200 rotate-180" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    {{-- REQUEST NEW COA --}}
+                    <a href="{{ route('user.requests.coas.index') }}">
+                        <x-ui.button variant="primary" class="rounded-xl px-4 py-2.5 text-xs shadow-xs font-semibold">
+                            + Ajukan COA Baru
+                        </x-ui.button>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @php
+            use Illuminate\Support\Str;
+        @endphp
+
+        {{-- GROUPED COA CARDS GRID --}}
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            @forelse ($groupedByType as $type => $coas)
                 @php
                     $slug = Str::slug($type);
+                    $totalInGroup = $coas->count();
+                    $activeInGroup = $coas->where('is_active', true)->count();
                 @endphp
 
-                {{-- CARD TYPE --}}
                 <div
-                    class="rounded-xl border bg-white shadow-sm flex flex-col h-fit dark:bg-white/[0.03] dark:border-gray-700 dark:text-white/90">
+                    class="rounded-3xl border border-gray-200 bg-white shadow-xs dark:border-gray-800 dark:bg-gray-900 flex flex-col h-fit overflow-hidden">
 
-                    {{-- HEADER --}}
-                    <div class="flex items-center justify-between border-b bg-gray-50 px-4 py-3 dark:bg-white/[0.03]">
-                        <h2 class="font-semibold text-gray-700 dark:text-white/90 text-sm">
-                            {{ $type }}
-                        </h2>
+                    {{-- CARD HEADER --}}
+                    <div
+                        class="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/40">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold dark:bg-blue-900/40 dark:text-blue-400">
+                                📊
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-gray-900 dark:text-white text-sm">
+                                    {{ $type }}
+                                </h2>
+                                <p class="text-[11px] text-gray-400">
+                                    {{ $activeInGroup }} dari {{ $totalInGroup }} akun aktif
+                                </p>
+                            </div>
+                        </div>
 
-                        <button onclick="toggleGroup('{{ $slug }}', this)"
-                            class="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 underline">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                {{ $totalInGroup }} Akun
+                            </span>
 
-                            <span>Sembunyikan</span>
-
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 transition-transform duration-200 rotate-180" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
+                            <button onclick="toggleGroup('{{ $slug }}', this)"
+                                class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition"
+                                title="Sembunyikan/Tampilkan">
+                                <svg class="w-5 h-5 transform transition-transform duration-200 rotate-180" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
-                    {{-- BODY --}}
-                    <div id="group-{{ $slug }}" class="p-3 space-y-2 max-h-[500px] overflow-auto">
-
-                        @foreach ($coas->whereNull('parent_id') as $coa)
+                    {{-- CARD BODY TREE --}}
+                    <div id="group-{{ $slug }}" class="p-4 space-y-2 max-h-[550px] overflow-y-auto">
+                        @forelse ($coas->whereNull('parent_id') as $coa)
                             @include('components.core.lists.partials.coa-node', [
                                 'coa' => $coa,
                                 'level' => 0,
-                                'showAction' => false
+                                'showAction' => false,
                             ])
-                        @endforeach
-
+                        @empty
+                            <div class="p-6 text-center text-xs text-gray-400">
+                                Tidak ada akun level teratas untuk kategori ini.
+                            </div>
+                        @endforelse
                     </div>
-                </div>
-            @endforeach
 
+                </div>
+            @empty
+                <div
+                    class="col-span-full rounded-3xl border border-gray-200 bg-white p-12 text-center text-gray-400 dark:border-gray-800 dark:bg-gray-900">
+                    Belum ada data COA yang diotorisasikan untuk akun Anda.
+                </div>
+            @endforelse
         </div>
 
-    </x-core.basic-tables.core-table>
+    </div>
 
-    {{-- JS --}}
+    {{-- JAVASCRIPT: INTERACTIVE TREE & SEARCH --}}
     <script>
-        // TOOGLE Node
+        // TOGGLE SINGLE NODE
         function toggleNode(id, button) {
             const el = document.getElementById('node-' + id);
-
             if (!el) return;
 
             el.classList.toggle('hidden');
-
-            const text = button.querySelector('span');
             const icon = button.querySelector('svg');
-
-            if (el.classList.contains('hidden')) {
-                text.textContent = 'Tampilkan';
-                icon.classList.remove('rotate-180');
-            } else {
-                text.textContent = 'Sembunyikan';
-                icon.classList.add('rotate-180');
+            if (icon) {
+                icon.classList.toggle('rotate-90');
             }
         }
-        
-        // TOGGLE GROUP
+
+        // TOGGLE GROUP CATEGORY
         function toggleGroup(id, button) {
             const el = document.getElementById('group-' + id);
-
             if (!el) return;
 
             el.classList.toggle('hidden');
-
-            const text = button.querySelector('span');
             const icon = button.querySelector('svg');
-
-            if (el.classList.contains('hidden')) {
-                text.textContent = 'Tampilkan';
-                icon.classList.remove('rotate-180');
-            } else {
-                text.textContent = 'Sembunyikan';
-                icon.classList.add('rotate-180');
+            if (icon) {
+                icon.classList.toggle('rotate-180');
             }
         }
 
@@ -164,125 +254,65 @@
         let allGroupsOpened = true;
 
         function toggleAllGroups(button) {
-
             const groups = document.querySelectorAll('[id^="group-"]');
-
-            const text = button.querySelector('span');
+            const textSpan = button.querySelector('span');
             const icon = button.querySelector('svg');
 
             if (allGroupsOpened) {
-
-                groups.forEach(group => {
-                    group.classList.add('hidden');
-                });
-
-                document.querySelectorAll('[onclick^="toggleGroup"]').forEach(btn => {
-
-                    const span = btn.querySelector('span');
-                    const svg = btn.querySelector('svg');
-
-                    if (span) span.textContent = 'Tampilkan';
-                    if (svg) svg.classList.remove('rotate-180');
-                });
-
-                text.textContent = 'Tampilkan Semua';
-                icon.classList.remove('rotate-180');
-
+                groups.forEach(group => group.classList.add('hidden'));
+                if (textSpan) textSpan.textContent = 'Tampilkan Semua Kategori';
+                if (icon) icon.classList.remove('rotate-180');
             } else {
-
-                groups.forEach(group => {
-                    group.classList.remove('hidden');
-                });
-
-                document.querySelectorAll('[onclick^="toggleGroup"]').forEach(btn => {
-
-                    const span = btn.querySelector('span');
-                    const svg = btn.querySelector('svg');
-
-                    if (span) span.textContent = 'Sembunyikan';
-                    if (svg) svg.classList.add('rotate-180');
-                });
-
-                text.textContent = 'Sembunyikan Semua';
-                icon.classList.add('rotate-180');
+                groups.forEach(group => group.classList.remove('hidden'));
+                if (textSpan) textSpan.textContent = 'Sembunyikan Semua Kategori';
+                if (icon) icon.classList.add('rotate-180');
             }
 
             allGroupsOpened = !allGroupsOpened;
         }
 
-        // SEARCH
-        const searchInput = document.getElementById('searchId');
-        const clearButton = document.getElementById('clearSearch');
+        // REALTIME CLIENT-SIDE SEARCH
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchId');
+            if (!searchInput) return;
 
-        searchInput.addEventListener('input', function(e) {
-            const keyword = e.target.value.toLowerCase().trim();
+            searchInput.addEventListener('input', function(e) {
+                const keyword = e.target.value.toLowerCase().trim();
+                const nodes = document.querySelectorAll('.coa-node');
 
-            const nodes = document.querySelectorAll('.coa-node');
-
-            // reset dulu
-            nodes.forEach(node => {
-                node.style.display = '';
-            });
-
-            if (!keyword) {
-                return;
-            }
-
-            // sembunyikan semua
-            nodes.forEach(node => {
-                node.style.display = 'none';
-            });
-
-            // cari yang match
-            nodes.forEach(node => {
-
-                const match =
-                    node.dataset.name.includes(keyword) ||
-                    node.dataset.code.includes(keyword);
-
-                if (!match) return;
-
-                // tampilkan dirinya
-                node.style.display = '';
-
-                // tampilkan seluruh parent
-                let parentId = node.dataset.parent;
-
-                while (parentId) {
-
-                    const parentNode = document.querySelector(
-                        `[data-id="${parentId}"]`
-                    );
-
-                    if (!parentNode) break;
-
-                    parentNode.style.display = '';
-
-                    const childrenContainer = document.getElementById(
-                        'node-' + parentId
-                    );
-
-                    if (childrenContainer) {
-                        childrenContainer.classList.remove('hidden');
-                    }
-
-                    parentId = parentNode.dataset.parent;
+                if (!keyword) {
+                    nodes.forEach(node => node.style.display = '');
+                    return;
                 }
+
+                // Sembunyikan semua node terlebih dahulu
+                nodes.forEach(node => node.style.display = 'none');
+
+                // Tampilkan node yang sesuai kata kunci beserta parent utamanya
+                nodes.forEach(node => {
+                    const name = node.dataset.name || '';
+                    const code = node.dataset.code || '';
+
+                    if (name.includes(keyword) || code.includes(keyword)) {
+                        node.style.display = '';
+
+                        // Buka parent container jika tersembunyi
+                        let parentId = node.dataset.parent;
+                        while (parentId) {
+                            const parentNode = document.querySelector(`[data-id="${parentId}"]`);
+                            if (!parentNode) break;
+
+                            parentNode.style.display = '';
+                            const childrenContainer = document.getElementById('node-' + parentId);
+                            if (childrenContainer) {
+                                childrenContainer.classList.remove('hidden');
+                            }
+
+                            parentId = parentNode.dataset.parent;
+                        }
+                    }
+                });
             });
-        });
-
-        // CLEAR SEARCH
-        clearButton.addEventListener('click', function() {
-            searchInput.value = '';
-            clearButton.classList.add('hidden');
-            clearButton.classList.remove('flex');
-
-            document.querySelectorAll('.coa-node').forEach(node => {
-                node.style.display = '';
-            });
-
-            searchInput.focus();
         });
     </script>
-
 @endsection

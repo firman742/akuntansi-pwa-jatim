@@ -10,9 +10,7 @@ use Illuminate\View\View;
 class COAController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return View
+     * Display a listing of the resource for logged in user.
      */
     public function index(): View
     {
@@ -31,13 +29,22 @@ class COAController extends Controller
                 },
                 'children.children' => function ($query) {
                     $query->orderBy('code');
-                }
+                },
             ])
             ->orderBy('code')
             ->get();
 
-        $groupedByType = $coas->groupBy(fn($coa) => $coa->accountType?->name ?? 'Uncategorized');
+        // Grouping berdasarkan Tipe Akun
+        $groupedByType = $coas->groupBy(fn ($coa) => $coa->accountType?->name ?? 'Uncategorized');
 
-        return view('pages.menus.user.coas.index', compact('coas', 'groupedByType'));
+        // Statistik Informasi COA Pengguna
+        $stats = [
+            'total_coa' => $coas->count(),
+            'active_coa' => $coas->where('is_active', true)->count(),
+            'inactive_coa' => $coas->where('is_active', false)->count(),
+            'total_types' => $groupedByType->count(),
+        ];
+
+        return view('pages.menus.user.coas.index', compact('coas', 'groupedByType', 'stats'));
     }
 }

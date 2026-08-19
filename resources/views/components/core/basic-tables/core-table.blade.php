@@ -66,34 +66,33 @@
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95" @click.outside="open = false"
                                 class="
-                                absolute
-                                top-full
-                                mt-3
-                                z-50
+                absolute
+                top-full
+                mt-2
+                z-50
 
-                                left-0
-                                w-[calc(100vw-2rem)]
+                right-0
+                w-80
+                sm:w-[400px]
+                max-w-[calc(100vw-2rem)]
+                origin-top-right
 
-                                md:left-auto
-                                md:right-0
-                                md:w-[680px]
+                rounded-2xl
+                border
+                border-gray-200
+                bg-white
+                shadow-xl
 
-                                rounded-2xl
-                                border
-                                border-gray-200
-                                bg-white
-                                shadow-xl
+                dark:border-gray-700
+                dark:bg-gray-900
+            ">
 
-                                dark:border-gray-700
-                                dark:bg-gray-900
-                            ">
-
-                                <form method="GET" class="p-5">
-                                    <div class="grid {{ $gridClass }} gap-4">
+                                <form method="GET" class="p-4">
+                                    <div class="grid {{ $gridClass }} gap-3">
                                         {{ $filters ?? '' }}
                                     </div>
 
-                                    <div class="mt-5 flex gap-2">
+                                    <div class="mt-4 flex gap-2">
 
                                         <x-ui.button type="submit" variant="primary" class="flex-1 justify-center">
                                             Tampilkan

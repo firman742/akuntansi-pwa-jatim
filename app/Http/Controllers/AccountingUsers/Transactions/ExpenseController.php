@@ -24,16 +24,7 @@ use Illuminate\View\View;
 class ExpenseController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @param Request $request
-     * @return View
-     */
-    /**
      * Display a listing of expense transactions for monitoring.
-     *
-     * @param Request $request
-     * @return View
      */
     public function index(Request $request): View
     {
@@ -41,7 +32,7 @@ class ExpenseController extends Controller
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
-            'subPeriod:id,name'
+            'subPeriod:id,name',
         ])
             ->where('transaction_type', TransactionType::EXPENSE)
             ->where('created_by', Auth::id());
@@ -80,14 +71,13 @@ class ExpenseController extends Controller
             $query->where('status', $request->status);
         }
 
-        // ================= MONITORING STATS =================
-        // Menghitung statistik berdasarkan filter aktif
+        // ================= MONITORING STATS (SPESIFIK PENGELUARAN) =================
         $statsQuery = clone $query;
         $stats = [
-            'total_amount' => (clone $statsQuery)->sum('net_amount'),
-            'total_count'  => (clone $statsQuery)->count(),
+            'total_amount' => (clone $statsQuery)->sum('gross_amount'),
+            'total_count' => (clone $statsQuery)->count(),
             'posted_count' => (clone $statsQuery)->where('status', TransactionStatus::POSTED)->count(),
-            'draft_count'  => (clone $statsQuery)->where('status', TransactionStatus::DRAFT)->count(),
+            'draft_count' => (clone $statsQuery)->where('status', TransactionStatus::DRAFT)->count(),
         ];
 
         // ================= EXECUTE QUERY =================
@@ -97,7 +87,7 @@ class ExpenseController extends Controller
             ->get();
 
         // ================= FILTER DATA =================
-        $periods = Period::query()->select("id", "name", "start_date", "end_date")->get();
+        $periods = Period::query()->select('id', 'name', 'start_date', 'end_date')->get();
 
         $subPeriods = collect();
         if ($request->filled('period_id')) {
@@ -117,7 +107,6 @@ class ExpenseController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return View
      * @throws Exception
      */
     public function create(): View
@@ -127,9 +116,9 @@ class ExpenseController extends Controller
         // ── Period ─────────────────────────────────────────
         $activePeriod = Period::query()
             ->latest()
-            ->first();
+            ->get();
 
-        if (!$activePeriod) {
+        if (! $activePeriod) {
             throw new Exception(
                 'Anda tidak bisa melakukan transaksi karena tidak ada periode aktif. Silakan hubungi administrator.'
             );
@@ -144,7 +133,6 @@ class ExpenseController extends Controller
 
         $selectedSubPeriodId = request('sub_period_id')
             ?? $subPeriods->first()?->id;
-
 
         // ── Kas User (Distribusi Bendahara) ────────────────
         $cashCoas = UserAccountBalance::query()
@@ -165,10 +153,10 @@ class ExpenseController extends Controller
             ->map(function ($balance) {
                 return [
                     'user_account_balance_id' => $balance->id,
-                    'coa_id'                  => $balance->userAccount->coa->id,
-                    'coa_code'                => $balance->userAccount->coa->code,
-                    'coa_name'                => $balance->userAccount->coa->name,
-                    'remaining_balance'       => $balance->remaining_balance,
+                    'coa_id' => $balance->userAccount->coa->id,
+                    'coa_code' => $balance->userAccount->coa->code,
+                    'coa_name' => $balance->userAccount->coa->name,
+                    'remaining_balance' => $balance->remaining_balance,
                 ];
             });
 
@@ -189,9 +177,6 @@ class ExpenseController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param string $id
-     * @return View
      */
     public function show(string $id): View
     {
@@ -199,10 +184,10 @@ class ExpenseController extends Controller
             'creator:id,name,email',
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
-            'subPeriod:id,name,start_date,end_date'
+            'subPeriod:id,name,start_date,end_date',
         ])
-        ->where('transaction_type', TransactionType::EXPENSE)
-        ->findOrFail($id);
+            ->where('transaction_type', TransactionType::EXPENSE)
+            ->findOrFail($id);
 
         return view('pages.menus.user.transactions.expenses.show', compact('transaction'));
     }
@@ -210,8 +195,6 @@ class ExpenseController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param string $id
-     * @return View
      * @throws Exception
      */
     public function edit(string $id): View
@@ -219,7 +202,7 @@ class ExpenseController extends Controller
         $transaction = Transaction::with([
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name',
-            'subPeriod:id,name'
+            'subPeriod:id,name',
         ])->findOrFail($id);
 
         $userId = Auth::id();
@@ -231,7 +214,7 @@ class ExpenseController extends Controller
             ->latest()
             ->first();
 
-        if (!$activePeriod) {
+        if (! $activePeriod) {
             throw new Exception(
                 'Anda tidak bisa melakukan transaksi karena tidak ada periode aktif. Silakan hubungi administrator.'
             );
@@ -266,10 +249,10 @@ class ExpenseController extends Controller
             ->map(function ($balance) {
                 return [
                     'user_account_balance_id' => $balance->id,
-                    'coa_id'                  => $balance->userAccount->coa->id,
-                    'coa_code'                => $balance->userAccount->coa->code,
-                    'coa_name'                => $balance->userAccount->coa->name,
-                    'remaining_balance'       => $balance->remaining_balance,
+                    'coa_id' => $balance->userAccount->coa->id,
+                    'coa_code' => $balance->userAccount->coa->code,
+                    'coa_name' => $balance->userAccount->coa->name,
+                    'remaining_balance' => $balance->remaining_balance,
                 ];
             });
 
@@ -293,10 +276,7 @@ class ExpenseController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     * 
-     * @param ExpenseService $service
-     * @param StoreExpenseRequest $request
-     * @return RedirectResponse
+     *
      * @throws Exception
      */
     public function store(ExpenseService $service, StoreExpenseRequest $request): RedirectResponse
@@ -311,17 +291,13 @@ class ExpenseController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi pengeluaran: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi pengeluaran: '.$e->getMessage());
         }
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param ExpenseService $service
-     * @param UpdateExpenseRequest $request
-     * @param string $id
-     * @return RedirectResponse
      * @throws Exception
      */
     public function update(ExpenseService $service, UpdateExpenseRequest $request, string $id): RedirectResponse
@@ -335,16 +311,12 @@ class ExpenseController extends Controller
         } catch (Exception $e) {
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memperbarui transaksi pengeluaran: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat memperbarui transaksi pengeluaran: '.$e->getMessage());
         }
     }
 
     /**
      * Post the specified resource in storage.
-     *
-     * @param string $id
-     * @param ExpenseService $service
-     * @return RedirectResponse
      */
     public function post(string $id, ExpenseService $service): RedirectResponse
     {
@@ -357,16 +329,12 @@ class ExpenseController extends Controller
         } catch (Exception $e) {
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memposting transaksi pengeluaran: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat memposting transaksi pengeluaran: '.$e->getMessage());
         }
     }
 
     /**
      * Cancel the specified resource in storage.
-     *
-     * @param string $id
-     * @param ExpenseService $service
-     * @return RedirectResponse
      */
     public function cancel(string $id, ExpenseService $service): RedirectResponse
     {
@@ -379,25 +347,24 @@ class ExpenseController extends Controller
         } catch (Exception $e) {
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat membatalkan transaksi pengeluaran: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat membatalkan transaksi pengeluaran: '.$e->getMessage());
         }
     }
 
     /**
      * Get the cash balance for a specific COA and period.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function getCashBalance(Request $request)
     {
-        $coaId       = $request->coa_id;
-        $periodId    = $request->period_id;
+        $coaId = $request->coa_id;
+        $periodId = $request->period_id;
         $subPeriodId = $request->sub_period_id;
 
-        if (!$coaId || !$periodId) {
+        if (! $coaId || ! $periodId) {
             return response()->json([
-                'balance' => 0
+                'balance' => 0,
             ]);
         }
 
@@ -408,7 +375,7 @@ class ExpenseController extends Controller
         );
 
         return response()->json([
-            'balance' => $balance
+            'balance' => $balance,
         ]);
     }
 }

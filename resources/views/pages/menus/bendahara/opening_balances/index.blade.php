@@ -27,7 +27,7 @@
 
     {{-- TABLE --}}
     <div class="space-y-6">
-        <x-core.basic-tables.core-table resetUrl="{{ route('bendahara.opening-balances.index') }}">
+        <x-core.basic-tables.core-table needFilter resetUrl="{{ route('bendahara.opening-balances.index') }}">
             {{-- SLOT search --}}
             <x-slot name="search">
                     <x-form.input
