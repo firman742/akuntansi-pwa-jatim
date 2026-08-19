@@ -13,7 +13,7 @@
     closeUrl: '{{ route('bendahara.sub-periods.close', ':id') }}',
 
     get totalPages() {
-        return Math.ceil(this.tableRowData.length / this.itemsPerPage);
+        return Math.ceil(this.tableRowData.length / this.itemsPerPage) || 1;
     },
 
     get paginatedData() {
@@ -21,17 +21,24 @@
         return this.tableRowData.slice(start, start + this.itemsPerPage);
     },
 
+    get startIndex() {
+        if (this.tableRowData.length === 0) return 0;
+        return (this.currentPage - 1) * this.itemsPerPage + 1;
+    },
+
+    get endIndex() {
+        return Math.min(this.currentPage * this.itemsPerPage, this.tableRowData.length);
+    },
 
     get displayedPages() {
         const total = this.totalPages;
         const current = this.currentPage;
-        const delta = 2; // jumlah page kiri & kanan
+        const delta = 2;
 
         const pages = [];
         let start = Math.max(1, current - delta);
         let end = Math.min(total, current + delta);
 
-        // pastikan selalu 5 angka kalau memungkinkan
         if (current <= delta + 1) {
             end = Math.min(total, 1 + delta * 2);
         }
@@ -60,40 +67,68 @@
             this.currentPage = page;
         }
     },
-    getStatusClass(status) {
-        return status == 1 ?
-            'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500' :
-            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500';
-    },
-    getStatusLabel(status) {
-        return status == 1 ? 'Ditutup' : 'Aktif';
-    },
 
     formatDate(date) {
         if (!date) return '-';
-
         return new Date(date).toLocaleDateString('id-ID', {
             day: 'numeric',
-            month: 'long',
+            month: 'short',
             year: 'numeric'
         });
     },
+
     isExpired(row) {
+        if (!row.end_date) return false;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
         const endDate = new Date(row.end_date);
         endDate.setHours(0, 0, 0, 0);
-
         return endDate < today;
     },
 
+    getStatusBadge(row) {
+        if (row.is_closed) {
+            return {
+                label: 'Ditutup',
+                class: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+                dot: 'bg-gray-400'
+            };
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startDate = new Date(row.start_date);
+        startDate.setHours(0, 0, 0, 0);
+
+        if (this.isExpired(row)) {
+            return {
+                label: 'Selesai / Kadaluarsa',
+                class: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60',
+                dot: 'bg-amber-500'
+            };
+        }
+
+        if (today >= startDate) {
+            return {
+                label: 'Aktif',
+                class: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60',
+                dot: 'bg-emerald-500 animate-pulse'
+            };
+        }
+
+        return {
+            label: 'Belum Aktif',
+            class: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700',
+            dot: 'bg-slate-400'
+        };
+    },
+
     canEdit(row) {
-        return row.transactions_count === 0 && !this.isExpired(row);
+        return row.transactions_count === 0 && !this.isExpired(row) && !row.is_closed;
     },
 
     canDelete(row) {
-        return row.transactions_count === 0 && !this.isExpired(row);
+        return row.transactions_count === 0 && !this.isExpired(row) && !row.is_closed;
     },
 
     canClose(row) {
@@ -101,282 +136,167 @@
     },
 
     getLockReason(row) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const endDate = new Date(row.end_date);
-        endDate.setHours(0, 0, 0, 0);
-
+        if (row.is_closed) {
+            return 'Sub-periode sudah ditutup';
+        }
         if (row.transactions_count > 0) {
-            return 'Tidak dapat diubah atau dihapus karena sudah memiliki transaksi';
+            return 'Terunci: Memiliki ' + row.transactions_count + ' transaksi terhubung';
         }
-
-        if (endDate < today) {
-            return 'Tidak dapat diubah atau dihapus karena periode telah berakhir';
+        if (this.isExpired(row)) {
+            return 'Terunci: Tanggal periode telah berakhir';
         }
-
         return null;
     },
 
     getCloseReason(row) {
-
-        if (row.is_closed)
-            return 'Sub periode sudah ditutup';
-
-        if (!this.isExpired(row))
-            return 'Sub periode belum dapat ditutup karena tanggal berakhir belum tercapai';
-
+        if (row.is_closed) {
+            return 'Sub-periode sudah dalam status ditutup';
+        }
+        if (!this.isExpired(row)) {
+            return 'Belum dapat ditutup sebelum tanggal berakhir tercapai';
+        }
         return null;
     }
 }">
-
-    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
-
-        <!-- TABLE -->
+    {{-- CONTAINER TABEL --}}
+    <div
+        class="overflow-hidden border border-gray-200/80 bg-white shadow-xs dark:border-gray-800 dark:bg-gray-900 transition-all">
         <div class="max-w-full overflow-x-auto">
-            <table class="w-full">
-
-                <thead
-                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+            <table class="w-full text-left text-sm">
+                {{-- HEADER --}}
+                <thead class="border-b border-gray-200/80 bg-gray-50/80 dark:border-gray-800 dark:bg-gray-800/50">
                     <tr>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            No</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Periode</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Nama</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Deskripsi</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Tanggal Mulai</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Tanggal Selesai</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Status</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Aksi</th>
-
+                        <th scope="col"
+                            class="w-14 px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            No
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Periode Utama
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Nama Sub-Periode
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Deskripsi
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Rentang Waktu
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Status
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Aksi Pengelolaan
+                        </th>
                     </tr>
-
                 </thead>
 
-                <tbody>
-
-                    {{-- Jika data ada --}}
+                {{-- BODY --}}
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60">
+                    {{-- JIKA DATA ADA --}}
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
-                            <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
-
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
+                            <tr class="group transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/40">
+                                {{-- NO --}}
+                                <td class="px-6 py-4 text-center font-mono text-xs text-gray-500 dark:text-gray-400"
+                                    x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
                                 </td>
 
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="row.period?.name"></span>
-                                </td>
-
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.name"></span>
-                                </td>
-
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="row.description"></span>
-                                </td>
-
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="formatDate(row.start_date)"></span>
-                                </td>
-
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="formatDate(row.end_date)"></span>
-                                </td>
-
-                                <td class="px-4 sm:px-6 py-3.5">
-
+                                {{-- PERIODE UTAMA --}}
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <span
-                                        class="inline-flex w-[120px] justify-center rounded-full px-2 py-0.5 text-theme-xs font-medium"
-                                        :class="getStatusClass(row.is_closed)" x-text="getStatusLabel(row.is_closed)">
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 border border-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-900/40"
+                                        x-text="row.period?.name || '-'">
                                     </span>
-
                                 </td>
 
-                                <!-- Action -->
-                                <td class="px-4 sm:px-3 py-2.5">
-                                    <div class="flex items-center gap-2">
-
-                                        <!-- Close -->
-                                        <form x-show="true"
-                                            :action="canClose(row) ?
-                                                closeUrl.replace(':id', row.id) :
-                                                '#'"
-                                            method="POST"
-                                            @submit.prevent="
-                                                        if (!canClose(row)) return;
-
-                                                        if (confirm('Apakah anda yakin MENUTUP Sub Periode ini?')) {
-                                                            $event.target.submit();
-                                                        }
-                                                    ">
-                                            @csrf
-                                            @method('PATCH')
-
-                                            <button type="submit" :disabled="!canClose(row)"
-                                                :title="getCloseReason(row) || 'Tutup Sub Periode'"
-                                                :class="canClose(row) ?
-                                                    'text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-500/10' :
-                                                    'text-gray-300 cursor-not-allowed dark:text-gray-600'"
-                                                class="flex h-8 w-8 items-center justify-center rounded-md">
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                                </svg>
-                                            </button>
-                                        </form>
-
-                                        <!-- Edit -->
-                                        <a :href="canEdit(row) ? editUrl.replace(':id', row.id) : 'javascript:void(0)'"
-                                            :class="canEdit(row) ?
-                                                'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10' :
-                                                'text-gray-300 cursor-not-allowed dark:text-gray-600'"
-                                            :title="getLockReason(row) || 'Edit Sub Periode'">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                {{-- NAMA SUB-PERIODE --}}
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="font-semibold text-gray-900 dark:text-white"
+                                            x-text="row.name"></span>
+                                        <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                            <svg class="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                        </a>
-
-                                        <!-- Delete SELALU tampil -->
-                                        <form x-show="true"
-                                            :action="canDelete(row) ?
-                                                destroyUrl.replace(':id', row.id) :
-                                                '#'"
-                                            method="POST"
-                                            @submit.prevent="
-                                                if (!canDelete(row)) {
-                                                    return;
-                                                }
-
-                                                if (confirm('Yakin hapus sub periode ini?')) {
-                                                    $event.target.submit();
-                                                }
-                                            ">
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button type="submit" :disabled="!canDelete(row)"
-                                                :title="getLockReason(row) || 'Hapus Sub Periode'"
-                                                class="text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 flex h-8 w-8 items-center justify-center rounded-md">
-
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862 a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6 m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-
-                                            </button>
-                                        </form>
-
+                                            <span x-text="(row.transactions_count || 0) + ' Transaksi'"></span>
+                                        </div>
                                     </div>
                                 </td>
 
-                            </tr>
+                                {{-- DESKRIPSI --}}
+                                <td class="px-6 py-4 max-w-xs">
+                                    <p class="truncate text-xs text-gray-600 dark:text-gray-300"
+                                        :title="row.description || '-'" x-text="row.description || '-'">
+                                    </p>
+                                </td>
 
+                                {{-- RENTANG WAKTU --}}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div
+                                        class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200/80 bg-gray-50 px-3 py-1.5 text-xs font-mono text-gray-700 dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300">
+                                        <svg class="h-3.5 w-3.5 text-gray-400 shrink-0" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span x-text="formatDate(row.start_date)"></span>
+                                        <span class="text-gray-400">—</span>
+                                        <span x-text="formatDate(row.end_date)"></span>
+                                    </div>
+                                </td>
+
+                                {{-- STATUS BADGE --}}
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    @php $badge = 'getStatusBadge(row)'; @endphp
+                                    <span
+                                        class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all"
+                                        :class="{{ $badge }}.class">
+                                        <span class="h-1.5 w-1.5 rounded-full" :class="{{ $badge }}.dot"></span>
+                                        <span x-text="{{ $badge }}.label"></span>
+                                    </span>
+                                </td>
+
+                                {{-- AKSI PENGELOLAAN --}}
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <x-common.table-actions
+                                        :closeUrl="'closeUrl.replace(\':id\', row.id)'"
+                                        canClose="canClose(row)"
+                                        closeLockReason="getCloseReason(row)"
+
+                                        :editUrl="'editUrl.replace(\':id\', row.id)'"
+                                        canEdit="canEdit(row)"
+                                        editLockReason="getLockReason(row)"
+
+                                        :destroyUrl="'destroyUrl.replace(\':id\', row.id)'"
+                                        canDelete="canDelete(row)"
+                                        deleteLockReason="getLockReason(row)"
+                                    />
+                                </td>
+                            </tr>
                         </template>
                     </template>
 
-                    {{-- Jika data kosong --}}
+                    {{-- JIKA DATA KOSONG --}}
                     <template x-if="paginatedData.length === 0">
-                        <tr>
-                            <td colspan="9" class="px-6 py-10 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
-                                    </svg>
-
-                                    <p class="text-sm font-medium text-gray-500">
-                                        Belum ada data sub periode
-                                    </p>
-
-                                    <p class="text-xs text-gray-400">
-                                        Data yang tersedia akan tampil di tabel ini
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
+                        <x-common.empty-table-state 
+                            title="Tidak ada data sub-periode ditemukan"
+                            description="Coba sesuaikan kata kunci pencarian atau rentang tanggal filter Anda."
+                        />
                     </template>
                 </tbody>
-
             </table>
-
         </div>
 
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
-            <div class="flex items-center justify-between">
-                <button @click="prevPage" :disabled="currentPage === 1"
-                    :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
-                    class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:px-3.5">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" clip-rule="evenodd"
-                            d="M2.58301 9.99868C2.58272 10.1909 2.65588 10.3833 2.80249 10.53L7.79915 15.5301C8.09194 15.8231 8.56682 15.8233 8.85981 15.5305C9.15281 15.2377 9.15297 14.7629 8.86018 14.4699L5.14009 10.7472L16.6675 10.7472C17.0817 10.7472 17.4175 10.4114 17.4175 9.99715C17.4175 9.58294 17.0817 9.24715 16.6675 9.24715L5.14554 9.24715L8.86017 5.53016C9.15297 5.23717 9.15282 4.7623 8.85983 4.4695C8.56684 4.1767 8.09197 4.17685 7.79917 4.46984L2.84167 9.43049C2.68321 9.568 2.58301 9.77087 2.58301 9.99715C2.58301 9.99766 2.58301 9.99817 2.58301 9.99868Z"
-                            fill="currentColor" />
-                    </svg>
-                    <span class="hidden sm:inline">Previous</span>
-                </button>
-
-                <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden">
-                    Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
-                </span>
-
-                <ul class="hidden items-center gap-0.5 sm:flex">
-                    <template x-for="page in displayedPages" :key="page">
-                        <li>
-                            <button x-show="page !== '...'" @click="goToPage(page)"
-                                :class="currentPage === page ? 'bg-blue-500 text-white' :
-                                    'text-gray-700 hover:bg-green-500/[0.08] hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500'"
-                                class="flex h-10 w-10 items-center justify-center rounded-lg text-theme-sm font-medium"
-                                x-text="page"></button>
-                            <span x-show="page === '...'"
-                                class="flex h-10 w-10 items-center justify-center text-gray-500">...</span>
-                        </li>
-                    </template>
-                </ul>
-
-                <button @click="nextPage" :disabled="currentPage === totalPages"
-                    :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
-                    class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:px-3.5">
-                    <span class="hidden sm:inline">Next</span>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" clip-rule="evenodd"
-                            d="M17.4175 9.9986C17.4178 10.1909 17.3446 10.3832 17.198 10.53L12.2013 15.5301C11.9085 15.8231 11.4337 15.8233 11.1407 15.5305C10.8477 15.2377 10.8475 14.7629 11.1403 14.4699L14.8604 10.7472L3.33301 10.7472C2.91879 10.7472 2.58301 10.4114 2.58301 9.99715C2.58301 9.58294 2.91879 9.24715 3.33301 9.24715L14.8549 9.24715L11.1403 5.53016C10.8475 5.23717 10.8477 4.7623 11.1407 4.4695C11.4336 4.1767 11.9085 4.17685 12.2013 4.46984L17.1588 9.43049C17.3173 9.568 17.4175 9.77087 17.4175 9.99715C17.4175 9.99763 17.4175 9.99812 17.4175 9.9986Z"
-                            fill="currentColor" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-
+        {{-- PAGINATION FOOTER --}}
+        <x-common.pagination itemLabel="sub-periode" />
     </div>
-
 </div>

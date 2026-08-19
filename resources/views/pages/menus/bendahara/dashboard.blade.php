@@ -106,15 +106,15 @@
                         <h3 class="font-bold text-sm text-gray-900 dark:text-white">
                             @switch($closingStatus)
                                 @case('expired')
-                                    🔴 Peringatan: Penutupan Sub Periode Tertunda
+                                    Peringatan: Penutupan Sub Periode Tertunda
                                 @break
 
                                 @case('today')
-                                    🟠 Hari Terakhir Penutupan Sub Periode
+                                    Hari Terakhir Penutupan Sub Periode
                                 @break
 
                                 @default
-                                    🔵 Reminder Jadwal Penutupan Sub Periode
+                                    Reminder Jadwal Penutupan Sub Periode
                             @endswitch
                             — <span class="underline decoration-dotted">{{ $closingReminder->name }}</span>
                         </h3>
@@ -282,18 +282,25 @@
                     <p class="text-xs text-gray-500 mb-4">Pintas cepat menuju laporan akuntansi standar</p>
 
                     <div class="space-y-3">
-                        <a href="{{ route('bendahara.reports.trial-balance.index') }}"
-                            class="group flex items-center justify-between p-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-blue-50/60 hover:border-blue-200 dark:border-gray-800 dark:bg-gray-800/40 dark:hover:bg-blue-950/30 transition-all">
+                        <a href="{{ route('bendahara.reports.journal.index') }}"
+                            class="group flex items-center justify-between p-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/60 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-800/40 dark:hover:bg-emerald-950/30 transition-all">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">⚖️</span>
+                                <span class="text-lg text-emerald-600">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                        height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 6c0 1.657-3.134 3-7 3S5 7.657 5 6m14 0c0-1.657-3.134-3-7-3S5 4.343 5 6m14 0v6M5 6v6m0 0c0 1.657 3.134 3 7 3s7-1.343 7-3M5 12v6c0 1.657 3.134 3 7 3s7-1.343 7-3v-6" />
+                                    </svg>
+                                </span>
                                 <div>
                                     <h4
-                                        class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-blue-600">
-                                        Laporan Neraca</h4>
-                                    <p class="text-[10px] text-gray-400">Aset, Kewajiban & Ekuitas</p>
+                                        class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-emerald-600">
+                                        Jurnal Umum</h4>
+                                    <p class="text-[10px] text-gray-400">Histori Posting Transaksi</p>
                                 </div>
                             </div>
-                            <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-600" fill="none"
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-emerald-600" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
@@ -302,7 +309,14 @@
                         <a href="{{ route('bendahara.reports.ledger.index') }}"
                             class="group flex items-center justify-between p-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-purple-50/60 hover:border-purple-200 dark:border-gray-800 dark:bg-gray-800/40 dark:hover:bg-purple-950/30 transition-all">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">📊</span>
+                                <span class="text-lg text-purple-600">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                        height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M18 5V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5M9 3v4a1 1 0 0 1-1 1H4m11.383.772 2.745 2.746m1.215-3.906a2.089 2.089 0 0 1 0 2.953l-6.65 6.646L9 17.95l.739-3.692 6.646-6.646a2.087 2.087 0 0 1 2.958 0Z" />
+                                    </svg>
+                                </span>
                                 <div>
                                     <h4
                                         class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-purple-600">
@@ -316,18 +330,25 @@
                             </svg>
                         </a>
 
-                        <a href="{{ route('bendahara.reports.journal.index') }}"
-                            class="group flex items-center justify-between p-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/60 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-800/40 dark:hover:bg-emerald-950/30 transition-all">
+                        <a href="{{ route('bendahara.reports.trial-balance.index') }}"
+                            class="group flex items-center justify-between p-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-blue-50/60 hover:border-blue-200 dark:border-gray-800 dark:bg-gray-800/40 dark:hover:bg-blue-950/30 transition-all">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">📘</span>
+                                <span class="text-lg text-blue-600">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                        height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M5.5 21h13M12 21V7m0 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm2-1.8c3.073.661 2.467 2.8 5 2.8M5 8c3.359 0 2.192-2.115 5.012-2.793M7 9.556V7.75m0 1.806-1.95 4.393a.773.773 0 0 0 .37.962.785.785 0 0 0 .362.089h2.436a.785.785 0 0 0 .643-.335.776.776 0 0 0 .09-.716L7 9.556Zm10 0V7.313m0 2.243-1.95 4.393a.773.773 0 0 0 .37.962.786.786 0 0 0 .362.089h2.436a.785.785 0 0 0 .643-.335.775.775 0 0 0 .09-.716L17 9.556Z" />
+                                    </svg>
+                                </span>
                                 <div>
                                     <h4
-                                        class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-emerald-600">
-                                        Jurnal Umum</h4>
-                                    <p class="text-[10px] text-gray-400">Histori Posting Transaksi</p>
+                                        class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-blue-600">
+                                        Laporan Neraca</h4>
+                                    <p class="text-[10px] text-gray-400">Aset, Kewajiban & Ekuitas</p>
                                 </div>
                             </div>
-                            <svg class="w-4 h-4 text-gray-400 group-hover:text-emerald-600" fill="none"
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-600" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
@@ -338,7 +359,12 @@
                 <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 text-center">
                     <a href="#"
                         class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1">
-                        📖 Lihat Buku Panduan Akuntansi Kompleks &rarr;
+                        {{-- svg book --}}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 20h9M12 4h9m-9 8h9M3 6h.01M3 10h.01M3 14h.01M3 18h.01M3 6a2 2 0 012-2h1a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6z" />
+                        </svg>
+                        Lihat Buku Panduan Akuntansi Kompleks &rarr;
                     </a>
                 </div>
             </div>
@@ -364,37 +390,43 @@
                         'step' => '01',
                         'title' => 'Setup COA & Saldo Awal',
                         'desc' => 'Struktur akun & entri saldo awal periode.',
-                        'icon' => '⚙️',
+                        'icon' =>
+                            '<svg class="w-5 h-5 text-emerald-600 dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
                     ],
                     [
                         'step' => '02',
                         'title' => 'Input Transaksi Kas',
                         'desc' => 'Pencatatan penerimaan & pengeluaran.',
-                        'icon' => '💳',
+                        'icon' =>
+                            '<svg class="w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>',
                     ],
                     [
                         'step' => '03',
                         'title' => 'Posting Jurnal Otomatis',
                         'desc' => 'Pembentukan entri debit & kredit.',
-                        'icon' => '📘',
+                        'icon' =>
+                            '<svg class="w-5 h-5 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>',
                     ],
                     [
                         'step' => '04',
                         'title' => 'Buku Besar (Ledger)',
                         'desc' => 'Akumulasi mutasi per kode akun.',
-                        'icon' => '📊',
+                        'icon' =>
+                            '<svg class="w-5 h-5 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 ２h-２a２ ２ ０ ０１-２-２z"/></svg>',
                     ],
                     [
                         'step' => '05',
                         'title' => 'Laporan Neraca Saldo',
                         'desc' => 'Validasi kesetaraan debit & kredit.',
-                        'icon' => '⚖️',
+                        'icon' =>
+                            '<svg class="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m0-18L4 7m8-4l8 4M4 7l3 6m-3-6h6m8 0l3 6m-3-6h6M7 13a3 3 0 100 6 3 3 0 000-6zm10 0a3 3 0 100 6 3 3 0 000-6z"/></svg>',
                     ],
                     [
                         'step' => '06',
                         'title' => 'Penutupan Sub Periode',
                         'desc' => 'Kunci transaksi & isolasi saldo.',
-                        'icon' => '🔒',
+                        'icon' =>
+                            '<svg class="w-5 h-5 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 002-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>',
                     ],
                 ];
             @endphp
@@ -405,7 +437,9 @@
                         class="relative flex flex-col justify-between rounded-2xl border border-gray-100 bg-gray-50/60 p-4 dark:border-gray-800 dark:bg-gray-800/40 hover:border-blue-300 transition-all">
                         <div>
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xl">{{ $flow['icon'] }}</span>
+                                <div class="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/50">
+                                    {!! $flow['icon'] !!}
+                                </div>
                                 <span
                                     class="text-[10px] font-black text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md dark:bg-blue-900/50 dark:text-blue-300">
                                     {{ $flow['step'] }}

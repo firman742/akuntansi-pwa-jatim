@@ -25,13 +25,18 @@
     @endif
 
     <div class="space-y-6">
+        {{-- KOMPONEN FILTER ACCORDION DINAMIS --}}
+        <x-common.filter-accordion title="Pencarian Tipe Akun" :action="route('bendahara.master.account-types.index')" :resetUrl="route('bendahara.master.account-types.index')">
+            {{-- BARIS 1: SEARCH BAR --}}
+            <div>
+                <x-form.input id="search" name="search" value="{{ request('search') }}"
+                    placeholder="Cari Nama Tipe Akun..." startIconSearch
+                    endIconSearch />
+            </div>
+        </x-common.filter-accordion>
+
         <x-core.basic-tables.core-table title="Daftar Tipe Akun"
             description="Berikut adalah daftar tipe akun yang tersedia.">
-            {{-- SLOT search --}}
-            <x-slot name="search">
-                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
-                    placeholder="Cari berdasarkan Akun atau kode COA..." startIconSearch endIconSearch />
-            </x-slot>
 
             {{-- SLOT Actions --}}
             <x-slot name="actions">

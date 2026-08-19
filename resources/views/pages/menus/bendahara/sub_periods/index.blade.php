@@ -26,7 +26,7 @@
 
     {{-- Info --}}
     <div class="mb-6">
-        <x-ui.alert variant="info" title="Aturan Pengelolaan Sub Periode" :dismissible="false">
+        <x-ui.alert variant="info" title="Aturan Pengelolaan Sub Periode">
             <ul class="list-disc pl-5 space-y-1 text-sm text-blue-500">
                 <li>Sub periode dapat diubah atau dihapus hanya jika belum memiliki transaksi.</li>
                 <li>Sub periode tidak dapat diubah atau dihapus setelah tanggal berakhir terlewati.</li>
@@ -37,28 +37,36 @@
     </div>
 
     <div class="space-y-6">
-        <x-core.basic-tables.core-table needFilter>
-            {{-- SLOT search --}}
-            <x-slot name="search">
-                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
-                    placeholder="Cari berdasarkan Akun atau kode COA..." startIconSearch endIconSearch />
-            </x-slot>
-        
-            {{-- SLOT FILTER --}}
-            <x-slot name="filters">
-                <x-form.select 
-                    id="filter_period" 
-                    name="period_id" 
-                    label="Periode" 
-                    placeholder="Pilih Periode">
-                    @foreach ($periods as $period)
-                        <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
-                            {{ $period->name }}
-                        </option>
-                    @endforeach
-                </x-form.select>
-            </x-slot>
+        {{-- FILTER ACCORDION DINAMIS --}}
+        <x-common.filter-accordion 
+            title="Filter & Pencarian Sub Periode" 
+            :action="route('bendahara.sub-periods.index')" 
+            :resetUrl="route('bendahara.sub-periods.index')"
+            :filterKeys="['search', 'period_id']"
+        >
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {{-- BARIS 1: SEARCH BAR --}}
+                <div class="sm:col-span-2">
+                    <x-form.input id="search" name="search" value="{{ request('search') }}"
+                        placeholder="Cari berdasarkan nama atau deskripsi sub-periode..." startIconSearch
+                        endIconSearch />
+                </div>
 
+                {{-- BARIS 2: FILTER PERIODE UTAMA --}}
+                <div>
+                    <x-form.select id="filter_period" name="period_id" placeholder="Semua Periode">
+                        <option value="">Semua Periode Utama</option>
+                        @foreach ($periods as $period)
+                            <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
+                                {{ $period->name }}
+                            </option>
+                        @endforeach
+                    </x-form.select>
+                </div>
+            </div>
+        </x-common.filter-accordion>
+
+        <x-core.basic-tables.core-table>
             {{-- SLOT Actions --}}
             <x-slot name="actions">
                 <a href="{{ route('bendahara.sub-periods.create') }}">

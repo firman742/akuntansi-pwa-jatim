@@ -15,7 +15,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $activePeriod = Period::query()->latest()->first();
+        $activePeriod = Period::query()->orderByDesc('start_date')->first();
 
         $subPeriods = SubPeriod::query()
             ->where('period_id', $activePeriod?->id)
@@ -80,7 +80,7 @@ class DashboardController extends Controller
         $closingChecks = [
             [
                 'label' => 'Seluruh transaksi penerimaan & pengeluaran telah terverifikasi',
-                'passed' => $transactionQuery->count() > 0,
+                'passed' => $transactionQuery->exists(),
             ],
             [
                 'label' => 'Keseimbangan Jurnal Umum (Total Debit = Total Kredit)',
@@ -103,10 +103,14 @@ class DashboardController extends Controller
 
         foreach ($subPeriods as $sp) {
             $chartLabels[] = $sp->name;
-            $chartIncomeData[] = Transaction::where('sub_period_id', $sp->id)
+            $chartIncomeData[] = Transaction::query()
+                ->where('period_id', $activePeriod?->id)
+                ->where('sub_period_id', $sp->id)
                 ->where('transaction_type', TransactionType::INCOME)
                 ->sum('gross_amount');
-            $chartExpenseData[] = Transaction::where('sub_period_id', $sp->id)
+            $chartExpenseData[] = Transaction::query()
+                ->where('period_id', $activePeriod?->id)
+                ->where('sub_period_id', $sp->id)
                 ->where('transaction_type', TransactionType::EXPENSE)
                 ->sum('gross_amount');
         }

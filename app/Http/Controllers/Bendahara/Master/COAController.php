@@ -19,8 +19,6 @@ class COAController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * 
-     * @return View
      */
     public function index(): View
     {
@@ -41,17 +39,19 @@ class COAController extends Controller
         $groupedByType = $chartOfAccounts->groupBy(fn($coa) => $coa->accountType?->name ?? 'Uncategorized')
             ->map(fn($group) => $group->sortBy('code'));
 
-        return view('pages.menus.bendahara.master.coa.index', [
-            'groupedByType' => $groupedByType
-        ]);
-    }
+        // Statistik Informasi Seluruh COA Sistem
+        $stats = [
+            'total_coa' => $chartOfAccounts->count(),
+            'active_coa' => $chartOfAccounts->where('is_active', true)->count(),
+            'inactive_coa' => $chartOfAccounts->where('is_active', false)->count(),
+            'total_types' => $groupedByType->count(),
+        ];
 
+        return view('pages.menus.bendahara.master.coa.index', compact('groupedByType', 'stats'));
+    }
 
     /**
      * Get children COA for a given parent ID (JSON FOR API)
-     * 
-     * @param string $id
-     * @return JsonResponse
      */
     public function getChildren(string $id): JsonResponse
     {
@@ -64,18 +64,16 @@ class COAController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     * 
-     * @return View
+     * Show the form for creating a new child resource.
      */
     public function createChild(): View
     {
-        $accountTypes = AccountType::orderBy('name')->get();
+        $accountTypes = AccountType::orderBy('name', 'ASC')->get();
 
         $parents = ChartOfAccount::with('accountType')
-        ->orderBy('code')
-        ->get();
-        
+            ->orderBy('code')
+            ->get();
+
         $normalBalances = NormalBalanceEnum::values();
 
         return view('pages.menus.bendahara.master.coa.create', compact(
@@ -85,10 +83,12 @@ class COAController extends Controller
         ));
     }
 
+    /**
+     * Show the form for creating a new parent resource.
+     */
     public function createParent(): View
     {
-        $accountTypes = AccountType::orderBy('name')->get();
-
+        $accountTypes = AccountType::orderBy('name', 'ASC')->get();
         $normalBalances = NormalBalanceEnum::values();
 
         return view('pages.menus.bendahara.master.coa.create-parent', compact(
@@ -99,14 +99,10 @@ class COAController extends Controller
 
     /**
      * Generate kode COA otomatis untuk frontend (JSON)
-     * 
-     * @param CoaService $service
-     * @param Request $request
-     * @return JsonResponse
      */
     public function generateCodeApi(CoaService $service, Request $request): JsonResponse
     {
-        $parentId = $request->query('parent_id'); // ambil dari query header ?parent_id=
+        $parentId = $request->query('parent_id');
 
         return response()->json(
             $service->generateCodeForAPI($parentId)
@@ -115,11 +111,6 @@ class COAController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     * 
-     * @param CoaService $service
-     * @param StoreCOARequest $request
-     * @return RedirectResponse
-     * @throws Exception
      */
     public function store(CoaService $service, StoreCOARequest $request): RedirectResponse
     {
@@ -138,43 +129,30 @@ class COAController extends Controller
 
     /**
      * Show the form for editing the specified resource.
-     * 
-     * @param string $id
-     * @return View
      */
     public function edit(string $id): View
     {
         $coa = ChartOfAccount::findOrFail($id);
+        $accountTypes = AccountType::orderBy('name', 'ASC')->get();
 
-        $accountTypes = AccountType::orderBy('name')->get();
-
-        $parents = ChartOfAccount::where('id', '!=', $id)
-            ->orderBy('code')
+        $parents = ChartOfAccount::where('id', '!=', $id, 'and')
+            ->orderBy('code', 'ASC')
             ->get();
 
         $normalBalances = NormalBalanceEnum::cases();
-
         $isLocked = true;
 
-        return view('pages.menus.bendahara.master.coa.edit',
-            compact(
-                'coa',
-                'accountTypes',
-                'parents',
-                'normalBalances',
-                'isLocked'
-            )
-        );
+        return view('pages.menus.bendahara.master.coa.edit', compact(
+            'coa',
+            'accountTypes',
+            'parents',
+            'normalBalances',
+            'isLocked'
+        ));
     }
 
     /**
      * Update the specified resource in storage.
-     * 
-     * @param string $id
-     * @param CoaService $service
-     * @param UpdateCOARequest $request
-     * @return RedirectResponse
-     * @throws Exception
      */
     public function update(string $id, CoaService $service, UpdateCOARequest $request): RedirectResponse
     {
@@ -193,11 +171,6 @@ class COAController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     * 
-     * @param string $id
-     * @param CoaService $service
-     * @return RedirectResponse
-     * @throws Exception
      */
     public function destroy(string $id, CoaService $service): RedirectResponse
     {
@@ -205,7 +178,7 @@ class COAController extends Controller
             $service->delete($id);
 
             return redirect()
-            ->route('bendahara.master.coas.index')
+                ->route('bendahara.master.coas.index')
                 ->with('success', 'Akun COA berhasil dihapus.');
         } catch (Exception $e) {
             return back()

@@ -168,7 +168,7 @@
                         <div class="flex items-center gap-3">
                             <div
                                 class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold dark:bg-blue-900/40 dark:text-blue-400">
-                                📊
+                                {{ strtoupper(substr($type, 0, 2)) }}
                             </div>
                             <div>
                                 <h2 class="font-bold text-gray-900 dark:text-white text-sm">

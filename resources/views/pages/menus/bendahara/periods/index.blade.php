@@ -25,7 +25,7 @@
     @endif
 
     <div class="mb-6">
-        <x-ui.alert variant="info" title="Aturan Pengelolaan Periode" :dismissible="false">
+        <x-ui.alert variant="info" title="Aturan Pengelolaan Periode">
 
             <ul class="list-disc pl-5 space-y-1 text-blue-500">
                 <li>Periode tidak dapat diubah jika sudah memiliki transaksi.</li>
@@ -38,13 +38,17 @@
     </div>
 
     <div class="space-y-6">
-        <x-core.basic-tables.core-table>
-            {{-- SLOT search --}}
-            <x-slot name="search">
-                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
-                    placeholder="Cari berdasarkan nama dan deskripsi..." startIconSearch endIconSearch />
-            </x-slot>
+        {{-- KOMPONEN FILTER ACCORDION DINAMIS --}}
+        <x-common.filter-accordion title="Pencarian Periode" :action="route('bendahara.periods.index')" :resetUrl="route('bendahara.periods.index')">
+            {{-- BARIS 1: SEARCH BAR --}}
+            <div>
+                <x-form.input id="search" name="search" value="{{ request('search') }}"
+                    placeholder="Cari Nama Periode..." startIconSearch
+                    endIconSearch />
+            </div>
+        </x-common.filter-accordion>
 
+        <x-core.basic-tables.core-table>
             {{-- SLOT Actions --}}
             <x-slot name="actions">
                 <a href="{{ route('bendahara.periods.create') }}">

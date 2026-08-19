@@ -82,7 +82,7 @@ class IncomeController extends Controller
             ->get();
 
         // ================= FILTER DATA =================
-        $periods = Period::query()->select('id', 'name', 'start_date', 'end_date')->get();
+        $periods = Period::query()->select(['id', 'name', 'start_date', 'end_date'])->get();
 
         $subPeriods = collect();
         if ($request->filled('period_id')) {
@@ -124,8 +124,8 @@ class IncomeController extends Controller
         $userId = Auth::id();
 
         $activePeriod = Period::query()
-            ->orderByDesc('start_date') // Urutkan dari periode paling baru
-            ->first(); // Ambil 1 record object (atau null)
+            ->orderByDesc('start_date')
+            ->first();
 
         if (! $activePeriod) {
             throw new Exception(
@@ -170,7 +170,7 @@ class IncomeController extends Controller
         // 2. Query Akun Penerimaan (DEBIT) dengan mengecualikan semua COA Kas milik user
         $incomeCoas = ChartOfAccount::query()
             ->where('is_active', true)
-            ->orderBy('code')
+            ->orderBy('code', 'asc')
             ->get();
 
         return view('pages.menus.user.transactions.incomes.create',

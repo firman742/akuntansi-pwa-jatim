@@ -9,23 +9,32 @@
     editUrl: '{{ route('bendahara.periods.edit', ':id') }}',
 
     get totalPages() {
-        return Math.ceil(this.tableRowData.length / this.itemsPerPage);
+        return Math.ceil(this.tableRowData.length / this.itemsPerPage) || 1;
     },
 
     get paginatedData() {
         const start = (this.currentPage - 1) * this.itemsPerPage;
         return this.tableRowData.slice(start, start + this.itemsPerPage);
     },
+
+    get startIndex() {
+        if (this.tableRowData.length === 0) return 0;
+        return (this.currentPage - 1) * this.itemsPerPage + 1;
+    },
+
+    get endIndex() {
+        return Math.min(this.currentPage * this.itemsPerPage, this.tableRowData.length);
+    },
+
     get displayedPages() {
         const total = this.totalPages;
         const current = this.currentPage;
-        const delta = 2; // jumlah page kiri & kanan
+        const delta = 2;
 
         const pages = [];
         let start = Math.max(1, current - delta);
         let end = Math.min(total, current + delta);
 
-        // pastikan selalu 5 angka kalau memungkinkan
         if (current <= delta + 1) {
             end = Math.min(total, 1 + delta * 2);
         }
@@ -40,6 +49,7 @@
 
         return pages;
     },
+
     prevPage() {
         if (this.currentPage > 1) this.currentPage--;
     },
@@ -53,271 +63,195 @@
             this.currentPage = page;
         }
     },
-    selectedRows: [],
-    selectAll: false,
-    handleSelectAll() {
-        this.selectAll = !this.selectAll;
-        if (this.selectAll) {
-            this.selectedRows = this.tableRowData.map(row => row.id);
-        } else {
-            this.selectedRows = [];
-        }
-    },
-    handleRowSelect(id) {
-        if (this.selectedRows.includes(id)) {
-            this.selectedRows = this.selectedRows.filter(rowId => rowId !== id);
-        } else {
-            this.selectedRows.push(id);
-        }
-    },
-    getStatusClass(status) {
-        return status == 1 ?
-            'bg-green-50 text-green-700 border border-green-500 dark:bg-green-500/15 dark:text-green-500 dark:border-green-500' :
-            'bg-red-50 text-red-700 border border-red-500 dark:bg-red-500/15 dark:text-red-500 dark:border-red-500';
-    },
-    getStatusLabel(status) {
-        return status == 1 ? 'Aktif' : 'Tidak Aktif';
-    },
 
     formatDate(date) {
         if (!date) return '-';
-
         return new Date(date).toLocaleDateString('id-ID', {
             day: 'numeric',
-            month: 'long',
+            month: 'short',
             year: 'numeric'
         });
     },
 
-    deleteRow(id) {
-        if (confirm('Are you sure you want to delete this order?')) {
-            this.tableRowData = this.tableRowData.filter(row => row.id !== id);
-            this.selectedRows = this.selectedRows.filter(rowId => rowId !== id);
-
-            if (this.currentPage > this.totalPages) {
-                this.currentPage = this.totalPages || 1;
-            }
-        }
-    },
-
     isExpired(row) {
+        if (!row.end_date) return false;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
         const endDate = new Date(row.end_date);
         endDate.setHours(0, 0, 0, 0);
-
         return endDate < today;
     },
 
+    getStatusBadge(row) {
+        if (row.is_closed) {
+            return {
+                label: 'Ditutup',
+                class: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+                dot: 'bg-gray-400'
+            };
+        }
+        if (row.is_active) {
+            return {
+                label: 'Aktif',
+                class: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60',
+                dot: 'bg-emerald-500 animate-pulse'
+            };
+        }
+        if (this.isExpired(row)) {
+            return {
+                label: 'Selesai / Kadaluarsa',
+                class: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60',
+                dot: 'bg-amber-500'
+            };
+        }
+        return {
+            label: 'Belum Aktif',
+            class: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700',
+            dot: 'bg-slate-400'
+        };
+    },
+
     getEditLockReason(row) {
+        if (row.is_closed) {
+            return 'Periode sudah ditutup';
+        }
         if (row.transactions_count > 0) {
             return 'Periode sudah memiliki transaksi';
         }
-
         if (row.sub_period_transactions_count > 0) {
             return 'Terdapat transaksi pada sub periode';
         }
-
         if (this.isExpired(row)) {
-            return 'Periode telah berakhir';
+            return 'Periode telah mengakhiri siklusnya';
         }
-
         return null;
     },
 
     canEdit(row) {
         return !this.getEditLockReason(row);
-    },
-
-    getCloseReason(row) {
-        if (row.is_closed) {
-            return 'Periode sudah ditutup';
-        }
-
-        if (!this.isExpired(row)) {
-            return 'Periode hanya dapat ditutup setelah tanggal berakhir';
-        }
-
-        return null;
-    },
+    }
 }">
-    <div class="overflow-hidden border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <!-- Table -->
+    {{-- TABLE CONTAINER --}}
+    <div
+        class="overflow-hidden border border-gray-200/80 bg-white shadow-xs dark:border-gray-800 dark:bg-gray-900 transition-all">
         <div class="max-w-full overflow-x-auto">
-            <table class="w-full">
-                <thead
-                    class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-200 dark:border-white/[0.05] dark:bg-gray-900">
+            <table class="w-full text-left text-sm">
+                {{-- HEADER --}}
+                <thead class="border-b border-gray-200/80 bg-gray-50/80 dark:border-gray-800 dark:bg-gray-800/50">
                     <tr>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            <div class="flex items-center gap-3">
-                                <span class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">No</span>
-                            </div>
+                        <th scope="col"
+                            class="w-14 px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            No
                         </th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Nama</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Deskirpsi</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Mulai</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Berakhir</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Status</th>
-                        <th
-                            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">
-                            Action</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Nama Periode
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Deskripsi
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Rentang Waktu
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Status
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Aksi Pengelolaan
+                        </th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Jika data ada -->
+
+                {{-- BODY --}}
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60">
+                    {{-- DATA AVAILABLE --}}
                     <template x-if="paginatedData.length > 0">
                         <template x-for="(row, index) in paginatedData" :key="row.id">
-                            <tr :class="index % 2 === 0 ? 'bg-gray-50 dark:bg-white/[0.02]' : 'bg-white dark:bg-white/[0.03]'"
-                                class="border-b border-gray-100 transition hover:bg-gray-100 dark:border-white/[0.05]">
-
-                                <!-- No Urut -->
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)"></span>
+                            <tr class="group transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/40">
+                                {{-- NO --}}
+                                <td class="px-6 py-4 text-center font-mono text-xs text-gray-500 dark:text-gray-400"
+                                    x-text="(index + 1) + ((currentPage - 1) * itemsPerPage)">
                                 </td>
 
-                                <!-- Nama -->
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400" x-text="row.name"></span>
-                                </td>
-
-                                <!-- Deskripsi -->
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="row.description"></span>
-                                </td>
-
-                                <!-- Tanggal Mulai -->
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="formatDate(row.start_date)"></span>
-                                </td>
-
-                                <!-- Tanggal Berakhir -->
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="font-medium text-gray-700 dark:text-gray-400"
-                                        x-text="formatDate(row.end_date)"></span>
-                                </td>
-
-                                <!-- Apakah ditutup -->
-                                <td class="px-4 sm:px-6 py-3.5">
-                                    <span class="inline-block rounded-full px-2 py-0.5 text-theme-xs font-medium"
-                                        :class="getStatusClass(row.is_active)" x-text="getStatusLabel(row.is_active)">
-                                    </span>
-                                </td>
-
-                                <!-- Action -->
-                                <td class="px-4 sm:px-3 py-2.5">
-                                    <div class="flex items-center gap-2">
-                                        <!-- Edit jika masih aktif -->
-                                        <div class="flex items-center gap-2">
-                                            <!-- Edit -->
-                                            <a :href="canEdit(row) ?
-                                                editUrl.replace(':id', row.id) :
-                                                'javascript:void(0)'"
-                                                :title="getEditLockReason(row) || 'Edit Periode'"
-                                                :class="canEdit(row) ?
-                                                    'text-blue-500 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10' :
-                                                    'text-gray-300 cursor-not-allowed dark:text-gray-600'"
-                                                class="flex h-8 w-8 items-center justify-center rounded-md">
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </a>
+                                {{-- NAMA PERIODE --}}
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="font-semibold text-gray-900 dark:text-white"
+                                            x-text="row.name"></span>
+                                        <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                            <span
+                                                x-text="(row.sub_periods ? row.sub_periods.length : 0) + ' Sub-Periode'"></span>
+                                            <span>•</span>
+                                            <span
+                                                x-text="((row.transactions_count || 0) + (row.sub_period_transactions_count || 0)) + ' Transaksi'"></span>
                                         </div>
                                     </div>
                                 </td>
 
+                                {{-- DESKRIPSI --}}
+                                <td class="px-6 py-4 max-w-xs">
+                                    <p class="truncate text-xs text-gray-600 dark:text-gray-300"
+                                        :title="row.description || '-'" x-text="row.description || '-'">
+                                    </p>
+                                </td>
+
+                                {{-- RENTANG WAKTU --}}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div
+                                        class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200/80 bg-gray-50 px-3 py-1.5 text-xs font-mono text-gray-700 dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300">
+                                        <svg class="h-3.5 w-3.5 text-gray-400 shrink-0" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span x-text="formatDate(row.start_date)"></span>
+                                        <span class="text-gray-400">—</span>
+                                        <span x-text="formatDate(row.end_date)"></span>
+                                    </div>
+                                </td>
+
+                                {{-- STATUS BADGE --}}
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    @php $badge = 'getStatusBadge(row)'; @endphp
+                                    <span
+                                        class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all"
+                                        :class="{{ $badge }}.class">
+                                        <span class="h-1.5 w-1.5 rounded-full" :class="{{ $badge }}.dot"></span>
+                                        <span x-text="{{ $badge }}.label"></span>
+                                    </span>
+                                </td>
+
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <x-common.table-actions
+                                        :editUrl="'editUrl.replace(\':id\', row.id)'"
+                                        canEdit="canEdit(row)"
+                                        editLockReason="getEditLockReason(row)"
+
+                                        :destroyUrl="'destroyUrl.replace(\':id\', row.id)'"
+                                        canDelete="canEdit(row)"
+                                        deleteLockReason="getEditLockReason(row)"
+                                    />
+                                </td>
                             </tr>
                         </template>
                     </template>
-                    <!-- Jika data kosong -->
+
+                    {{-- DATA KOSONG --}}
                     <template x-if="paginatedData.length === 0">
-                        <tr>
-                            <td colspan="8" class="px-6 py-10 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
-                                    </svg>
-
-                                    <p class="text-sm font-medium text-gray-500">
-                                        Belum ada data periode
-                                    </p>
-
-                                    <p class="text-xs text-gray-400">
-                                        Data yang tersedia akan tampil di tabel ini
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
+                        <x-common.empty-table-state 
+                            title="Tidak ada data periode ditemukan"
+                            description="Coba sesuaikan kata kunci pencarian atau rentang tanggal filter Anda."
+                        />
                     </template>
                 </tbody>
-
             </table>
         </div>
-    </div>
 
-    <!-- Pagination -->
-    <div class="px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
-        <div class="flex items-center justify-between">
-            <button @click="prevPage" :disabled="currentPage === 1"
-                :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
-                class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:px-3.5">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M2.58301 9.99868C2.58272 10.1909 2.65588 10.3833 2.80249 10.53L7.79915 15.5301C8.09194 15.8231 8.56682 15.8233 8.85981 15.5305C9.15281 15.2377 9.15297 14.7629 8.86018 14.4699L5.14009 10.7472L16.6675 10.7472C17.0817 10.7472 17.4175 10.4114 17.4175 9.99715C17.4175 9.58294 17.0817 9.24715 16.6675 9.24715L5.14554 9.24715L8.86017 5.53016C9.15297 5.23717 9.15282 4.7623 8.85983 4.4695C8.56684 4.1767 8.09197 4.17685 7.79917 4.46984L2.84167 9.43049C2.68321 9.568 2.58301 9.77087 2.58301 9.99715C2.58301 9.99766 2.58301 9.99817 2.58301 9.99868Z"
-                        fill="currentColor" />
-                </svg>
-                <span class="hidden sm:inline">Previous</span>
-            </button>
-
-            <span class="block text-sm font-medium text-gray-700 dark:text-gray-400 sm:hidden">
-                Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
-            </span>
-
-            <ul class="hidden items-center gap-0.5 sm:flex">
-                <template x-for="page in displayedPages" :key="page">
-                    <li>
-                        <button x-show="page !== '...'" @click="goToPage(page)"
-                            :class="currentPage === page ? 'bg-blue-500 text-white' :
-                                'text-gray-700 hover:bg-green-500/[0.08] hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-500'"
-                            class="flex h-10 w-10 items-center justify-center rounded-lg text-theme-sm font-medium"
-                            x-text="page"></button>
-                        <span x-show="page === '...'"
-                            class="flex h-10 w-10 items-center justify-center text-gray-500">...</span>
-                    </li>
-                </template>
-            </ul>
-
-            <button @click="nextPage" :disabled="currentPage === totalPages"
-                :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
-                class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 sm:px-3.5">
-                <span class="hidden sm:inline">Next</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M17.4175 9.9986C17.4178 10.1909 17.3446 10.3832 17.198 10.53L12.2013 15.5301C11.9085 15.8231 11.4337 15.8233 11.1407 15.5305C10.8477 15.2377 10.8475 14.7629 11.1403 14.4699L14.8604 10.7472L3.33301 10.7472C2.91879 10.7472 2.58301 10.4114 2.58301 9.99715C2.58301 9.58294 2.91879 9.24715 3.33301 9.24715L14.8549 9.24715L11.1403 5.53016C10.8475 5.23717 10.8477 4.7623 11.1407 4.4695C11.4336 4.1767 11.9085 4.17685 12.2013 4.46984L17.1588 9.43049C17.3173 9.568 17.4175 9.77087 17.4175 9.99715C17.4175 9.99763 17.4175 9.99812 17.4175 9.9986Z"
-                        fill="currentColor" />
-                </svg>
-            </button>
-        </div>
+        {{-- PAGINATION FOOTER --}}
+        <x-common.pagination itemLabel="periode" />
     </div>
 </div>

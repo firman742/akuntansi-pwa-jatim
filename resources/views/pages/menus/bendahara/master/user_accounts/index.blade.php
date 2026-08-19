@@ -13,13 +13,17 @@
     @endif
 
     <div class="space-y-6">
-        <x-core.basic-tables.core-table>
-           {{-- SLOT search --}}
-           <x-slot name="search">
-                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
-                    placeholder="Cari berdasarkan nama atau email pengguna..." startIconSearch endIconSearch />
-            </x-slot>
+        {{-- KOMPONEN FILTER ACCORDION DINAMIS --}}
+        <x-common.filter-accordion title="Pencarian Pengguna" :action="route('bendahara.master.account-users.index')" :resetUrl="route('bendahara.master.account-users.index')">
+            {{-- BARIS 1: SEARCH BAR --}}
+            <div>
+                <x-form.input id="search" name="search" value="{{ request('search') }}"
+                    placeholder="Cari Nama Pengguna..." startIconSearch
+                    endIconSearch />
+            </div>
+        </x-common.filter-accordion>
 
+        <x-core.basic-tables.core-table>
             <x-core.basic-tables.bendahara.user-account-table :users="$users" />
         </x-core.basic-tables.core-table>
     </div>

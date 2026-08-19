@@ -25,6 +25,16 @@
     @endif
 
     <div class="space-y-6">
+        {{-- KOMPONEN FILTER ACCORDION DINAMIS --}}
+        <x-common.filter-accordion title="Pencarian Pengajuan COA" :action="route('bendahara.master.requests.coas.index')" :resetUrl="route('bendahara.master.requests.coas.index')">
+            {{-- BARIS 1: SEARCH BAR --}}
+            <div>
+                <x-form.input id="search" name="search" value="{{ request('search') }}"
+                    placeholder="Cari Nama Pengajuan COA..." startIconSearch
+                    endIconSearch />
+            </div>
+        </x-common.filter-accordion>
+        
         <x-core.basic-tables.core-table title="Daftar Pengajuan COA"
             description="Berikut adalah daftar pengajuan coa yang tersedia.">
 
