@@ -24,9 +24,7 @@ class DashboardController extends Controller
         /**
          * Active Period & Sub Periods
          */
-        $activePeriod = Period::query()
-            ->latest()
-            ->first();
+        $activePeriod = Period::query()->orderByDesc('start_date')->first();
 
         $subPeriods = SubPeriod::query()
             ->where('period_id', $activePeriod?->id)
@@ -43,6 +41,8 @@ class DashboardController extends Controller
                 $query->where('user_id', $user->id);
             })
             ->pluck('id');
+
+            // dd($userCoaIds);
 
         /**
          * Base Transaction Query - Strictly personalized by logged-in user
@@ -62,7 +62,7 @@ class DashboardController extends Controller
         /**
          * Summary Metrics (Personal)
          */
-        $totalTransactions = (clone $transactionQuery)->count();
+        $totalTransactions = (clone $transactionQuery)->count('*');
 
         $totalIncome = (clone $transactionQuery)
             ->where('transaction_type', TransactionType::INCOME)
@@ -114,13 +114,16 @@ class DashboardController extends Controller
 
         foreach ($subPeriods as $sp) {
             $chartLabels[] = $sp->name;
-            $chartIncomeData[] = Transaction::where('created_by', $user->id)
-                ->where('sub_period_id', $sp->id)
-                ->where('transaction_type', TransactionType::INCOME)
+            $chartIncomeData[] = Transaction::query()
+                ->where('created_by', '=', $user->id)
+                ->where('sub_period_id', '=', $sp->id)
+                ->where('transaction_type', '=', TransactionType::INCOME)
                 ->sum('gross_amount');
-            $chartExpenseData[] = Transaction::where('created_by', $user->id)
-                ->where('sub_period_id', $sp->id)
-                ->where('transaction_type', TransactionType::EXPENSE)
+
+            $chartExpenseData[] = Transaction::query()
+                ->where('created_by', '=', $user->id)
+                ->where('sub_period_id', '=', $sp->id)
+                ->where('transaction_type', '=', TransactionType::EXPENSE)
                 ->sum('gross_amount');
         }
 

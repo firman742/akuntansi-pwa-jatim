@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\AccountingUsers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Transaction;
 use App\Models\UserAccountBalance;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -11,8 +12,6 @@ class UserAccountBalanceController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @return View
      */
     public function index(): View
     {
@@ -43,26 +42,40 @@ class UserAccountBalanceController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param string $id
-     * @return View
      */
     public function show(string $id): View
     {
         $user = Auth::user();
 
-        $userAccountBalance = UserAccountBalance::with(
+        $userAccountBalance = UserAccountBalance::with([
             'coaBalance.chartOfAccount',
             'subPeriod',
             'allocatedBy',
             'userAccount',
             'userAccount.user',
-        )->findOrFail($id);
+        ])->findOrFail($id);
 
         if ($userAccountBalance->userAccount->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
-        return view('pages.menus.user.userAccountBalances.show', compact('userAccountBalance'));
+        // Ambil ID COA dan Sub Period terkait
+        $coaId = $userAccountBalance->coaBalance?->chart_of_account_id;
+        $subPeriodId = $userAccountBalance->sub_period_id;
+
+        // Query transaksi yang menggunakan COA dan sub-periode saldo ini
+        $transactions = Transaction::query()
+            ->where('created_by', $user->id)
+            ->when($subPeriodId, fn ($q) => $q->where('sub_period_id', $subPeriodId))
+            ->whereHas('transactionLines', function ($q) use ($coaId) {
+                $q->where('chart_of_account_id', $coaId);
+            })
+            ->with(['transactionLines' => function ($q) use ($coaId) {
+                $q->where('chart_of_account_id', $coaId);
+            }])
+            ->orderBy('transaction_date', 'desc')
+            ->paginate(10);
+
+        return view('pages.menus.user.userAccountBalances.show', compact('userAccountBalance', 'transactions'));
     }
 }

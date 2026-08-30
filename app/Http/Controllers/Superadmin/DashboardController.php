@@ -23,13 +23,8 @@ class DashboardController extends Controller
         /**
          * Active Period
          */
-        $activePeriod = Period::query()
-            ->latest()
-            ->first();
+        $activePeriod = Period::query()->orderByDesc('start_date')->first();
 
-        /**
-         * Active Sub Periods
-         */
         $subPeriods = SubPeriod::query()
             ->where('period_id', $activePeriod?->id)
             ->orderBy('start_date')

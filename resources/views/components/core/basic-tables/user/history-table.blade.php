@@ -72,15 +72,14 @@
         }).format(amount || 0);
     },
 
-    getCoaName(row) {
-        if (row.transaction_lines && row.transaction_lines.length > 0) {
-            const coa = row.transaction_lines[0].chart_of_account;
-            if (coa) {
-                const countExtra = row.transaction_lines.length - 1;
-                return coa.code + ' - ' + coa.name + (countExtra > 0 ? ` (+${countExtra})` : '');
-            }
+    getCoas(row) {
+        if (!row.transaction_lines || row.transaction_lines.length === 0) {
+            return [];
         }
-        return '-';
+
+        return row.transaction_lines
+            .map(line => line.chart_of_account)
+            .filter(coa => coa);
     },
 
     typeBadgeClass(type) {
@@ -154,8 +153,10 @@
                                 {{-- NO & TANGGAL TRANSAKSI --}}
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
-                                        <span class="font-semibold text-gray-900 dark:text-white"
-                                            x-text="row.transaction_number || 'TRX'"></span>
+                                        <a :href="getDetailUrl(row)" title="Lihat Detail Transaksi"
+                                            class="font-semibold text-blue-600 hover:underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                            <span x-text="row.transaction_number || 'TRX'"></span>
+                                        </a>
                                         <span class="text-xs text-gray-500 dark:text-gray-400"
                                             x-text="formatDate(row.transaction_date)"></span>
                                     </div>
@@ -172,9 +173,20 @@
 
                                 {{-- AKUN (COA) --}}
                                 <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center rounded-md bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300"
-                                        x-text="getCoaName(row)"></span>
+                                    <div class="flex flex-col gap-1.5">
+                                        <template x-if="getCoas(row).length > 0">
+                                            <template x-for="coa in getCoas(row)" :key="coa.id">
+                                                <div
+                                                    class="inline-flex w-fit items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                    <span x-text="`${coa.code} - ${coa.name}`"></span>
+                                                </div>
+                                            </template>
+                                        </template>
+
+                                        <template x-if="getCoas(row).length === 0">
+                                            <span class="text-xs text-gray-400">-</span>
+                                        </template>
+                                    </div>
                                 </td>
 
                                 {{-- DESKRIPSI --}}
@@ -223,10 +235,8 @@
 
                     {{-- JIKA DATA KOSONG --}}
                     <template x-if="paginatedData.length === 0">
-                        <x-common.empty-table-state 
-                            title="Tidak ada riwayat transaksi ditemukan"
-                            description="Coba sesuaikan kata kunci pencarian atau rentang tanggal filter Anda."
-                        />
+                        <x-common.empty-table-state title="Tidak ada riwayat transaksi ditemukan"
+                            description="Coba sesuaikan kata kunci pencarian atau rentang tanggal filter Anda." />
                     </template>
                 </tbody>
             </table>

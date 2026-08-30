@@ -5,7 +5,7 @@
 @section('content')
     <div class="space-y-6">
         {{-- BREADCRUMB --}}
-        <x-common.page-breadcrumb defaultTitle="Daftar Transaksi Penerimaan" pageTitle="Monitoring Transaksi Penerimaan"
+        <x-common.page-breadcrumb defaultTitle="Transaksi Penerimaan" pageTitle="Monitoring Transaksi Penerimaan"
             pageDescription="Pusat pencatatan dan evaluasi histori pendapatan & penerimaan kas" pageIcon="transaction" />
 
         {{-- ALERTS --}}
