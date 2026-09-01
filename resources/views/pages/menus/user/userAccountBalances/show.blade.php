@@ -7,11 +7,12 @@
 
     @php
         $allocated = (float) ($userAccountBalance->allocated_balance ?? 0);
+        $income = (float) ($userAccountBalance->income_balance ?? 0);
         $used = (float) ($userAccountBalance->used_balance ?? 0);
         $remaining = (float) ($userAccountBalance->remaining_balance ?? 0);
 
-        $percentage = $allocated > 0 ? min(100, round(($used / $allocated) * 100, 1)) : 0;
-        $remainingPercentage = max(0, 100 - $percentage);
+        $totalAvailable = $allocated + $income;
+        $percentage = $totalAvailable > 0 ? min(100, round(($used / $totalAvailable) * 100, 1)) : 0;
     @endphp
 
     <div class="space-y-6">
@@ -54,12 +55,13 @@
             </div>
         </div>
 
-        {{-- Top KPI Stat Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-            {{-- Dialokasikan --}}
+        {{-- Top KPI Stat Cards (4 Cards + Subtext Info) --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+            {{-- 1. Alokasi Awal --}}
             <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Dialokasikan</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Alokasi Awal (Pagu)</span>
                     <span class="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -70,56 +72,60 @@
                 <h3 class="mt-3 text-2xl font-extrabold text-gray-900 dark:text-white">
                     Rp {{ number_format($allocated, 0, ',', '.') }}
                 </h3>
+                <p class="text-[11px] text-gray-400 mt-2">Batas pagu awal periode</p>
             </div>
 
-            {{-- Terpakai --}}
+            {{-- 2. Total Penerimaan --}}
             <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Saldo Terpakai</span>
-                    <span class="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                        </svg>
-                    </span>
-                </div>
-                <h3 class="mt-3 text-2xl font-extrabold text-rose-600 dark:text-rose-400">
-                    Rp {{ number_format($used, 0, ',', '.') }}
-                </h3>
-            </div>
-
-            {{-- Tersisa --}}
-            <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Saldo Tersisa</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Penerimaan</span>
                     <span
                         class="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                d="M7 11l5-5m0 0l5 5m-5-5v12" />
                         </svg>
                     </span>
                 </div>
                 <h3 class="mt-3 text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                    Rp {{ number_format($remaining, 0, ',', '.') }}
+                    + Rp {{ number_format($income, 0, ',', '.') }}
                 </h3>
+                <p class="text-[11px] text-gray-400 mt-2">Dana penerimaan kas masuk</p>
             </div>
 
-            {{-- Rasio Penggunaan --}}
+            {{-- 3. Total Pengeluaran --}}
             <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Tingkat Penggunaan</span>
-                    <span class="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Pengeluaran</span>
+                    <span class="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                         </svg>
                     </span>
                 </div>
-                <h3 class="mt-3 text-2xl font-extrabold text-gray-900 dark:text-white">
-                    {{ $percentage }}%
+                <h3 class="mt-3 text-2xl font-extrabold text-rose-600 dark:text-rose-400">
+                    - Rp {{ number_format($used, 0, ',', '.') }}
                 </h3>
+                <p class="text-[11px] text-gray-400 mt-2">Belanja/pengeluaran kas</p>
             </div>
+
+            {{-- 4. Sisa Saldo Tersedia --}}
+            <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Sisa Saldo Tersedia</span>
+                    <span class="p-2 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </span>
+                </div>
+                <h3 class="mt-3 text-2xl font-extrabold text-teal-700 dark:text-teal-400">
+                    Rp {{ number_format($remaining, 0, ',', '.') }}
+                </h3>
+                <p class="text-[11px] text-gray-400 mt-2">Saldo aktif siap transaksi</p>
+            </div>
+
         </div>
 
         {{-- Visualisation & Metadata Section --}}
@@ -133,7 +139,7 @@
                         Analisis Alokasi Saldo
                     </h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                        Perbandingan saldo terpakai vs sisa anggaran
+                        Perbandingan saldo terpakai vs sisa anggaran dari total ketersediaan dana (Alokasi + Penerimaan)
                     </p>
                 </div>
 
@@ -145,10 +151,10 @@
                 {{-- Progress Bar Integrasi --}}
                 <div class="space-y-2 border-t border-gray-100 dark:border-gray-700/60 pt-4">
                     <div class="flex justify-between text-xs font-semibold">
-                        <span class="text-gray-500 dark:text-gray-400">Batas Penggunaan</span>
-                        <span
-                            class="{{ $percentage >= 85 ? 'text-red-500' : 'text-gray-700 dark:text-gray-300' }}">{{ $percentage }}%
-                            / 100%</span>
+                        <span class="text-gray-500 dark:text-gray-400">Tingkat Penggunaan</span>
+                        <span class="{{ $percentage >= 85 ? 'text-red-500' : 'text-gray-700 dark:text-gray-300' }}">
+                            {{ $percentage }}% / 100%
+                        </span>
                     </div>
                     <div class="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div class="h-full rounded-full transition-all duration-700 {{ $percentage >= 85 ? 'bg-red-500' : ($percentage >= 50 ? 'bg-amber-500' : 'bg-emerald-500') }}"
@@ -196,18 +202,26 @@
                     </div>
                 </div>
 
-                {{-- Informasi Alokasi --}}
+                {{-- Informasi Alokasi & Rekapitulasi --}}
                 <div
                     class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/60 rounded-2xl p-6 shadow-sm space-y-4">
                     <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-700/60 pb-3">
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                        <h2 class="font-bold text-gray-900 dark:text-white">Informasi Alokasi</h2>
+                        <h2 class="font-bold text-gray-900 dark:text-white">Rekapitulasi Dana</h2>
                     </div>
 
                     <div class="space-y-3.5 text-sm">
+                        <div>
+                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Total Dana Kelolaan</p>
+                            <p class="font-semibold text-blue-700 dark:text-blue-400 mt-0.5">
+                                Rp {{ number_format($totalAvailable, 0, ',', '.') }}
+                                <span class="text-[11px] font-normal text-gray-400">(Alokasi + Penerimaan)</span>
+                            </p>
+                        </div>
+
                         <div>
                             <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Dialokasikan Oleh</p>
                             <p class="font-semibold text-gray-900 dark:text-white mt-0.5">
@@ -219,13 +233,6 @@
                             <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Tanggal Alokasi</p>
                             <p class="font-semibold text-gray-900 dark:text-white mt-0.5">
                                 {{ optional($userAccountBalance->allocated_at)->format('d M Y, H:i') ?? '-' }}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">ID Reference Saldo</p>
-                            <p class="font-mono text-xs text-gray-500 dark:text-gray-400 mt-0.5 break-all">
-                                {{ $userAccountBalance->id }}
                             </p>
                         </div>
                     </div>
@@ -244,7 +251,7 @@
                         Daftar Transaksi Terkait
                     </h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        Riwayat penggunaan saldo pada akun ini
+                        Riwayat transaksi pengeluaran dan penerimaan pada akun kas ini
                     </p>
                 </div>
                 <span
@@ -269,11 +276,16 @@
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60 text-gray-700 dark:text-gray-300">
                         @forelse($transactions as $trx)
                             @php
-                                $type = is_object($trx->transaction_type) ? $trx->transaction_type->value : $trx->transaction_type;
+                                $type = is_object($trx->transaction_type)
+                                    ? $trx->transaction_type->value
+                                    : $trx->transaction_type;
                                 $line = $trx->transactionLines->first();
                                 $amount = $line?->amount ?? ($trx->net_amount ?? 0);
 
-                                $linkDetail = $type === 'EXPENSE' ? route('user.transactions.expenses.show', $trx->id) : route('user.transactions.incomes.show', $trx->id);
+                                $linkDetail =
+                                    $type === 'EXPENSE'
+                                        ? route('user.transactions.expenses.show', $trx->id)
+                                        : route('user.transactions.incomes.show', $trx->id);
                             @endphp
                             <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition">
                                 <td class="px-6 py-4 font-mono text-xs font-semibold text-blue-600 dark:text-blue-400">
@@ -287,16 +299,16 @@
                                 </td>
                                 <td class="px-6 py-4 text-xs">
                                     <span
-                                        class="px-2 py-1 font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">
-                                        {{ is_object($trx->transaction_type) ? $trx->transaction_type->value : $trx->transaction_type }}
+                                        class="px-2 py-1 font-medium text-xs rounded-md {{ $type === 'INCOME' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' }}">
+                                        {{ $type }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 max-w-xs truncate text-xs">
                                     {{ $trx->description ?? '-' }}
                                 </td>
                                 <td
-                                    class="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white whitespace-nowrap">
-                                    Rp {{ number_format($amount, 0, ',', '.') }}
+                                    class="px-6 py-4 text-right font-semibold {{ $type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }} whitespace-nowrap">
+                                    {{ $type === 'INCOME' ? '+' : '-' }} Rp {{ number_format($amount, 0, ',', '.') }}
                                 </td>
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
                                     @php
@@ -349,10 +361,11 @@
         document.addEventListener("DOMContentLoaded", function() {
             const usedAmount = {{ $used }};
             const remainingAmount = {{ $remaining }};
+            const totalAvailableAmount = {{ $totalAvailable }};
 
             const options = {
                 series: [usedAmount, remainingAmount],
-                labels: ['Saldo Terpakai', 'Saldo Tersisa'],
+                labels: ['Saldo Terpakai', 'Sisa Saldo Tersedia'],
                 chart: {
                     type: 'donut',
                     height: 230,
@@ -377,12 +390,11 @@
                                 show: true,
                                 total: {
                                     show: true,
-                                    label: 'Total Dialokasikan',
-                                    fontSize: '12px',
+                                    label: 'Total Kelolaan Dana',
+                                    fontSize: '11px',
                                     color: '#6b7280',
                                     formatter: function(w) {
-                                        return 'Rp ' + (usedAmount + remainingAmount).toLocaleString(
-                                            'id-ID');
+                                        return 'Rp ' + totalAvailableAmount.toLocaleString('id-ID');
                                     }
                                 }
                             }

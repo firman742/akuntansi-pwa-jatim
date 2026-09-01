@@ -31,6 +31,7 @@ class UserAccountBalanceController extends Controller
                     'account_code' => $item->coaBalance->chartOfAccount->code,
                     'sub_period' => optional($item->subPeriod)->name,
                     'allocated_balance' => $item->allocated_balance,
+                    'income_balance' => $item->income_balance,
                     'used_balance' => $item->used_balance,
                     'remaining_balance' => $item->remaining_balance,
                     'allocated_at' => $item->allocated_at,

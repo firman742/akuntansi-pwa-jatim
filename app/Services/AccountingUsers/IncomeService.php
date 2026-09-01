@@ -9,7 +9,6 @@ use App\Enums\TransactionType;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
 use App\Services\TransactionBaseService;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -22,8 +21,6 @@ class IncomeService extends TransactionBaseService
      * Debit  : Kas User
      * Credit : Akun Penerimaan
      *
-     * @param array $data
-     * @return Transaction
      * @throws Exception
      */
     public function handle(array $data): Transaction
@@ -39,6 +36,7 @@ class IncomeService extends TransactionBaseService
 
             $oldBalance = [
                 'allocated_balance' => $userBalance->allocated_balance,
+                'income_balance' => $userBalance->income_balance,
                 'used_balance' => $userBalance->used_balance,
                 'remaining_balance' => $userBalance->remaining_balance,
             ];
@@ -92,10 +90,10 @@ class IncomeService extends TransactionBaseService
             /*
             |--------------------------------------------------------------------------
             | Update Saldo User:
-            | Penerimaan -> Saldo Dialokasikan Bertambah & Saldo Tersisa Bertambah
+            | Penerimaan -> Total Penerimaan (income_balance) & Saldo Tersisa Bertambah
             |--------------------------------------------------------------------------
             */
-            $userBalance->increment('allocated_balance', $amount);
+            $userBalance->increment('income_balance', $amount);
             $userBalance->increment('remaining_balance', $amount);
 
             /**
@@ -111,7 +109,7 @@ class IncomeService extends TransactionBaseService
                 $lines,
                 collect($lines)->sum('debit'),
                 collect($lines)->sum('credit'),
-                "INC",
+                'INC',
                 $transaction
             );
 
@@ -134,14 +132,11 @@ class IncomeService extends TransactionBaseService
                     'status' => $transaction->status,
                     'lines' => collect($lines)
                         ->map(function ($line) {
-
                             return [
-
                                 'coa_id' => $line['coa_id'],
                                 'position' => $line['position'],
                                 'amount' => $line['amount'],
                                 'description' => $line['description'],
-
                             ];
                         })
                         ->toArray(),
@@ -150,7 +145,6 @@ class IncomeService extends TransactionBaseService
                     'transaction_type' => TransactionType::INCOME->value,
                     'period_id' => $transaction->period_id,
                     'sub_period_id' => $transaction->sub_period_id,
-
                 ]
             );
 
@@ -162,6 +156,7 @@ class IncomeService extends TransactionBaseService
                 old: $oldBalance,
                 new: [
                     'allocated_balance' => $userBalance->allocated_balance,
+                    'income_balance' => $userBalance->income_balance,
                     'used_balance' => $userBalance->used_balance,
                     'remaining_balance' => $userBalance->remaining_balance,
                 ],

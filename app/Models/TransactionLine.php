@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class TransactionLine extends Model
 {
     use HasUuids, HasFactory;
-    
+
     protected $table = 'transaction_lines';
 
     protected $fillable = [

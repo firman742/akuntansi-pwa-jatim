@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $sub_period_id
  * @property string $allocated_by
  * @property float $allocated_balance
+ * @property float $income_balance
  * @property float $used_balance
  * @property float $remaining_balance
  * @property Carbon|null $allocated_at
@@ -41,6 +42,7 @@ class UserAccountBalance extends Model
         "sub_period_id",
         "allocated_by",
         "allocated_balance",
+        "income_balance",
         "used_balance",
         "remaining_balance",
         "allocated_at",

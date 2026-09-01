@@ -126,8 +126,8 @@
 
                             {{-- NOMINAL --}}
                             <div>
-                                <x-form.input name="" label="Nominal Penerimaan" type="text" placeholder="Rp 0"
-                                    @input="inputAmount" required />
+                                <x-form.input name="nominal_display" label="Nominal Penerimaan" type="text"
+                                    placeholder="Rp 0" x-model="displayAmount" @input="inputAmount($event)" required />
                                 <input type="hidden" name="amount" x-model="amount">
                             </div>
 
@@ -314,17 +314,16 @@
                     selectedCash: '',
                     subPeriod: '',
                     amount: 0,
+                    displayAmount: '', // 1. State penampung teks format Rp
                     proofPreview: null,
                     proofFileName: '',
 
                     init() {
-                        // Set default pilihan pertama jika data cashCoas tersedia
                         if (this.cashCoas.length > 0) {
                             this.selectedCash = this.cashCoas[0].user_account_balance_id;
                         }
                     },
 
-                    // GETTER SALDO: Otomatis terupdate saat `selectedCash` berubah
                     get balance() {
                         if (!this.selectedCash) return 0;
 
@@ -335,10 +334,19 @@
                         return found ? Number(found.remaining_balance) : 0;
                     },
 
+                    // 2. Fungsi input handler yang sinkron dengan Alpine State
                     inputAmount(event) {
                         const raw = this.onlyNumber(event.target.value);
-                        this.amount = Number(raw);
-                        event.target.value = raw ? 'Rp ' + this.format(raw) : '';
+
+                        // Set angka murni ke state `amount` (memicu reaktivitas Total & Proyeksi Saldo)
+                        this.amount = raw ? Number(raw) : 0;
+
+                        // Format string Rupiah
+                        const formatted = raw ? 'Rp ' + this.format(raw) : '';
+
+                        // Update tampilan input
+                        this.displayAmount = formatted;
+                        event.target.value = formatted;
                     },
 
                     onlyNumber(value) {
@@ -352,26 +360,6 @@
                     afterBalance() {
                         return Number(this.balance) + Number(this.amount);
                     },
-
-                    handleFileChange(event) {
-                        const file = event.target.files[0];
-                        if (!file) return;
-
-                        this.proofFileName = file.name;
-
-                        if (file.type.startsWith('image/')) {
-                            this.proofPreview = URL.createObjectURL(file);
-                        } else {
-                            this.proofPreview = null;
-                        }
-                    },
-
-                    removeFile() {
-                        this.proofPreview = null;
-                        this.proofFileName = '';
-                        const input = document.getElementById('proof_file');
-                        if (input) input.value = '';
-                    }
                 }
             }
         </script>

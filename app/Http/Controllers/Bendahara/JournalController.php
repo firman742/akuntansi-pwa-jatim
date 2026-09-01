@@ -15,20 +15,20 @@ class JournalController extends Controller
 {
     public function index(Request $request)
     {
-        $periodId    = $request->input('period_id');
+        $periodId = $request->input('period_id');
         $subPeriodId = $request->input('sub_period_id');
-        $startDate   = $request->input('start_date');
-        $endDate     = $request->input('end_date');
-        $search      = $request->input('search');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $search = $request->input('search');
 
-        // Dynamic Sorting
-        $sortBy  = $request->get('sort_by', 'journal_date');
-        $sortDir = $request->get('sort_dir', 'desc');
+        // Dynamic Sorting - Default diubah menjadi 'asc' (Terlama ke Terbaru)
+        $sortBy = $request->get('sort_by', 'journal_date');
+        $sortDir = $request->get('sort_dir', 'asc');
 
         // Eager load relations secara efisien
         $query = Journal::with([
             'details.chartOfAccount.accountType',
-            'postedBy'
+            'postedBy',
         ]);
 
         // ================= FILTERS =================
@@ -62,7 +62,10 @@ class JournalController extends Controller
             });
         }
 
-        $journals = $query->orderBy($sortBy, $sortDir)->get();
+        // QUERY ORDERING: Utama berdasar kolom pilihan (default: journal_date ASC), sekunder berdasar ID ASC
+        $journals = $query->orderBy($sortBy, $sortDir)
+            ->orderBy('id', 'asc')
+            ->get();
 
         // Master Data Periode
         $periods = Period::all();
@@ -74,41 +77,45 @@ class JournalController extends Controller
         }
 
         // ================= GROUPING KHUSUS COA BERTIPE ASET =================
-        $groupedJournals  = [];
-        $grandTotalDebit  = 0;
+        $groupedJournals = [];
+        $grandTotalDebit = 0;
         $grandTotalCredit = 0;
 
         foreach ($journals as $journal) {
             foreach ($journal->details as $detail) {
                 $coa = $detail->chartOfAccount;
-                if (!$coa) continue;
+                if (! $coa) {
+                    continue;
+                }
 
                 $typeName = strtoupper($coa->accountType->name ?? '');
-                $isAsset  = str_contains($typeName, 'ASET') ||
+                $isAsset = str_contains($typeName, 'ASET') ||
                     str_contains($typeName, 'ASSET') ||
-                    str_starts_with((string)$coa->code, '1');
+                    str_starts_with((string) $coa->code, '1');
 
-                if (!$isAsset) continue;
+                if (! $isAsset) {
+                    continue;
+                }
 
-                $coaId   = $detail->chart_of_account_id;
+                $coaId = $detail->chart_of_account_id;
                 $coaCode = $coa->code ?? '-';
                 $coaName = $coa->name ?? 'Tanpa Nama Akun';
 
-                if (!isset($groupedJournals[$coaId])) {
+                if (! isset($groupedJournals[$coaId])) {
                     $groupedJournals[$coaId] = [
-                        'account_id'      => $coaId,
-                        'account_code'    => $coaCode,
-                        'account_name'    => $coaName,
-                        'account_info'    => "{$coaName} ({$coaCode})",
-                        'subtotal_debit'  => 0,
+                        'account_id' => $coaId,
+                        'account_code' => $coaCode,
+                        'account_name' => $coaName,
+                        'account_info' => "{$coaName} ({$coaCode})",
+                        'subtotal_debit' => 0,
                         'subtotal_credit' => 0,
-                        'data'            => []
+                        'data' => [],
                     ];
                 }
 
                 // Masukkan jurnal ke grup COA terkait (cekal duplikasi jurnal dalam grup yang sama)
                 $alreadyAdded = collect($groupedJournals[$coaId]['data'])->contains('id', $journal->id);
-                if (!$alreadyAdded) {
+                if (! $alreadyAdded) {
                     $groupedJournals[$coaId]['data'][] = $journal;
                 }
             }
@@ -118,11 +125,11 @@ class JournalController extends Controller
         foreach ($groupedJournals as $coaId => &$group) {
             foreach ($group['data'] as $journal) {
                 foreach ($journal->details as $detail) {
-                    $group['subtotal_debit']  += $detail->debit;
+                    $group['subtotal_debit'] += $detail->debit;
                     $group['subtotal_credit'] += $detail->credit;
                 }
             }
-            $grandTotalDebit  += $group['subtotal_debit'];
+            $grandTotalDebit += $group['subtotal_debit'];
             $grandTotalCredit += $group['subtotal_credit'];
         }
         unset($group);
@@ -133,18 +140,18 @@ class JournalController extends Controller
         });
 
         return view('pages.menus.bendahara.journals.index', [
-            'journals'         => $journals,
-            'groupedJournals'  => $groupedJournals,
-            'grandTotalDebit'  => $grandTotalDebit,
+            'journals' => $journals,
+            'groupedJournals' => $groupedJournals,
+            'grandTotalDebit' => $grandTotalDebit,
             'grandTotalCredit' => $grandTotalCredit,
-            'periods'          => $periods,
-            'subPeriods'       => $subPeriods,
-            'periodId'         => $periodId,
-            'subPeriodId'      => $subPeriodId,
-            'startDate'        => $startDate,
-            'endDate'          => $endDate,
-            'sortBy'           => $sortBy,
-            'sortDir'          => $sortDir,
+            'periods' => $periods,
+            'subPeriods' => $subPeriods,
+            'periodId' => $periodId,
+            'subPeriodId' => $subPeriodId,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'sortBy' => $sortBy,
+            'sortDir' => $sortDir,
         ]);
     }
 
@@ -164,9 +171,9 @@ class JournalController extends Controller
         // =====================
         // FILTER INPUT
         // =====================
-        $periodId   = $request->period_id;
+        $periodId = $request->period_id;
         $startMonth = $request->start_month; // format: Y-m
-        $endMonth   = $request->end_month;   // format: Y-m
+        $endMonth = $request->end_month;   // format: Y-m
 
         $query = Journal::with(['details.chartOfAccount.accountType']);
 
@@ -176,13 +183,15 @@ class JournalController extends Controller
 
         if ($startMonth && $endMonth) {
             $start = Carbon::parse($startMonth)->startOfMonth();
-            $end   = Carbon::parse($endMonth)->endOfMonth();
+            $end = Carbon::parse($endMonth)->endOfMonth();
 
             $query->whereBetween('journal_date', [$start, $end]);
         }
 
+        // Query export diubah dari desc ke asc
         $journals = $query
-            ->orderBy('journal_date')
+            ->orderBy('journal_date', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
 
         // TERAPKAN GROUPING DISINI
@@ -197,7 +206,7 @@ class JournalController extends Controller
             'period_name' => $period?->name,
             'month_label' => ($startMonth && $endMonth)
                 ? Carbon::parse($startMonth)->translatedFormat('F Y')
-                . ' - ' .
+                .' - '.
                 Carbon::parse($endMonth)->translatedFormat('F Y')
                 : null,
             'year' => ($startMonth)
@@ -207,32 +216,31 @@ class JournalController extends Controller
         ];
 
         return match ($type) {
-            // Kirim $groupedJournals, bukan $journals mentah
             'pdf' => app(JournalPdfExport::class)->download($groupedJournals, $meta),
             default => abort(404),
         };
     }
 
-
     private function groupJournals($journals)
     {
         $grouped = [];
         foreach ($journals as $journal) {
-            $kasDetail = $journal->details->first(fn($d) => $d->chartOfAccount?->accountType?->name === 'ASET');
+            $kasDetail = $journal->details->first(fn ($d) => $d->chartOfAccount?->accountType?->name === 'ASET');
 
             if ($kasDetail) {
                 $coaId = $kasDetail->coa_id;
-                $coaName = $kasDetail->chartOfAccount->name . ' (' . $kasDetail->chartOfAccount->code . ')';
+                $coaName = $kasDetail->chartOfAccount->name.' ('.$kasDetail->chartOfAccount->code.')';
 
-                if (!isset($grouped[$coaId])) {
+                if (! isset($grouped[$coaId])) {
                     $grouped[$coaId] = [
                         'account_info' => $coaName,
-                        'data' => []
+                        'data' => [],
                     ];
                 }
                 $grouped[$coaId]['data'][] = $journal;
             }
         }
+
         return $grouped;
     }
 }

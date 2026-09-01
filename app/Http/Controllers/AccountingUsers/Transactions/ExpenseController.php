@@ -163,7 +163,7 @@ class ExpenseController extends Controller
         // ── Semua akun CREDIT ─────────────────────────────
         $expenseCoas = ChartOfAccount::query()
             ->where('is_active', true)
-            ->orderBy('code')
+            ->orderBy('code', 'asc')
             ->get();
 
         return view('pages.menus.user.transactions.expenses.create', compact(

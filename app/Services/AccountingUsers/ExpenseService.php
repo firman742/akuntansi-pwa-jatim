@@ -9,24 +9,19 @@ use App\Enums\TransactionType;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
 use App\Services\TransactionBaseService;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ExpenseService extends TransactionBaseService
 {
     /**
-     * Handle expense transaction
-     * 
+     * Handle expense transaction.
+     *
      * Journal:
      * Debit  : Akun Pengeluaran
      * Credit : Kas User
      *
-     * @param array $data
-     * @return Transaction
-     * @throws ValidationException
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle(array $data): Transaction
     {
@@ -41,15 +36,17 @@ class ExpenseService extends TransactionBaseService
                 );
 
             $oldBalance = [
+                'allocated_balance' => $userBalance->allocated_balance,
+                'income_balance' => $userBalance->income_balance,
                 'used_balance' => $userBalance->used_balance,
                 'remaining_balance' => $userBalance->remaining_balance,
             ];
 
             $totalExpense = collect($data['expense_lines'])->sum('amount');
 
-            // Validasi saldo
+            // Validasi kecukupan saldo tersisa
             if ($userBalance->remaining_balance < $totalExpense) {
-                throw new Exception('Periode tidak valid atau sudah ditutup.');
+                throw new Exception('Saldo tidak mencukupi untuk melakukan transaksi pengeluaran ini.');
             }
 
             $lines = [];
@@ -75,14 +72,11 @@ class ExpenseService extends TransactionBaseService
                 'Kas Keluar'
             );
 
-            /**
-             * =====================================================
-             * STORE TRANSACTION
-             * ====================================================
-             * 
-             * STATUS DRAFT: Simpan transaksi tanpa mengurangi saldo user
-             * STATUS POSTED: Tidak diperbolehkan, karena transaksi harus melalui DRAFT atau SUBMITTED terlebih dahulu
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | STORE TRANSACTION
+            |--------------------------------------------------------------------------
+            */
             if ($status === TransactionStatus::DRAFT->value) {
                 $transaction = $this->storeTransaction(
                     $data,
@@ -98,8 +92,9 @@ class ExpenseService extends TransactionBaseService
                     TransactionType::EXPENSE
                 );
 
-                // Update saldo user : 
-                // Pengeluaran -> Saldo digunakan Bertambah dan Saldo Tersisa Berkurang
+                // Update saldo user:
+                // Pengeluaran -> used_balance bertambah & remaining_balance berkurang.
+                // allocated_balance & income_balance TETAP.
                 $userBalance->increment('used_balance', $totalExpense);
                 $userBalance->decrement('remaining_balance', $totalExpense);
 
@@ -118,11 +113,11 @@ class ExpenseService extends TransactionBaseService
                     $transaction
                 );
 
-                /**
-                 * =====================================================
-                 * AUDIT LOG - USER BALANCE UPDATED
-                 * =====================================================
-                 */
+                /*
+                |--------------------------------------------------------------------------
+                | AUDIT LOG - USER BALANCE UPDATED
+                |--------------------------------------------------------------------------
+                */
                 $this->logger->log(
                     action: 'UPDATE',
                     module: 'USER_ACCOUNT_BALANCE',
@@ -130,6 +125,8 @@ class ExpenseService extends TransactionBaseService
                     description: 'Saldo pengguna berkurang karena transaksi pengeluaran.',
                     old: $oldBalance,
                     new: [
+                        'allocated_balance' => $userBalance->allocated_balance,
+                        'income_balance' => $userBalance->income_balance,
                         'used_balance' => $userBalance->used_balance,
                         'remaining_balance' => $userBalance->remaining_balance,
                     ],
@@ -143,11 +140,11 @@ class ExpenseService extends TransactionBaseService
                 throw new Exception('Status transaksi tidak valid.');
             }
 
-            /**
-             * =====================================================
-             * AUDIT LOG - TRANSACTION CREATED
-             * =====================================================
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT LOG - TRANSACTION CREATED
+            |--------------------------------------------------------------------------
+            */
             $this->logger->log(
                 action: 'CREATE',
                 module: 'TRANSACTION_EXPENSE',
@@ -185,9 +182,6 @@ class ExpenseService extends TransactionBaseService
      * STATUS DRAFT: Update transaksi tanpa mengurangi saldo user
      * STATUS POSTED: Update transaksi dan kurangi saldo user dan generate jurnal
      *
-     * @param string $id
-     * @param array $data
-     * @return Transaction
      * @throws \Exception
      */
     public function update(string $id, array $data): Transaction
@@ -337,7 +331,6 @@ class ExpenseService extends TransactionBaseService
         });
     }
 
-
     /**
      * Post a transaction.
      * STEPS:
@@ -351,8 +344,6 @@ class ExpenseService extends TransactionBaseService
      * 8. Generate the journal entry.
      * 9. Log the changes in user balance and transaction status.
      *
-     * @param string $id
-     * @return Transaction
      * @throws \Exception
      */
     public function postTransaction(string $id): Transaction
@@ -381,7 +372,7 @@ class ExpenseService extends TransactionBaseService
                 ->where('position', NormalBalanceEnum::CREDIT->value)
                 ->first();
 
-            if (!$cashLine) {
+            if (! $cashLine) {
                 throw new Exception('Akun kas tidak ditemukan.');
             }
 
@@ -520,7 +511,6 @@ class ExpenseService extends TransactionBaseService
         });
     }
 
-
     /**
      * Cancel a transaction.
      * STEPS:
@@ -530,8 +520,6 @@ class ExpenseService extends TransactionBaseService
      * 4. Update the user balance -> reserve (Kebalikan dari posted / dana nya kembali).
      * 5. Update the transaction status to RESERVED.
      *
-     * @param string $id
-     * @return Transaction
      * @throws \Exception
      */
     public function cancelTransaction(string $id): Transaction
@@ -560,7 +548,7 @@ class ExpenseService extends TransactionBaseService
                 ->where('position', NormalBalanceEnum::CREDIT->value)
                 ->first();
 
-            if (!$cashLine) {
+            if (! $cashLine) {
                 throw new Exception('Akun kas tidak ditemukan.');
             }
 
@@ -593,7 +581,6 @@ class ExpenseService extends TransactionBaseService
                 'remaining_balance',
                 $transaction->gross_amount
             );
-
 
             /*
             |--------------------------------------------------------------------------
