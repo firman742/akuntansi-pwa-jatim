@@ -162,12 +162,15 @@
                         <tr
                             class="bg-gray-100/70 dark:bg-gray-800/80 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                             <th rowspan="2"
-                                class="w-32 px-4 py-3 text-center border-r border-gray-200 dark:border-gray-700">Tanggal
+                                class="w-28 px-4 py-3 text-center border-r border-gray-200 dark:border-gray-700">Tanggal
                             </th>
                             <th rowspan="2" class="px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">
-                                Keterangan & Akun Lawan</th>
+                                Keterangan</th>
                             <th rowspan="2"
-                                class="w-36 px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">Posting Oleh
+                                class="w-52 px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">Akun Lawan
+                            </th>
+                            <th rowspan="2"
+                                class="w-32 px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">Posting Oleh
                             </th>
                             <th rowspan="2"
                                 class="w-36 px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700">Debit (Rp)
@@ -190,25 +193,36 @@
                         {{-- BARIS SALDO AWAL --}}
                         <tr
                             class="bg-blue-50/50 dark:bg-blue-950/20 font-semibold border-b border-blue-100 dark:border-blue-900">
-                            <td class="px-4 py-3 text-center text-xs font-mono text-blue-700 dark:text-blue-300">
+                            <td
+                                class="px-4 py-3 text-center text-xs font-mono text-blue-700 dark:text-blue-300 border-r border-gray-100 dark:border-gray-800">
                                 {{ $openingBalanceDate }}
                             </td>
-                            <td class="px-4 py-3 text-blue-900 dark:text-blue-200">
+                            <td
+                                class="px-4 py-3 text-blue-900 dark:text-blue-200 border-r border-gray-100 dark:border-gray-800">
                                 Saldo Awal Periode
                             </td>
-                            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
-                                {{ $openingBalanceCreatedBy }}
+                            <td class="px-4 py-3 text-xs text-gray-400 border-r border-gray-100 dark:border-gray-800">-
                             </td>
                             <td
-                                class="px-4 py-3 text-right font-mono text-gray-400 dark:text-gray-600 border-r border-gray-100 dark:border-gray-800">
-                                -</td>
+                                class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-800">
+                                {{ $openingBalanceCreatedBy }}
+                            </td>
+                            {{-- Mutasi Debit Saldo Awal --}}
                             <td
-                                class="px-4 py-3 text-right font-mono text-gray-400 dark:text-gray-600 border-r border-gray-100 dark:border-gray-800">
-                                -</td>
+                                class="px-4 py-3 text-right font-mono text-blue-700 dark:text-blue-300 border-r border-gray-100 dark:border-gray-800">
+                                {{ $openingDebit > 0 ? number_format($openingDebit, 0, ',', '.') : '-' }}
+                            </td>
+                            {{-- Mutasi Kredit Saldo Awal --}}
+                            <td
+                                class="px-4 py-3 text-right font-mono text-purple-700 dark:text-purple-300 border-r border-gray-100 dark:border-gray-800">
+                                {{ $openingCredit > 0 ? number_format($openingCredit, 0, ',', '.') : '-' }}
+                            </td>
+                            {{-- Saldo Kumulatif Debit --}}
                             <td
                                 class="px-4 py-3 text-right font-mono text-blue-700 dark:text-blue-300 border-r border-gray-100 dark:border-gray-800">
                                 {{ $isDebitAcc ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
                             </td>
+                            {{-- Saldo Kumulatif Kredit --}}
                             <td class="px-4 py-3 text-right font-mono text-purple-700 dark:text-purple-300">
                                 {{ !$isDebitAcc ? number_format(abs($openingBalance), 0, ',', '.') : '-' }}
                             </td>
@@ -223,10 +237,29 @@
                                 </td>
                                 <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
                                     <p class="font-medium text-gray-800 dark:text-gray-200">{{ $row['description'] }}</p>
-                                    <p class="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5">
-                                        Law: {{ $row['ref_code'] }} - {{ $row['ref_name'] }}
-                                    </p>
                                 </td>
+
+                                {{-- KOLOM AKUN LAWAN (TAMPILKAN SEMUA TANPA 'BEBERAPA AKUN') --}}
+                                <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
+                                    <div class="space-y-1">
+                                        @forelse ($row['opposing_accounts'] as $opp)
+                                            <div class="flex items-center gap-1.5">
+                                                <span
+                                                    class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded shrink-0">
+                                                    {{ $opp['code'] }}
+                                                </span>
+                                                <span
+                                                    class="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[180px]"
+                                                    title="{{ $opp['name'] }}">
+                                                    {{ $opp['name'] }}
+                                                </span>
+                                            </div>
+                                        @empty
+                                            <span class="text-xs text-gray-400">-</span>
+                                        @endforelse
+                                    </div>
+                                </td>
+
                                 <td
                                     class="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['posted_by'] }}
@@ -239,12 +272,10 @@
                                     class="px-4 py-2.5 text-right font-mono text-rose-600 dark:text-rose-400 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['credit'] > 0 ? number_format($row['credit'], 0, ',', '.') : '-' }}
                                 </td>
-                                {{-- SALDO KUMULATIF DEBIT --}}
                                 <td
                                     class="px-4 py-2.5 text-right font-mono font-bold text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
                                     {{ $isDebitAcc ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
                                 </td>
-                                {{-- SALDO KUMULATIF KREDIT --}}
                                 <td
                                     class="px-4 py-2.5 text-right font-mono font-bold text-gray-900 dark:text-gray-100 bg-gray-50/50 dark:bg-gray-800/30">
                                     {{ !$isDebitAcc ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
@@ -252,7 +283,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
+                                <td colspan="9" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
                                     Tidak ada transaksi untuk akun ini pada periode yang dipilih.
                                 </td>
                             </tr>
@@ -260,18 +291,45 @@
                     </tbody>
 
                     <tfoot>
-                        <tr class="bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-700 font-bold">
-                            <td colspan="3"
-                                class="px-4 py-3 text-right uppercase text-xs tracking-wider text-gray-700 dark:text-gray-300">
-                                Total Akhir Mutasi & Saldo
+                        @php
+                            $grandTotalDebit = $openingDebit + $totalDebitMutation;
+                            $grandTotalCredit = $openingCredit + $totalCreditMutation;
+                        @endphp
+
+                        {{-- BARIS 1: TOTAL MUTASI TRANSAKSI SAJA --}}
+                        <tr
+                            class="bg-gray-100/80 dark:bg-gray-800/80 border-t-2 border-gray-300 dark:border-gray-700 font-semibold text-xs text-gray-600 dark:text-gray-300">
+                            <td colspan="4" class="px-4 py-2.5 text-right uppercase tracking-wider">
+                                Total Mutasi Transaksi
                             </td>
                             <td
-                                class="px-4 py-3 text-right font-mono text-blue-600 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700">
+                                class="px-4 py-2.5 text-right font-mono text-blue-600 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700">
                                 {{ number_format($totalDebitMutation, 0, ',', '.') }}
                             </td>
                             <td
-                                class="px-4 py-3 text-right font-mono text-rose-600 dark:text-rose-400 border-r border-gray-200 dark:border-gray-700">
+                                class="px-4 py-2.5 text-right font-mono text-rose-600 dark:text-rose-400 border-r border-gray-200 dark:border-gray-700">
                                 {{ number_format($totalCreditMutation, 0, ',', '.') }}
+                            </td>
+                            <td colspan="2"
+                                class="px-4 py-2.5 text-center text-gray-400 dark:text-gray-500 font-normal italic">
+                                (Hanya Transaksi)
+                            </td>
+                        </tr>
+
+                        {{-- BARIS 2: GRAND TOTAL (+ SALDO AWAL) --}}
+                        <tr
+                            class="bg-gray-200/60 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 font-bold">
+                            <td colspan="4"
+                                class="px-4 py-3 text-right uppercase text-xs tracking-wider text-gray-800 dark:text-gray-100">
+                                Total Akumulasi (+ Saldo Awal)
+                            </td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-blue-700 dark:text-blue-300 border-r border-gray-200 dark:border-gray-700">
+                                {{ number_format($grandTotalDebit, 0, ',', '.') }}
+                            </td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-rose-700 dark:text-rose-300 border-r border-gray-200 dark:border-gray-700">
+                                {{ number_format($grandTotalCredit, 0, ',', '.') }}
                             </td>
                             <td
                                 class="px-4 py-3 text-right font-mono text-base text-emerald-600 dark:text-emerald-400 border-r border-gray-200 dark:border-gray-700">
@@ -316,7 +374,7 @@
                         });
                     } catch (err) {
                         subPeriodFilter.innerHTML =
-                        '<option value="">Gagal memuat sub periode</option>';
+                            '<option value="">Gagal memuat sub periode</option>';
                     } finally {
                         filterForm.submit();
                     }

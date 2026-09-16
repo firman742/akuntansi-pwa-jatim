@@ -2,71 +2,39 @@
 
 namespace App\Helpers;
 
+use App\Enums\MetaTypeTransactionEnum;
 use App\Enums\NormalBalanceEnum;
 use App\Models\ChartOfAccount;
 
 class TransactionHelper
 {
-    /**
-     * Format transaction description for display
-     */
-    public function formatTrxDesc(string $type, string $context): string
+    public static function formatTrxDesc(string $type, string $context): string
     {
         return "{$type} - {$context}";
     }
 
-    /**
-     * Format transaction line description for display
-     */
-    public function formatLineDesc(string $role, string $from, string $to): string
+    public static function formatLineDesc(string $role, string $from, string $to): string
     {
         return "{$role} - {$from} → {$to}";
     }
 
-
-    public static function generateLineDescription($coaId, $position, $meta, $reference): string
+    /**
+     * Mengembalikan deskripsi input pengguna langsung.
+     * Jika kosong, fallback ke Nama Akun / Deskripsi Parent.
+     */
+    public static function generateLineDescription(string|ChartOfAccount $coa, ?string $reference = null ): string
     {
-        $coa = ChartOfAccount::find($coaId);
+        // 1. Jika ada deskripsi yang diinputkan pengguna, gunakan langsung
+        $cleanRef = trim((string) $reference);
+        if ($cleanRef !== '' && $cleanRef !== '-') {
+            return $cleanRef;
+        }
 
-        if (!$coa) return 'Transaksi';
+        // 2. Fallback: Ambil nama akun jika input dikosongkan
+        $account = is_string($coa)
+            ? ChartOfAccount::find($coa, ['name'])
+            : $coa;
 
-        $role = $coa->role;
-        $name = $coa->name;
-
-        return match ($role) {
-
-            // ======================
-            // CASH
-            // ======================
-            'CASH' => $position === NormalBalanceEnum::DEBIT->value
-                ? "Kas Masuk dari {$reference}"
-                : "Kas Keluar untuk {$reference}",
-
-            // ======================
-            // REVENUE
-            // ======================
-            'REVENUE' => "Pendapatan dari {$reference}",
-
-            // ======================
-            // EXPENSE
-            // ======================
-            'EXPENSE' => "Beban untuk {$reference}",
-
-            // ======================
-            // TAX
-            // ======================
-            'TAX_PREPAID' => "Pajak Dibayar Dimuka {$reference}",
-
-            'TAX_PAYABLE' => "Utang Pajak {$reference}",
-
-            // ======================
-            // INTEREST
-            // ======================
-            'INTEREST_INCOME' => "Pendapatan Bunga {$reference}",
-
-            'BANK_FEE' => "Biaya Bank {$reference}",
-
-            default => "{$name} {$reference}",
-        };
+        return $account ? $account->name : 'Transaksi';
     }
 }

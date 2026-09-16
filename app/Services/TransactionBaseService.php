@@ -7,10 +7,13 @@ use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\TransactionHelper;
+use App\Models\ChartOfAccount;
+use App\Models\CoaBalance;
 use App\Models\Journal;
 use App\Models\JournalDetail;
 use App\Models\Transaction;
 use App\Models\TransactionLine;
+use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -65,7 +68,7 @@ class TransactionBaseService extends BaseService
 
         return $transaction;
     }
-    
+
     /**
      * Generate a journal entry for a transaction.
      *
@@ -98,7 +101,7 @@ class TransactionBaseService extends BaseService
             $amountDebit = $position === NormalBalanceEnum::DEBIT->value
                 ? (float) $line['amount']
                 : 0;
-        
+
             $amountCredit = $position === NormalBalanceEnum::CREDIT->value
                 ? (float) $line['amount']
                 : 0;
@@ -110,6 +113,15 @@ class TransactionBaseService extends BaseService
                 'credit' => $amountCredit,
                 'description' => $line['description'],
             ]);
+
+            // Update CoaBalance for the specific chart of account, period, and sub-period
+            self::updateCoaBalance(
+                $line['coa_id'],
+                $data['period_id'],
+                $data['sub_period_id'],
+                $amountDebit,
+                $amountCredit
+            );
         }
 
         return $journal;
@@ -133,7 +145,67 @@ class TransactionBaseService extends BaseService
             'debit' => $position === NormalBalanceEnum::DEBIT->value ? $amount : 0,
             'credit' =>  $position === NormalBalanceEnum::CREDIT->value ? $amount : 0,
             'meta_type' => $meta->value,
-            'description' => TransactionHelper::generateLineDescription($coaId, $position, $meta, $reference ?? 'Transaksi'),
+            'description' => TransactionHelper::generateLineDescription($coaId, $reference),
         ];
+    }
+
+    /**
+     * Update the CoaBalance for a specific chart of account, period, and sub-period.
+     *
+     * @param string $coaId
+     * @param string $periodId
+     * @param string $subPeriodId
+     * @param float $debit
+     * @param float $credit
+     * @return void
+     */
+    protected static function updateCoaBalance(
+        string $coaId,
+        string $periodId,
+        string $subPeriodId,
+        float $debit,
+        float $credit
+    ): void {
+        $coa = ChartOfAccount::findOrFail($coaId);
+
+        // Normalisasi string normal_balance ke Uppercase untuk menghindari Mismatch
+        $normalBalanceStr = strtoupper(
+            is_object($coa->normal_balance) ? $coa->normal_balance->value : (string) $coa->normal_balance
+        );
+
+        // 1. Ambil atau buat record CoaBalance
+        $coaBalance = CoaBalance::firstOrCreate(
+            [
+                'chart_of_account_id' => $coaId,
+                'period_id'          => $periodId,
+                'sub_period_id'      => $subPeriodId,
+            ],
+            [
+                'opening_balance'     => 0,
+                'debit_total'         => 0,
+                'credit_total'        => 0,
+                'current_balance'     => 0,
+            ]
+        );
+
+        // 2. Tambahkan akumulasi mutasi ke database
+        $coaBalance->increment('debit_total', $debit);
+        $coaBalance->increment('credit_total', $credit);
+
+        // 3. Refresh model untuk mendapatkan nilai debit_total & credit_total paling mutakhir
+        $coaBalance->refresh();
+
+        // 4. Hitung Ulang Current Balance secara utuh (Termasuk Saldo Awal)
+        if ($normalBalanceStr === 'DEBIT') {
+            $newBalance = $coaBalance->opening_balance + ($coaBalance->debit_total - $coaBalance->credit_total);
+        } else {
+            $newBalance = $coaBalance->opening_balance + ($coaBalance->credit_total - $coaBalance->debit_total);
+        }
+
+        // 5. Simpan saldo akhir baru
+        $coaBalance->update([
+            'current_balance'     => $newBalance,
+            'last_transaction_at' => now(),
+        ]);
     }
 }

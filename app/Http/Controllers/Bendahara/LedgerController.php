@@ -15,6 +15,12 @@ use Illuminate\Http\Request;
 
 class LedgerController extends Controller
 {
+    /**
+     * Display the ledger for a specific chart of account.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function index(Request $request)
     {
         $periods = Period::orderBy('created_at', 'desc')->get();
@@ -25,7 +31,7 @@ class LedgerController extends Controller
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
-        $coas = ChartOfAccount::orderBy('code')->get();
+        $coas = ChartOfAccount::orderBy('code', 'asc')->get();
 
         $subPeriods = collect();
         if ($periodId) {
@@ -44,6 +50,8 @@ class LedgerController extends Controller
         $coa = null;
         $openingBalanceCreatedBy = '-';
         $openingBalanceDate = '-';
+        $openingDebit = 0;
+        $openingCredit = 0;
 
         if ($coaId) {
             $coa = ChartOfAccount::findOrFail($coaId);
@@ -52,14 +60,20 @@ class LedgerController extends Controller
             // 1. OPENING BALANCE
             $opening = OpeningBalance::where('chart_of_account_id', $coaId)
                 ->where('period_id', $periodId)
-                ->when($subPeriodId, fn ($q) => $q->where('sub_period_id', $subPeriodId))
+                ->when($subPeriodId, fn($q) => $q->where('sub_period_id', $subPeriodId))
                 ->first();
 
             if ($opening) {
                 $openingType = is_object($opening->balance_type) ? $opening->balance_type->value : $opening->balance_type;
-                $openingBalance = ($openingType === NormalBalanceEnum::DEBIT->value || $openingType === 'DEBIT')
-                    ? $opening->amount
-                    : -1 * $opening->amount;
+                $isOpeningDebit = ($openingType === NormalBalanceEnum::DEBIT->value || strtoupper((string)$openingType) === 'DEBIT');
+
+                if ($isOpeningDebit) {
+                    $openingDebit = $opening->amount;
+                    $openingBalance = $opening->amount;
+                } else {
+                    $openingCredit = $opening->amount;
+                    $openingBalance = -1 * $opening->amount;
+                }
             }
 
             $openingBalanceCreatedBy = $opening?->creator?->name ?? '-';
@@ -75,20 +89,13 @@ class LedgerController extends Controller
                             $q->where('sub_period_id', $subPeriodId);
                         }
                         $q->where('journal_date', '<', Carbon::parse($startDate)->startOfDay());
-
-                        // ── FILTER HANYA TRANSAKSI ───────────────────────────────────────
-                        // Opsi A: Jika jurnal transaksi memiliki relasi/kolom transaction_id
                         $q->whereNotNull('transaction_id');
-
-                        // Opsi B: Jika ada kolom type / source_type di tabel journals
-                        // $q->where('type', 'TRANSACTION');
-                        // ─────────────────────────────────────────────────────────────────
                     });
 
                 $priorDebit = (clone $priorMutation)->sum('debit');
                 $priorCredit = (clone $priorMutation)->sum('credit');
 
-                if ($normalBalance === 'DEBIT') {
+                if (strtoupper($normalBalance) === 'DEBIT') {
                     $runningBalance += ($priorDebit - $priorCredit);
                 } else {
                     $runningBalance += ($priorCredit - $priorDebit);
@@ -109,14 +116,7 @@ class LedgerController extends Controller
                             Carbon::parse($endDate)->endOfDay(),
                         ]);
                     }
-
-                    // ── FILTER HANYA TRANSAKSI ───────────────────────────────────────
-                    // Opsi A: Jika jurnal transaksi memiliki relasi/kolom transaction_id
                     $q->whereNotNull('transaction_id');
-
-                    // Opsi B: Jika ada kolom type / source_type di tabel journals
-                    // $q->where('type', 'TRANSACTION');
-                    // ─────────────────────────────────────────────────────────────────
                 })
                 ->join('journals', 'journals.id', '=', 'journal_details.journal_id')
                 ->orderBy('journals.journal_date', 'asc')
@@ -124,32 +124,39 @@ class LedgerController extends Controller
                 ->select('journal_details.*')
                 ->get();
 
-            // 4. HITUNG RUNNING BALANCE & AKUN LAWAN
+            // 4. HITUNG RUNNING BALANCE & PENENTUAN AKUN LAWAN
             foreach ($transactions as $trx) {
                 $totalDebitMutation += $trx->debit;
                 $totalCreditMutation += $trx->credit;
 
-                if ($normalBalance === 'DEBIT') {
+                if (strtoupper($normalBalance) === 'DEBIT') {
                     $runningBalance += ($trx->debit - $trx->credit);
                 } else {
                     $runningBalance += ($trx->credit - $trx->debit);
                 }
 
-                $opposingTrx = JournalDetail::where('journal_id', $trx->journal_id)
+                // Ambil SEMUA akun lawan pada jurnal yang sama
+                $opposingAccounts = JournalDetail::where('journal_id', $trx->journal_id)
                     ->where('chart_of_account_id', '!=', $coaId)
                     ->with('chartOfAccount')
-                    ->first();
+                    ->get()
+                    ->map(fn ($opp) => [
+                        'code' => $opp->chartOfAccount?->code ?? '-',
+                        'name' => $opp->chartOfAccount?->name ?? '-',
+                    ])
+                    ->values()
+                    ->toArray();
 
                 $ledger[] = [
                     'date' => $trx->journal->journal_date,
-                    'description' => $trx->description ?? $trx->journal->description,
+                    'journal_number' => $trx->journal->journal_number ?? '-',
+                    'description' => $trx->description ?? $trx->journal->description ?? '-',
                     'posted_by' => $trx->journal->postedBy?->name ?? '-',
-                    'ref_code' => $opposingTrx?->chartOfAccount?->code ?? '-',
-                    'ref_name' => $opposingTrx?->chartOfAccount?->name ?? '-',
                     'debit' => $trx->debit,
                     'credit' => $trx->credit,
                     'current_balance' => $runningBalance,
                     'normal_balance' => $normalBalance,
+                    'opposing_accounts' => $opposingAccounts,
                 ];
             }
 
@@ -163,6 +170,8 @@ class LedgerController extends Controller
             'coa',
             'ledger',
             'openingBalance',
+            'openingDebit',
+            'openingCredit',
             'runningBalance',
             'endingBalance',
             'totalDebitMutation',

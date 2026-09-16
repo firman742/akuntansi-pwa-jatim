@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\AccountingUsers\Transactions;
 
+use App\Enums\NormalBalanceEnum;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\CashBalanceHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AccountingUsers\Transactions\Incomes\StoreIncomeRequest;
+use App\Http\Requests\AccountingUsers\Transactions\Incomes\UpdateIncomeRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
-use App\Services\AccountingUsers\IncomeService;
+use App\Services\AccountingUsers\Incomes\DeleteIncomeService;
+use App\Services\AccountingUsers\Incomes\IncomeService;
+use App\Services\AccountingUsers\Incomes\UpdateIncomeService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,13 +25,19 @@ use Illuminate\View\View;
 
 class IncomeController extends Controller
 {
+    /**
+     * Display a listing of the income transactions for the authenticated user.
+     *
+     * @param Request $request
+     * @return View
+     */
     public function index(Request $request): View
     {
         $query = Transaction::with([
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
-            'subPeriod:id,name,start_date,end_date',
+            'subPeriod:id,name,start_date,end_date,is_closed',
         ])
             ->where('transaction_type', TransactionType::INCOME)
             ->where('created_by', Auth::id());
@@ -102,6 +112,12 @@ class IncomeController extends Controller
         );
     }
 
+    /**
+     * Display the specified income transaction.
+     *
+     * @param string $id
+     * @return View
+     */
     public function show(string $id): View
     {
         $transaction = Transaction::with([
@@ -118,6 +134,9 @@ class IncomeController extends Controller
 
     /**
      * Show the form for creating a new income transaction.
+     *
+     * @return View
+     * @throws Exception
      */
     public function create(): View
     {
@@ -152,7 +171,7 @@ class IncomeController extends Controller
             ->where('period_id', $selectedPeriodId)
             ->where('sub_period_id', $selectedSubPeriodId)
             ->get()
-            ->sortBy(fn ($balance) => $balance->userAccount->coa->code)
+            ->sortBy(fn($balance) => $balance->userAccount->coa->code)
             ->values()
             ->map(function ($balance) {
                 return [
@@ -173,7 +192,8 @@ class IncomeController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
-        return view('pages.menus.user.transactions.incomes.create',
+        return view(
+            'pages.menus.user.transactions.incomes.create',
             compact(
                 'cashCoas',
                 'incomeCoas',
@@ -186,6 +206,12 @@ class IncomeController extends Controller
 
     /**
      * Store a newly created income transaction in storage. This method handles the complex logic of saving the transaction,
+     * including updating the relevant account balances and ensuring data integrity.
+     *
+     * @param IncomeService $service
+     * @param StoreIncomeRequest $request
+     * @return RedirectResponse
+     * @throws Exception
      */
     public function store(IncomeService $service, StoreIncomeRequest $request): RedirectResponse
     {
@@ -199,7 +225,135 @@ class IncomeController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi penerimaan: '.$e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi penerimaan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for editing an existing income transaction.
+     *
+     * @param string $id
+     * @return View
+     * @throws Exception
+     */
+    public function edit(string $id): View
+    {
+        $userId = Auth::id();
+
+        $transaction = Transaction::with(['transactionLines'])
+            ->where('transaction_type', TransactionType::INCOME)
+            ->where('created_by', $userId)
+            ->findOrFail($id);
+
+        $activePeriod = Period::query()->orderByDesc('start_date')->first();
+        $selectedPeriodId = $transaction->period_id;
+
+        $subPeriods = SubPeriod::query()
+            ->where('period_id', $selectedPeriodId)
+            ->orderBy('start_date')
+            ->get();
+
+        $cashCoas = UserAccountBalance::query()
+            ->with('userAccount.coa')
+            ->whereHas('userAccount', fn($q) => $q->where('user_id', $userId))
+            ->where('period_id', $selectedPeriodId)
+            ->where('sub_period_id', $transaction->sub_period_id)
+            ->get()
+            ->map(fn($balance) => [
+                'user_account_balance_id' => $balance->id,
+                'coa_id' => $balance->userAccount->coa->id,
+                'coa_code' => $balance->userAccount->coa->code,
+                'coa_name' => $balance->userAccount->coa->name,
+                'remaining_balance' => $balance->remaining_balance,
+            ]);
+
+        $incomeCoas = ChartOfAccount::query()
+            ->where('is_active', true)
+            ->orderBy('code', 'asc')
+            ->get();
+
+        // Ambil data line lama untuk prefill form
+        $selectedDebitLine = $transaction->transactionLines->where('position', NormalBalanceEnum::DEBIT)->first();
+        $selectedCreditLine = $transaction->transactionLines->where('position', NormalBalanceEnum::CREDIT)->first();
+
+        $selectedUserBalanceId = null;
+        if ($selectedDebitLine) {
+            $matchedBalance = UserAccountBalance::whereHas('userAccount', fn($q) => $q->where('coa_id', $selectedDebitLine->chart_of_account_id))
+                ->where('period_id', $transaction->period_id)
+                ->where('sub_period_id', $transaction->sub_period_id)
+                ->first();
+            $selectedUserBalanceId = $matchedBalance?->id;
+        }
+
+        return view('pages.menus.user.transactions.incomes.edit', compact(
+            'transaction',
+            'cashCoas',
+            'incomeCoas',
+            'subPeriods',
+            'selectedPeriodId',
+            'selectedUserBalanceId',
+            'selectedCreditLine'
+        ));
+    }
+
+    /**
+     * Update the specified income transaction in storage. This method handles the complex logic of updating the transaction,
+     * including adjusting the relevant account balances and ensuring data integrity.
+     *
+     * @param UpdateIncomeService $service
+     * @param UpdateIncomeRequest $request
+     * @param string $id
+     * @return RedirectResponse
+     */
+    public function update(UpdateIncomeService $service, UpdateIncomeRequest $request, string $id): RedirectResponse
+    {
+        try {
+            $transaction = Transaction::where('transaction_type', TransactionType::INCOME)
+                ->where('created_by', Auth::id())
+                ->findOrFail($id);
+
+            $service->handle($transaction, $request->validated());
+
+            return redirect()
+                ->route('user.transactions.incomes.index')
+                ->with('success', 'Transaksi penerimaan berhasil diperbarui.');
+        } catch (Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui transaksi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove the specified income transaction from storage.
+     *
+     * @param DeleteIncomeService $service
+     * @param string $id
+     * @return RedirectResponse
+     */
+    public function destroy(DeleteIncomeService $service, string $id): RedirectResponse
+    {
+        try {
+            $transaction = Transaction::with(['subPeriod'])
+                ->where('transaction_type', TransactionType::INCOME)
+                ->where('created_by', Auth::id())
+                ->findOrFail($id);
+
+            // Validasi: pastikan sub periode belum ditutup
+            if ($transaction->subPeriod && $transaction->subPeriod->is_closed) {
+                throw new Exception('Tidak dapat menghapus transaksi karena sub periode sudah ditutup.');
+            }
+
+            $service->handle($transaction);
+
+            return redirect()
+                ->route('user.transactions.incomes.index')
+                ->with('success', 'Transaksi penerimaan berhasil dihapus.');
+        } catch (Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus transaksi: ' . $e->getMessage());
         }
     }
 

@@ -135,20 +135,17 @@ class ExpenseController extends Controller
             ?? $subPeriods->first()?->id;
 
         // ── Kas User (Distribusi Bendahara) ────────────────
+        // ExpenseController.php (method create)
         $cashCoas = UserAccountBalance::query()
-            ->with([
-                'userAccount.coa',
-            ])
+            ->with(['userAccount.coa'])
             ->whereHas('userAccount', function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             })
             ->where('period_id', $selectedPeriodId)
             ->where('sub_period_id', $selectedSubPeriodId)
-            ->where('remaining_balance', '>', 0)
+            // ->where('remaining_balance', '>', 0) // <-- DIHAPUS agar akun minus/0 tetap muncul
             ->get()
-            ->sortBy(function ($balance) {
-                return $balance->userAccount->coa->code;
-            })
+            ->sortBy(fn ($balance) => $balance->userAccount->coa->code)
             ->values()
             ->map(function ($balance) {
                 return [
@@ -156,7 +153,7 @@ class ExpenseController extends Controller
                     'coa_id' => $balance->userAccount->coa->id,
                     'coa_code' => $balance->userAccount->coa->code,
                     'coa_name' => $balance->userAccount->coa->name,
-                    'remaining_balance' => $balance->remaining_balance,
+                    'remaining_balance' => (float) $balance->remaining_balance,
                 ];
             });
 

@@ -32,7 +32,7 @@
 
             <!-- Card 1: Total Akumulasi Penerimaan (Nominal) -->
             <div
-                class="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50/60 via-white to-white p-5 shadow-xs dark:border-emerald-900/30 dark:from-emerald-950/20 dark:via-gray-900 dark:to-gray-900">
+                class="rounded-3xl border border-emerald-100 bg-linear-to-br from-emerald-50/60 via-white to-white p-5 shadow-xs dark:border-emerald-900/30 dark:from-emerald-950/20 dark:via-gray-900 dark:to-gray-900">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Total

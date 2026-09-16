@@ -29,17 +29,16 @@ Route::post('/logout', [AuthController::class, 'logout'])
 */
 Route::get('/', function () {
     // Jika belum login → ke halaman login
-    if (!Auth::check()) {
+    if (! Auth::check()) {
         return redirect()->route('login');
     }
 
     // Jika sudah login → redirect sesuai role
     $role = Auth::user()->getRoleNames()->first();
-    $map  = config('role-redirect');
+    $map = config('role-redirect');
 
     return redirect()->route($map[$role] ?? 'login');
 })->name('home');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -56,7 +55,7 @@ Route::middleware(['auth', 'role:SUPER ADMIN'])->prefix('superadmin')->name('sup
     Route::post('/install-medialibrary', [\App\Http\Controllers\Superadmin\SystemCommandController::class, 'installMediaLibrary']);
 
     // Dashboard
-    Route::get('/dashboard', fn() => app(\App\Http\Controllers\Superadmin\DashboardController::class)->index())
+    Route::get('/dashboard', fn () => app(\App\Http\Controllers\Superadmin\DashboardController::class)->index())
         ->name('dashboard');
 
     // Resource
@@ -64,7 +63,6 @@ Route::middleware(['auth', 'role:SUPER ADMIN'])->prefix('superadmin')->name('sup
     Route::resource('roles', App\Http\Controllers\Superadmin\RoleController::class);
     Route::resource('permissions', App\Http\Controllers\Superadmin\PermissionController::class)
         ->only(['index', 'create', 'store']);
-
 
     // Activity Logs
     Route::get('/activity-logs', [App\Http\Controllers\Superadmin\ActivityLogController::class, 'index'])
@@ -177,13 +175,12 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
     Route::get('/api-coa-balances/{coa}', function ($coa) {
         $sub = request('sub_period_id');
 
-
         $balance = CoaBalance::where('chart_of_account_id', $coa)
             ->where('sub_period_id', $sub->id)
             ->first();
 
         return response()->json([
-            'current_balance' => $balance->current_balance ?? 0
+            'current_balance' => $balance->current_balance ?? 0,
         ]);
     });
 
@@ -203,7 +200,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         if ($balance && $balance->current_balance !== null) {
             return response()->json([
                 'available' => (float) $balance->current_balance,
-                'source' => 'coa_balance'
+                'source' => 'coa_balance',
             ]);
         }
 
@@ -219,7 +216,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
         if ($opening) {
             return response()->json([
                 'available' => (float) $opening->amount,
-                'source' => 'opening_balance'
+                'source' => 'opening_balance',
             ]);
         }
 
@@ -228,7 +225,7 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
          */
         return response()->json([
             'available' => 0,
-            'source' => null
+            'source' => null,
         ]);
     });
     /*
@@ -349,7 +346,6 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
     Route::get('/dashboard', [App\Http\Controllers\AccountingUsers\DashboardController::class, 'index'])
         ->name('dashboard');
 
-
     /*
     |--------------------------------------------------------------------------
     | COA
@@ -393,6 +389,9 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
             Route::get('/{id}', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'show'])->name('show');
             Route::get('/cash-balance', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'getCashBalance'])->name('cash-balance');
             Route::post('/', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'update'])->name('update');
+            Route::delete('/{id}', [App\Http\Controllers\AccountingUsers\Transactions\IncomeController::class, 'destroy'])->name('destroy');
         });
 
         // Expense
