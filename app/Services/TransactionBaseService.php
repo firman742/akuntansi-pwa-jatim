@@ -208,4 +208,47 @@ class TransactionBaseService extends BaseService
             'last_transaction_at' => now(),
         ]);
     }
+
+    /**
+     * Revert / batalkan efek jurnal lama pada CoaBalance sebelum dihapus.
+     * 
+     * @param Journal $journal
+     * @return void
+     * @throws Exception
+     */
+    protected static function revertJournal(Journal $journal): void
+    {
+        foreach ($journal->details as $detail) {
+            $coa = ChartOfAccount::findOrFail($detail->chart_of_account_id);
+            $normalBalanceStr = strtoupper(
+                is_object($coa->normal_balance) ? $coa->normal_balance->value : (string) $coa->normal_balance
+            );
+
+            $coaBalance = CoaBalance::where([
+                'chart_of_account_id' => $detail->chart_of_account_id,
+                'period_id' => $journal->period_id,
+                'sub_period_id' => $journal->sub_period_id,
+            ])->first();
+
+            if ($coaBalance) {
+                // Kurangi akumulasi debit dan kredit total
+                $coaBalance->decrement('debit_total', $detail->debit);
+                $coaBalance->decrement('credit_total', $detail->credit);
+
+                $coaBalance->refresh();
+
+                // Hitung ulang current balance secara utuh
+                if ($normalBalanceStr === 'DEBIT') {
+                    $newBalance = $coaBalance->opening_balance + ($coaBalance->debit_total - $coaBalance->credit_total);
+                } else {
+                    $newBalance = $coaBalance->opening_balance + ($coaBalance->credit_total - $coaBalance->debit_total);
+                }
+
+                $coaBalance->update([
+                    'current_balance' => $newBalance,
+                    'last_transaction_at' => now(),
+                ]);
+            }
+        }
+    }
 }

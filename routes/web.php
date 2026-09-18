@@ -404,6 +404,7 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
             Route::post('/{id}/post', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'post'])->name('post');
             Route::post('/{id}/cancel', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'cancel'])->name('cancel');
             Route::post('/', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'store'])->name('store');
+            Route::delete('/{id}', [App\Http\Controllers\AccountingUsers\Transactions\ExpenseController::class, 'destroy'])->name('destroy');
         });
 
         // History

@@ -14,7 +14,7 @@ use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
-use App\Services\AccountingUsers\ExpenseService;
+use App\Services\AccountingUsers\Expenses\ExpenseService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -145,7 +145,7 @@ class ExpenseController extends Controller
             ->where('sub_period_id', $selectedSubPeriodId)
             // ->where('remaining_balance', '>', 0) // <-- DIHAPUS agar akun minus/0 tetap muncul
             ->get()
-            ->sortBy(fn ($balance) => $balance->userAccount->coa->code)
+            ->sortBy(fn($balance) => $balance->userAccount->coa->code)
             ->values()
             ->map(function ($balance) {
                 return [
@@ -190,88 +190,6 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @throws Exception
-     */
-    public function edit(string $id): View
-    {
-        $transaction = Transaction::with([
-            'transactionLines.chartOfAccount:id,code,name',
-            'period:id,name',
-            'subPeriod:id,name',
-        ])->findOrFail($id);
-
-        $userId = Auth::id();
-
-        // ── Period ─────────────────────────────────────────
-        $activePeriod = Period::query()
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->latest()
-            ->first();
-
-        if (! $activePeriod) {
-            throw new Exception(
-                'Anda tidak bisa melakukan transaksi karena tidak ada periode aktif. Silakan hubungi administrator.'
-            );
-        }
-
-        $selectedPeriodId = $activePeriod->id;
-
-        $subPeriods = SubPeriod::where('period_id', $selectedPeriodId)
-            ->where('is_closed', false)
-            ->orderBy('start_date')
-            ->get();
-
-        $selectedSubPeriodId = request('sub_period_id')
-            ?? $subPeriods->first()?->id;
-
-        // ── Kas User (Distribusi Bendahara) ────────────────
-        $cashCoas = UserAccountBalance::query()
-            ->with([
-                'userAccount.coa',
-            ])
-            ->whereHas('userAccount', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
-            ->where('period_id', $selectedPeriodId)
-            ->where('sub_period_id', $selectedSubPeriodId)
-            ->where('remaining_balance', '>', 0)
-            ->get()
-            ->sortBy(function ($balance) {
-                return $balance->userAccount->coa->code;
-            })
-            ->values()
-            ->map(function ($balance) {
-                return [
-                    'user_account_balance_id' => $balance->id,
-                    'coa_id' => $balance->userAccount->coa->id,
-                    'coa_code' => $balance->userAccount->coa->code,
-                    'coa_name' => $balance->userAccount->coa->name,
-                    'remaining_balance' => $balance->remaining_balance,
-                ];
-            });
-
-        // ── Semua akun CREDIT ─────────────────────────────
-        $expenseCoas = ChartOfAccount::query()
-            ->where('normal_balance', NormalBalanceEnum::CREDIT->value)
-            ->where('is_active', true)
-            ->whereDoesntHave('children')
-            ->orderBy('code')
-            ->get();
-
-        return view('pages.menus.user.transactions.expenses.edit', compact(
-            'transaction',
-            'cashCoas',
-            'expenseCoas',
-            'subPeriods',
-            'selectedPeriodId',
-            'selectedSubPeriodId'
-        ));
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @throws Exception
@@ -288,16 +206,107 @@ class ExpenseController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi pengeluaran: '.$e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat menyimpan transaksi pengeluaran: ' . $e->getMessage());
         }
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @throws Exception
+     * Show the form for editing the specified resource.
      */
-    public function update(ExpenseService $service, UpdateExpenseRequest $request, string $id): RedirectResponse
+    public function edit(string $id): View
+    {
+        $userId = Auth::id();
+
+        $transaction = Transaction::with(['transactionLines', 'period', 'subPeriod'])
+            ->where('transaction_type', TransactionType::EXPENSE)
+            ->where('created_by', $userId)
+            ->findOrFail($id);
+
+        if ($transaction->subPeriod && $transaction->subPeriod->is_closed) {
+            abort(403, 'Sub periode transaksi ini sudah ditutup, data tidak dapat diedit.');
+        }
+
+        $selectedPeriodId = $transaction->period_id;
+        $selectedSubPeriodId = $transaction->sub_period_id;
+
+        $subPeriods = SubPeriod::where('period_id', $selectedPeriodId)
+            ->where('is_closed', false)
+            ->orderBy('start_date')
+            ->get();
+
+        // Ambil kas user terkait
+        $cashCoas = UserAccountBalance::query()
+            ->with(['userAccount.coa'])
+            ->whereHas('userAccount', fn($q) => $q->where('user_id', $userId))
+            ->where('period_id', $selectedPeriodId)
+            ->where('sub_period_id', $selectedSubPeriodId)
+            ->get()
+            ->sortBy(fn($balance) => $balance->userAccount->coa->code)
+            ->values()
+            ->map(function ($balance) {
+                return [
+                    'user_account_balance_id' => $balance->id,
+                    'coa_id' => $balance->userAccount->coa->id,
+                    'coa_code' => $balance->userAccount->coa->code,
+                    'coa_name' => $balance->userAccount->coa->name,
+                    'remaining_balance' => (float) $balance->remaining_balance,
+                ];
+            });
+
+        $expenseCoas = ChartOfAccount::query()
+            ->where('is_active', true)
+            ->orderBy('code', 'asc')
+            ->get();
+
+        // Format data baris transaksi lama agar terbaca Alpine.js
+        $oldLines = $transaction->transactionLines
+            ->where('position', NormalBalanceEnum::DEBIT)
+            ->map(fn($line) => [
+                'coa_id' => $line->chart_of_account_id,
+                'amount' => (float) $line->amount,
+                'description' => $line->description ?? '',
+            ])->values();
+
+        // Ambil balance ID akun kas yang sedang dipakai di transaksi ini
+        $currentCashLine = $transaction->transactionLines->where('position', NormalBalanceEnum::CREDIT)->first();
+        $selectedCashBalanceId = '';
+        $selectedCashName = '-';
+        if ($currentCashLine) {
+            $matchingBalance = UserAccountBalance::with('userAccount.coa')
+                ->whereHas('userAccount', fn($q) => $q->where('coa_id', $currentCashLine->chart_of_account_id))
+                ->where('period_id', $selectedPeriodId)
+                ->where('sub_period_id', $selectedSubPeriodId)
+                ->first();
+            $selectedCashBalanceId = $matchingBalance?->id ?? '';
+            if ($matchingBalance && $matchingBalance->userAccount && $matchingBalance->userAccount->coa) {
+                $selectedCashName = $matchingBalance->userAccount->coa->code . ' - ' . $matchingBalance->userAccount->coa->name;
+            }
+        }
+
+        $oldDate = $transaction->transaction_date->format('Y-m-d');
+        $oldTotal = (float) $transaction->gross_amount;
+        $subPeriodName = $transaction->subPeriod?->name ?? '-';
+
+        return view('pages.menus.user.transactions.expenses.edit', compact(
+            'transaction',
+            'cashCoas',
+            'expenseCoas',
+            'subPeriods',
+            'selectedPeriodId',
+            'selectedSubPeriodId',
+            'oldLines',
+            'selectedCashBalanceId',
+            'selectedCashName',
+            'oldDate',
+            'oldTotal',
+            'subPeriodName'
+        ));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateExpenseRequest $request, string $id, ExpenseService $service): RedirectResponse
     {
         try {
             $service->update($id, $request->validated());
@@ -306,9 +315,33 @@ class ExpenseController extends Controller
                 ->route('user.transactions.expenses.index')
                 ->with('success', 'Transaksi Pengeluaran berhasil diperbarui');
         } catch (Exception $e) {
-            return back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memperbarui transaksi pengeluaran: '.$e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat memperbarui transaksi pengeluaran: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     * 
+     * @param string $id
+     * @param ExpenseService $service
+     * @return RedirectResponse
+     * @throws Exception
+     */
+    public function destroy(string $id, ExpenseService $service): RedirectResponse
+    {
+        try {
+            $service->delete($id);
+
+            return redirect()
+                ->route('user.transactions.expenses.index')
+                ->with('success', 'Transaksi Pengeluaran berhasil dihapus');
+        } catch (Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus transaksi pengeluaran: ' . $e->getMessage());
         }
     }
 
@@ -326,25 +359,7 @@ class ExpenseController extends Controller
         } catch (Exception $e) {
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memposting transaksi pengeluaran: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Cancel the specified resource in storage.
-     */
-    public function cancel(string $id, ExpenseService $service): RedirectResponse
-    {
-        try {
-            $service->cancelTransaction($id);
-
-            return redirect()
-                ->route('user.transactions.expenses.index')
-                ->with('success', 'Transaksi Pengeluaran berhasil dibatalkan');
-        } catch (Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan saat membatalkan transaksi pengeluaran: '.$e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat memposting transaksi pengeluaran: ' . $e->getMessage());
         }
     }
 

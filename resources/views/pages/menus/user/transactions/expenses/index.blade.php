@@ -8,10 +8,28 @@
         <x-common.page-breadcrumb defaultTitle="Transaksi Pengeluaran" pageTitle="Monitoring Transaksi Pengeluaran"
             pageDescription="Pusat pencatatan dan evaluasi histori beban & pengeluaran kas" pageIcon="transaction" />
 
+        {{-- ALERTS --}}
+        @if ($errors->any())
+            <div class="mb-6">
+                <x-ui.alert variant="error" title="Terjadi Kesalahan">
+                    <ul class="list-disc list-inside space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li class="text-dark-500">{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </x-ui.alert>
+            </div>
+        @endif
+
+        @if (session('success'))
+            <div class="mb-6">
+                <x-ui.alert variant="success" title="Berhasil" message="{{ session('success') }}" />
+            </div>
+        @endif
         {{-- RESTRUCTURED EXPENSE KPI SUMMARY CARDS --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            <!-- Card 1: Total Akumulasi Pengeluaran (Nominal) -->
+            <!-- Card 1: Total Akumulasi Pengeluaran (Nominal) - Rose Theme -->
             <div
                 class="rounded-3xl border border-rose-100 bg-gradient-to-br from-rose-50/60 via-white to-white p-5 shadow-xs dark:border-rose-900/30 dark:from-rose-950/20 dark:via-gray-900 dark:to-gray-900">
                 <div class="flex items-center justify-between">
@@ -33,19 +51,20 @@
                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Akumulasi kas keluar (filtered)</p>
             </div>
 
-            <!-- Card 2: Total Catatan Transaksi -->
-            <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+            <!-- Card 2: Total Catatan Transaksi - Blue Theme -->
+            <div
+                class="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50/60 via-white to-white p-5 shadow-xs dark:border-blue-900/30 dark:from-blue-950/20 dark:via-gray-900 dark:to-gray-900">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Entri
+                        <p class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Entri
                             Data</p>
-                        <h3 class="mt-2 text-2xl font-black text-gray-900 dark:text-white font-mono tabular-nums">
+                        <h3 class="mt-2 text-2xl font-black text-blue-600 dark:text-blue-400 font-mono tabular-nums">
                             {{ number_format($stats['total_count'] ?? 0) }} <span
                                 class="text-xs font-normal text-gray-400">Transaksi</span>
                         </h3>
                     </div>
                     <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -55,8 +74,9 @@
                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Jumlah dokumen pengeluaran</p>
             </div>
 
-            <!-- Card 3: Transaksi Terposting (Posted) -->
-            <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+            <!-- Card 3: Transaksi Terposting (Posted) - Emerald Theme -->
+            <div
+                class="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50/60 via-white to-white p-5 shadow-xs dark:border-emerald-900/30 dark:from-emerald-950/20 dark:via-gray-900 dark:to-gray-900">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
@@ -67,7 +87,7 @@
                         </h3>
                     </div>
                     <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -77,19 +97,20 @@
                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Masuk ke Buku Besar & Jurnal</p>
             </div>
 
-            <!-- Card 4: Draft / Pending Verification -->
-            <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+            <!-- Card 4: Draft / Pending Verification - Amber Theme -->
+            <div
+                class="rounded-3xl border border-yellow-100 bg-gradient-to-br from-yellow-50/60 via-white to-white p-5 shadow-xs dark:border-yellow-900/30 dark:from-yellow-950/20 dark:via-gray-900 dark:to-gray-900">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Status
+                        <p class="text-xs font-bold uppercase tracking-wider text-yellow-600 dark:text-yellow-400">Status
                             Draft</p>
-                        <h3 class="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400 font-mono tabular-nums">
+                        <h3 class="mt-2 text-2xl font-black text-yellow-600 dark:text-yellow-400 font-mono tabular-nums">
                             {{ number_format($stats['draft_count'] ?? 0) }} <span
                                 class="text-xs font-normal text-gray-400">Entri</span>
                         </h3>
                     </div>
                     <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
