@@ -29,7 +29,7 @@ class UpdateIncomeRequest extends FormRequest
             'income_coa_id' => 'required|exists:chart_of_accounts,id',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:255',
-            'proof_file' => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:2048',
+            'receipt_file' => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:2048',
         ];
     }
 
@@ -57,9 +57,9 @@ class UpdateIncomeRequest extends FormRequest
             'description.required' => 'Deskripsi harus diisi.',
             'description.string' => 'Deskripsi harus berupa teks.',
             'description.max' => 'Deskripsi maksimal 255 karakter.',
-            'proof_file.file' => 'File bukti harus berupa file yang valid.',
-            'proof_file.mimes' => 'File bukti harus berupa file dengan format: jpeg, png, jpg, webp, pdf.',
-            'proof_file.max' => 'Ukuran file bukti maksimal 2MB.',
+            'receipt_file.file' => 'File bukti harus berupa file yang valid.',
+            'receipt_file.mimes' => 'File bukti harus berupa file dengan format: jpeg, png, jpg, webp, pdf.',
+            'receipt_file.max' => 'Ukuran file bukti maksimal 2MB.',
         ];
     }
 }

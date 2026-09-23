@@ -10,6 +10,7 @@ use App\Models\UserAccountBalance;
 use App\Services\TransactionBaseService;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage; // ⬅️ PASTIKAN IMPORT STORAGE INI ADA
 
 class DeleteIncomeService extends TransactionBaseService
 {
@@ -108,8 +109,14 @@ class DeleteIncomeService extends TransactionBaseService
                 Journal::whereKey($oldJournal->getKey())->delete();
             }
 
-            // 5. Hapus Transaction Lines & File Media (Receipts)
+            // 5. Hapus Transaction Lines, File di Google Drive, & Spatie Media
             $transaction->transactionLines()->delete();
+
+            // ⬅️ TAMBAHKAN KODE INI UNTUK HAPUS FILE FISIK DI GOOGLE DRIVE
+            if ($transaction->receipt_path) {
+                Storage::disk('google_receipt_transaction')->delete($transaction->receipt_path);
+            }
+
             $transaction->clearMediaCollection('receipts');
 
             // 6. ACTIVITY LOGS (AUDIT TRAIL)
@@ -117,7 +124,7 @@ class DeleteIncomeService extends TransactionBaseService
                 action: 'DELETE',
                 module: 'TRANSACTION_INCOME',
                 subject: $transaction,
-                description: 'Menghapus transaksi penerimaan.',
+                description: 'Menghapus transaksi penerimaan dan berkas lampirannya.',
                 old: $oldTransactionSnapshot,
                 new: [],
                 additionalData: [

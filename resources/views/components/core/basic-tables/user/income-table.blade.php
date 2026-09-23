@@ -134,6 +134,7 @@
                         <th scope="col" class="px-6 py-4">Akun (COA)</th>
                         <th scope="col" class="px-6 py-4">Deskripsi / Catatan</th>
                         <th scope="col" class="px-6 py-4 text-right">Nominal</th>
+                        <th scope="col" class="px-6 py-4 text-center">Lampiran Bukti</th>
                         <th scope="col" class="px-6 py-4 text-center">Status</th>
                         <th scope="col" class="px-6 py-4 text-center">Aksi</th>
                     </tr>
@@ -184,7 +185,7 @@
                                             <span class="text-xs text-gray-400">-</span>
                                         </template>
                                     </div>
-                                </td>>
+                                </td>
 
                                 {{-- DESKRIPSI --}}
                                 <td class="px-6 py-4 max-w-xs truncate">
@@ -203,6 +204,59 @@
                                         x-text="(row.transaction_type === 'INCOME' ? '+ ' : (row.transaction_type === 'EXPENSE' ? '- ' : '')) + currency(row.net_amount)"></span>
                                 </td>
 
+                                {{-- LAMPIRAN / BUKTI TRANSAKSI (REFINED UI) --}}
+                                <td class="px-6 py-4 text-center">
+                                    <template x-if="row.receipt_path && row.receipt_url">
+                                        <div class="inline-flex items-center justify-center">
+                                            <a :href="row.receipt_url" target="_blank"
+                                                class="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/20 shadow-2xs"
+                                                title="Klik untuk membuka bukti transaksi">
+
+                                                {{-- Ikon PDF --}}
+                                                <template x-if="row.receipt_path.toLowerCase().endsWith('.pdf')">
+                                                    <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none"
+                                                        viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                    </svg>
+                                                </template>
+
+                                                {{-- Ikon Gambar (PNG/JPG/JPEG/dll) --}}
+                                                <template x-if="!row.receipt_path.toLowerCase().endsWith('.pdf')">
+                                                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </template>
+
+                                                <span>Terlampir</span>
+
+                                                <svg class="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!row.receipt_path">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                            </svg>
+                                            Kosong
+                                        </span>
+                                    </template>
+                                </td>
+
                                 {{-- STATUS --}}
                                 <td class="px-6 py-4 text-center">
                                     <span
@@ -213,19 +267,14 @@
 
                                 {{-- AKSI --}}
                                 <td class="px-6 py-4 text-center">
-                                    <x-common.table-actions
-                                        detailUrl="getDetailUrl(row)"
-                                        detailTooltip="Lihat Detail Transaksi"
-
-                                        editUrl="editUrl.replace(':id', row.id)"
+                                    <x-common.table-actions detailUrl="getDetailUrl(row)"
+                                        detailTooltip="Lihat Detail Transaksi" editUrl="editUrl.replace(':id', row.id)"
                                         canEdit="!row.sub_period || !row.sub_period.is_closed"
                                         editLockReason="row.sub_period && row.sub_period.is_closed ? 'Sub periode sudah ditutup' : 'Edit Transaksi'"
-
                                         destroyUrl="deleteUrl.replace(':id', row.id)"
                                         canDelete="!row.sub_period || !row.sub_period.is_closed"
                                         deleteLockReason="row.sub_period && row.sub_period.is_closed ? 'Sub periode sudah ditutup' : 'Hapus Transaksi'"
-                                        deleteConfirm="Apakah Anda yakin ingin menghapus transaksi ini? Saldo dan jurnal akan disesuaikan kembali."
-                                    />
+                                        deleteConfirm="Apakah Anda yakin ingin menghapus transaksi ini? Saldo dan jurnal akan disesuaikan kembali." />
                                 </td>
                             </tr>
                         </template>

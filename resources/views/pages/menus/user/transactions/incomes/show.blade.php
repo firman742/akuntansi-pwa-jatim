@@ -23,19 +23,19 @@
                     </x-ui.button>
                 </a>
 
-                @if ($transaction->status === \App\Enums\TransactionStatus::DRAFT)
-                    {{-- EDIT --}}
-                    <a href="{{ route('user.transactions.incomes.edit', $transaction) }}">
-                        <x-ui.button variant="outline" size="sm"
-                            class="rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-400">
-                            <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit
-                        </x-ui.button>
-                    </a>
+                {{-- EDIT LINK (Selalu tampil atau dapat disesuaikan kondisinya) --}}
+                <a href="{{ route('user.transactions.incomes.edit', $transaction) }}">
+                    <x-ui.button variant="outline" size="sm"
+                        class="rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-400">
+                        <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit Transaksi
+                    </x-ui.button>
+                </a>
 
+                @if ($transaction->status === \App\Enums\TransactionStatus::DRAFT)
                     {{-- POSTING --}}
                     <form action="{{ route('user.transactions.incomes.post', $transaction) }}" method="POST"
                         onsubmit="return confirm('Apakah Anda yakin ingin memposting transaksi penerimaan ini? Transaksi yang diposting akan langsung menambah saldo kas.')">
@@ -319,33 +319,67 @@
                     </h3>
 
                     @php
+                        $receiptPath = $transaction->receipt_path;
                         $receiptUrl =
                             $transaction->receipt_url ??
                             ($transaction->hasMedia('receipts') ? $transaction->getFirstMediaUrl('receipts') : null);
+
+                        $isPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
                     @endphp
 
                     @if ($receiptUrl)
                         <div class="space-y-3">
-                            <div
-                                class="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                                <img src="{{ $receiptUrl }}" alt="Bukti Penerimaan"
-                                    class="w-full h-48 object-cover transition transform duration-300 group-hover:scale-105" />
+                            @if ($isPdf)
                                 <div
-                                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                                    class="flex flex-col items-center justify-center p-6 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-center space-y-3">
+                                    <div
+                                        class="p-3 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p
+                                            class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[240px]">
+                                            {{ basename($receiptPath) }}
+                                        </p>
+                                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Dokumen PDF Bukti
+                                            Transaksi</p>
+                                    </div>
                                     <a href="{{ $receiptUrl }}" target="_blank"
-                                        class="p-2 bg-white rounded-lg shadow-sm text-gray-800 hover:bg-gray-100 transition"
-                                        title="Buka Gambar">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        class="inline-flex items-center justify-center w-full px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
+                                        Buka Dokumen PDF di Tab Baru
                                     </a>
                                 </div>
-                            </div>
-                            <a href="{{ $receiptUrl }}" target="_blank"
-                                class="block w-full text-center text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
-                                Lihat Ukuran Penuh (Tab Baru)
-                            </a>
+                            @else
+                                <div
+                                    class="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                    <img src="{{ $receiptUrl }}" alt="Bukti Penerimaan"
+                                        class="w-full h-48 object-cover transition transform duration-300 group-hover:scale-105" />
+                                    <div
+                                        class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                                        <a href="{{ $receiptUrl }}" target="_blank"
+                                            class="p-2 bg-white rounded-lg shadow-sm text-gray-800 hover:bg-gray-100 transition"
+                                            title="Buka Gambar di Tab Baru">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <a href="{{ $receiptUrl }}" target="_blank"
+                                    class="block w-full text-center text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+                                    Lihat Gambar Ukuran Penuh (Tab Baru)
+                                </a>
+                            @endif
                         </div>
                     @else
                         <div
@@ -358,7 +392,7 @@
                             </div>
                             <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Tidak ada lampiran bukti</p>
                             <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Berkas struk / kwitansi belum
-                                diunggah saat pembuatan transaksi.</p>
+                                diunggah.</p>
                         </div>
                     @endif
                 </div>

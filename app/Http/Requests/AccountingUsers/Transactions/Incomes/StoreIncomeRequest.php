@@ -29,6 +29,7 @@ class StoreIncomeRequest extends FormRequest
             'income_coa_id' => 'required|exists:chart_of_accounts,id',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:255',
+            'receipt_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // Max 2MB
         ];
     }
 
@@ -55,6 +56,9 @@ class StoreIncomeRequest extends FormRequest
             'amount.min' => 'Jumlah harus lebih besar dari 0.',
             'description.string' => 'Deskripsi harus berupa teks.',
             'description.max' => 'Deskripsi maksimal 255 karakter.',
+            'receipt_file.file' => 'Bukti transaksi harus berupa file.',
+            'receipt_file.mimes' => 'Bukti transaksi harus berupa file dengan format: jpg, jpeg, png, pdf.',
+            'receipt_file.max' => 'Bukti transaksi maksimal berukuran 2MB.',
         ];
     }
 }

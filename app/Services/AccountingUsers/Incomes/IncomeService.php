@@ -10,7 +10,9 @@ use App\Models\Transaction;
 use App\Models\UserAccountBalance;
 use App\Services\TransactionBaseService;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class IncomeService extends TransactionBaseService
 {
@@ -88,6 +90,46 @@ class IncomeService extends TransactionBaseService
                 totalAmount: $amount,
                 type: TransactionType::INCOME,
             );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Handle File Upload to Google Drive
+            |--------------------------------------------------------------------------
+            */
+            $receiptPath = null;
+            if (isset($data['receipt_file']) && $data['receipt_file'] instanceof \Illuminate\Http\UploadedFile) {
+                try {
+                    $file = $data['receipt_file'];
+                    $extension = $file->getClientOriginalExtension();
+
+                    // Muat relasi period dan subPeriod jika belum ada
+                    $transaction->load(['period', 'subPeriod']);
+
+                    // Sanitasi string agar aman digunakan sebagai nama folder/file
+                    $jenis         = strtoupper($transaction->transaction_type->value);
+                    $periodName    = str_replace(['/', '\\', ' '], '_', $transaction->period?->name ?? 'Tanpa_Periode');
+                    $subPeriodName = str_replace(['/', '\\', ' '], '_', $transaction->subPeriod?->name ?? 'Tanpa_Sub_Periode');
+                    $tanggal     = $transaction->transaction_date->format('Y-m-d');
+                    $trxNumber   = str_replace(['/', '\\', ' '], '_', $transaction->transaction_number);
+
+                    // Menentukan direktori bersarang (nested folders) berdasarkan format
+                    $directory = sprintf('%s/%s/%s', $jenis, $periodName, $subPeriodName);
+                    $fileName  = $tanggal . '_' . $trxNumber . '.' . $extension;
+                    
+                    // Upload file ke Google Drive
+                    Storage::disk('google_receipt_transaction')->putFileAs($directory, $file, $fileName);
+
+                    // Simpan path lengkap ke database
+                    $receiptPath = trim($directory, '/') . '/' . $fileName;
+
+                    $transaction->update([
+                        'receipt_path' => $receiptPath
+                    ]);
+                } catch (\Exception $e) {
+                    // Lempar exception khusus jika upload gagal/gagal koneksi API
+                    throw new Exception('Gagal mengunggah bukti transaksi ke Google Drive: ' . $e->getMessage());
+                }
+            }
 
             /*
             |--------------------------------------------------------------------------

@@ -2,8 +2,74 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Models\CoaBalance;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+
+// Form untuk memilih file yang akan di-test upload
+// Route::get('/test-google-drive', function () {
+//     return '
+//     <!DOCTYPE html>
+//     <html lang="en">
+//     <head>
+//         <meta charset="UTF-8">
+//         <title>Test Google Drive Upload</title>
+//         <script src="https://cdn.tailwindcss.com"></script>
+//     </head>
+//     <body class="bg-gray-100 flex items-center justify-center h-screen">
+//         <div class="bg-white p-8 rounded-lg shadow-md w-96">
+//             <h2 class="text-xl font-bold mb-4 text-gray-700">Test Google Drive Upload</h2>
+//             <form action="/test-google-drive" method="POST" enctype="multipart/form-data" class="space-y-4">
+//                 ' . csrf_field() . '
+//                 <div>
+//                     <label class="block text-sm font-medium text-gray-600 mb-2">Pilih File / Gambar / PDF</label>
+//                     <input type="file" name="file" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+//                 </div>
+//                 <button type="submit" class="w-full bg-violet-600 text-white py-2 px-4 rounded-md hover:bg-violet-700 transition">Upload ke Google Drive</button>
+//             </form>
+//         </div>
+//     </body>
+//     </html>
+//     ';
+// });
+
+// // Endpoint POST untuk memproses dan menguji upload ke Google Drive
+// Route::post('/test-google-drive', function (Request $request) {
+//     $request->validate([
+//         'file' => 'required|file',
+//     ]);
+
+//     $file = $request->file('file');
+//     // Membuat nama file unik agar tidak bentrok
+//     $fileName = time() . '_' . $file->getClientOriginalName();
+
+//     try {
+//         // Menggunakan Storage disk 'google' sesuai konfigurasi package
+//         $uploaded = Storage::disk('google_receipt_transaction')->put($fileName, File::get($file));
+
+//         if ($uploaded) {
+//             return response()->json([
+//                 'success' => true,
+//                 'message' => 'Berhasil! File berhasil masuk ke Google Drive.',
+//                 'file_name' => $fileName,
+//                 'disk' => 'google'
+//             ]);
+//         }
+
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Gagal mengupload file ke Google Drive.',
+//         ], 500);
+
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'success' => false,
+//             'error' => $e->getMessage(),
+//         ], 500);
+//     }
+// });
 
 /*
 |--------------------------------------------------------------------------

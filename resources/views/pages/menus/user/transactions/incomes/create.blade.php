@@ -20,6 +20,12 @@
     </a>
 
     {{-- ALERTS --}}
+    @if (session('error'))
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Gagal Mengunggah / Menyimpan" message="{{ session('error') }}" />
+        </div>
+    @endif
+    
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
@@ -146,11 +152,11 @@
                         desc="Unggah foto nota, kwitansi, atau bukti transfer (Opsional)">
                         <div class="space-y-4">
                             <div class="flex items-center justify-center w-full">
-                                <label for="proof_file"
+                                <label for="receipt_file"
                                     class="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-emerald-500 dark:hover:border-emerald-400 transition-all relative overflow-hidden group">
 
                                     {{-- State 1: Belum ada file dipilih --}}
-                                    <template x-if="!proofPreview && !proofFileName">
+                                    <template x-if="!recieptPreview && !recieptFileName">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
                                             <div
                                                 class="p-3 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
@@ -170,16 +176,16 @@
                                     </template>
 
                                     {{-- State 2: Preview jika file gambar --}}
-                                    <template x-if="proofPreview">
+                                    <template x-if="recieptPreview">
                                         <div class="relative w-full h-full p-2 flex items-center justify-center">
-                                            <img :src="proofPreview"
+                                            <img :src="recieptPreview"
                                                 class="max-h-full max-w-full object-contain rounded-lg shadow-sm"
                                                 alt="Preview Bukti">
                                         </div>
                                     </template>
 
                                     {{-- State 3: Tampilan file non-gambar (contoh: PDF) --}}
-                                    <template x-if="!proofPreview && proofFileName">
+                                    <template x-if="!recieptPreview && recieptFileName">
                                         <div class="flex flex-col items-center justify-center p-4 text-center">
                                             <div
                                                 class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 mb-2">
@@ -190,17 +196,17 @@
                                                 </svg>
                                             </div>
                                             <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[200px]"
-                                                x-text="proofFileName"></p>
+                                                x-text="recieptFileName"></p>
                                         </div>
                                     </template>
 
-                                    <input id="proof_file" name="proof_file" type="file" class="hidden"
+                                    <input id="receipt_file" name="receipt_file" type="file" class="hidden"
                                         accept="image/*,.pdf" @change="handleFileChange($event)" />
                                 </label>
                             </div>
 
                             {{-- File Info Footer & Clear Button --}}
-                            <template x-if="proofFileName">
+                            <template x-if="recieptFileName">
                                 <div
                                     class="flex items-center justify-between p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
                                     <div class="flex items-center gap-2 truncate pr-2">
@@ -210,7 +216,7 @@
                                                 d="M5 13l4 4L19 7" />
                                         </svg>
                                         <span class="text-slate-700 dark:text-slate-300 font-medium truncate"
-                                            x-text="proofFileName"></span>
+                                            x-text="recieptFileName"></span>
                                     </div>
                                     <button type="button" @click="removeFile()"
                                         class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 font-semibold transition-colors shrink-0 flex items-center gap-1">
@@ -305,7 +311,6 @@
 
         </form>
     </div>
-
     @push('scripts')
         <script>
             function incomeForm(cashCoas = []) {
@@ -314,9 +319,9 @@
                     selectedCash: '',
                     subPeriod: '',
                     amount: 0,
-                    displayAmount: '', // 1. State penampung teks format Rp
-                    proofPreview: null,
-                    proofFileName: '',
+                    displayAmount: '',
+                    recieptPreview: null,
+                    recieptFileName: '',
 
                     init() {
                         if (this.cashCoas.length > 0) {
@@ -334,17 +339,10 @@
                         return found ? Number(found.remaining_balance) : 0;
                     },
 
-                    // 2. Fungsi input handler yang sinkron dengan Alpine State
                     inputAmount(event) {
                         const raw = this.onlyNumber(event.target.value);
-
-                        // Set angka murni ke state `amount` (memicu reaktivitas Total & Proyeksi Saldo)
                         this.amount = raw ? Number(raw) : 0;
-
-                        // Format string Rupiah
                         const formatted = raw ? 'Rp ' + this.format(raw) : '';
-
-                        // Update tampilan input
                         this.displayAmount = formatted;
                         event.target.value = formatted;
                     },
@@ -360,6 +358,39 @@
                     afterBalance() {
                         return Number(this.balance) + Number(this.amount);
                     },
+
+                    // ==========================================
+                    // TAMBAHAN FUNGSI UNTUK HANDLE UPLOAD FILE
+                    // ==========================================
+                    handleFileChange(event) {
+                        const file = event.target.files[0];
+                        if (file) {
+                            this.recieptFileName = file.name;
+
+                            // Jika file berupa gambar, buatkan pratinjau (preview)
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    this.recieptPreview = e.target.result;
+                                };
+                                reader.readAsDataURL(file);
+                            } else {
+                                // Jika non-gambar (misal: PDF), kosongkan preview gambar
+                                this.recieptPreview = null;
+                            }
+                        }
+                    },
+
+                    removeFile() {
+                        this.recieptFileName = '';
+                        this.recieptPreview = null;
+
+                        // Reset nilai input file HTML
+                        const fileInput = document.getElementById('receipt_file');
+                        if (fileInput) {
+                            fileInput.value = '';
+                        }
+                    }
                 }
             }
         </script>
