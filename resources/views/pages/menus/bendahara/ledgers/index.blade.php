@@ -142,14 +142,9 @@
 
                 {{-- EXPORT BUTTONS --}}
                 <div class="flex items-center gap-2">
-                    <a href="#" target="_blank">
+                    <a href="{{ route('bendahara.reports.ledger.export', request()->query()) }}" target="_blank">
                         <x-ui.button type="button" variant="outline" class="rounded-xl px-3 py-1.5 text-xs">
                             PDF
-                        </x-ui.button>
-                    </a>
-                    <a href="#">
-                        <x-ui.button type="button" variant="outline" class="rounded-xl px-3 py-1.5 text-xs">
-                            Excel
                         </x-ui.button>
                     </a>
                 </div>
@@ -204,7 +199,8 @@
                                 class="px-4 py-3 text-blue-900 dark:text-blue-200 border-r border-gray-100 dark:border-gray-800">
                                 Saldo Awal Periode
                             </td>
-                            <td colspan="2" class="px-4 py-3 text-xs text-gray-400 border-r border-gray-100 dark:border-gray-800">-
+                            <td colspan="2"
+                                class="px-4 py-3 text-xs text-gray-400 border-r border-gray-100 dark:border-gray-800">-
                             </td>
                             <td
                                 class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-800">
@@ -234,62 +230,57 @@
                         {{-- BARIS TRANSAKSI --}}
                         @forelse ($ledger as $row)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+                                {{-- Tanggal --}}
                                 <td
                                     class="px-4 py-2.5 text-center font-mono text-xs text-gray-500 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['date']->format('d/m/Y') }}
                                 </td>
+
+                                {{-- Keterangan --}}
                                 <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
                                     <p class="font-medium text-gray-800 dark:text-gray-200">{{ $row['description'] }}</p>
                                 </td>
 
-                                {{-- KOLOM AKUN LAWAN (TAMPILKAN SEMUA TANPA 'BEBERAPA AKUN') --}}
+                                {{-- Akun Lawan (Single Line) --}}
                                 <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
-                                    <div class="space-y-1">
-                                        @forelse ($row['opposing_accounts'] as $opp)
-                                            <div class="flex items-center gap-1.5">
-                                                <span
-                                                    class="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[180px]"
-                                                    title="{{ $opp['name'] }}">
-                                                    {{ $opp['name'] }}
-                                                </span>
-                                            </div>
-                                        @empty
-                                            <span class="text-xs text-gray-400">-</span>
-                                        @endforelse
-                                    </div>
+                                    <span class="text-xs text-gray-700 dark:text-gray-300">
+                                        {{ $row['opposing_account_name'] }}
+                                    </span>
                                 </td>
 
+                                {{-- Kode Akun Lawan (Single Line) --}}
                                 <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
-                                    <div class="space-y-1">
-                                        @forelse ($row['opposing_accounts'] as $opp)
-                                            <div class="flex items-center">
-                                                <span
-                                                    class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded shrink-0">
-                                                    {{ $opp['code'] }}
-                                                </span>
-                                            </div>
-                                        @empty
-                                            <span class="text-xs text-gray-400">-</span>
-                                        @endforelse
-                                    </div>
+                                    <span
+                                        class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded">
+                                        {{ $row['opposing_account_code'] }}
+                                    </span>
                                 </td>
 
+                                {{-- Posting Oleh --}}
                                 <td
                                     class="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['posted_by'] }}
                                 </td>
+
+                                {{-- Debit --}}
                                 <td
                                     class="px-4 py-2.5 text-right font-mono text-gray-800 dark:text-gray-200 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['debit'] > 0 ? number_format($row['debit'], 0, ',', '.') : '-' }}
                                 </td>
+
+                                {{-- Kredit --}}
                                 <td
                                     class="px-4 py-2.5 text-right font-mono text-rose-600 dark:text-rose-400 border-r border-gray-100 dark:border-gray-800">
                                     {{ $row['credit'] > 0 ? number_format($row['credit'], 0, ',', '.') : '-' }}
                                 </td>
+
+                                {{-- Saldo Kumulatif Debit --}}
                                 <td
                                     class="px-4 py-2.5 text-right font-mono font-bold text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
                                     {{ $isDebitAcc ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
                                 </td>
+
+                                {{-- Saldo Kumulatif Kredit --}}
                                 <td
                                     class="px-4 py-2.5 text-right font-mono font-bold text-gray-900 dark:text-gray-100 bg-gray-50/50 dark:bg-gray-800/30">
                                     {{ !$isDebitAcc ? number_format($row['current_balance'], 0, ',', '.') : '-' }}
@@ -313,7 +304,7 @@
                         {{-- BARIS 1: TOTAL MUTASI TRANSAKSI SAJA --}}
                         <tr
                             class="bg-gray-100/80 dark:bg-gray-800/80 border-t-2 border-gray-300 dark:border-gray-700 font-semibold text-xs text-gray-600 dark:text-gray-300">
-                            <td colspan="4" class="px-4 py-2.5 text-right uppercase tracking-wider">
+                            <td colspan="5" class="px-4 py-2.5 text-right uppercase tracking-wider">
                                 Total Mutasi Transaksi
                             </td>
                             <td
@@ -333,7 +324,7 @@
                         {{-- BARIS 2: GRAND TOTAL (+ SALDO AWAL) --}}
                         <tr
                             class="bg-gray-200/60 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 font-bold">
-                            <td colspan="4"
+                            <td colspan="5"
                                 class="px-4 py-3 text-right uppercase text-xs tracking-wider text-gray-800 dark:text-gray-100">
                                 Total Akumulasi (+ Saldo Awal)
                             </td>

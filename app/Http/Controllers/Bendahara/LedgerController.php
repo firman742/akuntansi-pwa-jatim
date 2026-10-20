@@ -10,18 +10,17 @@ use App\Models\JournalDetail;
 use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\SubPeriod;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class LedgerController extends Controller
 {
     /**
-     * Display the ledger for a specific chart of account.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\Response
+     * Helper privat untuk mengolah data ledger (DRY principle)
      */
-    public function index(Request $request)
+    private function getLedgerData(Request $request): array
     {
         $periods = Period::orderBy('created_at', 'desc')->get();
 
@@ -77,7 +76,7 @@ class LedgerController extends Controller
             }
 
             $openingBalanceCreatedBy = $opening?->creator?->name ?? '-';
-            $openingBalanceDate = $opening?->created_at ? Carbon::parse($opening->created_at)->format('d M Y') : '-';
+            $openingBalanceDate = $opening?->created_at ? Carbon::parse($opening->created_at)->format('d/m/Y') : '-';
 
             // 2. MUTASI SEBELUM START DATE
             $runningBalance = $openingBalance;
@@ -124,48 +123,81 @@ class LedgerController extends Controller
                 ->select('journal_details.*')
                 ->get();
 
-            // 4. HITUNG RUNNING BALANCE & PENENTUAN AKUN LAWAN
+            // 4. HITUNG RUNNING BALANCE & BREAKDOWN TRANSAKSI
             foreach ($transactions as $trx) {
                 $totalDebitMutation += $trx->debit;
                 $totalCreditMutation += $trx->credit;
 
-                if (strtoupper($normalBalance) === 'DEBIT') {
-                    $runningBalance += ($trx->debit - $trx->credit);
-                } else {
-                    $runningBalance += ($trx->credit - $trx->debit);
-                }
-
-                // Ambil SEMUA akun lawan pada jurnal yang sama
-                $opposingAccounts = JournalDetail::where('journal_id', $trx->journal_id)
+                $opposingDetails = JournalDetail::where('journal_id', $trx->journal_id)
                     ->where('chart_of_account_id', '!=', $coaId)
                     ->with('chartOfAccount')
-                    ->get()
-                    ->map(fn ($opp) => [
-                        'code' => $opp->chartOfAccount?->code ?? '-',
-                        'name' => $opp->chartOfAccount?->name ?? '-',
-                    ])
-                    ->values()
-                    ->toArray();
+                    ->get();
 
-                $ledger[] = [
-                    'date' => $trx->journal->journal_date,
-                    'journal_number' => $trx->journal->journal_number ?? '-',
-                    'description' => $trx->description ?? $trx->journal->description ?? '-',
-                    'posted_by' => $trx->journal->postedBy?->name ?? '-',
-                    'debit' => $trx->debit,
-                    'credit' => $trx->credit,
-                    'current_balance' => $runningBalance,
-                    'normal_balance' => $normalBalance,
-                    'opposing_accounts' => $opposingAccounts,
-                ];
+                $oppCount = $opposingDetails->count();
+
+                if ($oppCount <= 1) {
+                    if (strtoupper($normalBalance) === 'DEBIT') {
+                        $runningBalance += ($trx->debit - $trx->credit);
+                    } else {
+                        $runningBalance += ($trx->credit - $trx->debit);
+                    }
+
+                    $opp = $opposingDetails->first();
+
+                    $ledger[] = [
+                        'date'                  => $trx->journal->journal_date,
+                        'journal_number'        => $trx->journal->journal_number ?? '-',
+                        'description'           => $trx->description ?? $trx->journal->description ?? '-',
+                        'posted_by'             => $trx->journal->postedBy?->name ?? '-',
+                        'debit'                 => $trx->debit,
+                        'credit'                => $trx->credit,
+                        'current_balance'       => $runningBalance,
+                        'normal_balance'        => $normalBalance,
+                        'opposing_account_code' => $opp?->chartOfAccount?->code ?? '-',
+                        'opposing_account_name' => $opp?->chartOfAccount?->name ?? '-',
+                    ];
+                } else {
+                    $totalOpposingAmount = $opposingDetails->sum(fn($d) => $d->debit + $d->credit);
+
+                    foreach ($opposingDetails as $opp) {
+                        $oppAmount = $opp->debit + $opp->credit;
+                        $ratio = $totalOpposingAmount > 0 ? ($oppAmount / $totalOpposingAmount) : (1 / $oppCount);
+
+                        $splitDebit = $trx->debit * $ratio;
+                        $splitCredit = $trx->credit * $ratio;
+
+                        if (strtoupper($normalBalance) === 'DEBIT') {
+                            $runningBalance += ($splitDebit - $splitCredit);
+                        } else {
+                            $runningBalance += ($splitCredit - $splitDebit);
+                        }
+
+                        $ledger[] = [
+                            'date'                  => $trx->journal->journal_date,
+                            'journal_number'        => $trx->journal->journal_number ?? '-',
+                            'description'           => $opp->description ?? $trx->description ?? $trx->journal->description ?? '-',
+                            'posted_by'             => $trx->journal->postedBy?->name ?? '-',
+                            'debit'                 => $splitDebit,
+                            'credit'                => $splitCredit,
+                            'current_balance'       => $runningBalance,
+                            'normal_balance'        => $normalBalance,
+                            'opposing_account_code' => $opp->chartOfAccount?->code ?? '-',
+                            'opposing_account_name' => $opp->chartOfAccount?->name ?? '-',
+                        ];
+                    }
+                }
             }
-
             $endingBalance = $runningBalance;
         }
 
-        return view('pages.menus.bendahara.ledgers.index', compact(
+        $selectedPeriod = Period::find($periodId);
+        $selectedSubPeriod = $subPeriodId ? SubPeriod::find($subPeriodId) : null;
+
+        return compact(
             'periods',
             'periodId',
+            'selectedPeriod',
+            'selectedSubPeriod',
             'coas',
             'coa',
             'ledger',
@@ -182,28 +214,32 @@ class LedgerController extends Controller
             'endDate',
             'openingBalanceCreatedBy',
             'openingBalanceDate'
-        ));
+        );
     }
 
-    public function export(Request $request, string $type)
+    public function index(Request $request)
     {
-        $periodId = $request->period_id;
-        $month = $request->month;
+        $data = $this->getLedgerData($request);
+        return view('pages.menus.bendahara.ledgers.index', $data);
+    }
 
-        $journals = Journal::with(['details.coa.accountType'])
-            ->where('period_id', $periodId)
-            ->when($month, function ($q) use ($month) {
-                [$year, $m] = explode('-', $month);
-                $q->whereYear('journal_date', $year)
-                    ->whereMonth('journal_date', $m);
-            })
-            ->orderBy('journal_date')
-            ->get();
+    public function export(Request $request)
+    {
+        $data = $this->getLedgerData($request);
 
-        return match ($type) {
-            'excel' => app()->download($journals),
-            'pdf' => app()->download($journals),
-            default => abort(404),
-        };
+        if (!$data['coa']) {
+            return redirect()->back()->with('error', 'Silakan pilih akun terlebih dahulu untuk mengeksport PDF.');
+        }
+
+        $pdf = Pdf::loadView('pages.menus.bendahara.ledgers.pdf', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOption([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => true,
+            ]);
+
+        $fileName = 'Buku_Besar_' . Str::slug($data['coa']->code . '_' . $data['coa']->name) . '.pdf';
+
+        return $pdf->stream($fileName);
     }
 }

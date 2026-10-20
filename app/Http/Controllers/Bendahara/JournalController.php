@@ -328,11 +328,13 @@ class JournalController extends Controller
             'selectedSubPeriod',
             'startDate',
             'endDate'
-        ))->setPaper('a4', 'landscape');
+        ))
+        ->setPaper('a4', 'landscape')
+        ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
 
         $fileName = 'Laporan_Jurnal_Umum_' . date('Ymd_His') . '.pdf';
 
-        return $pdf->download($fileName);
+        return $pdf->stream($fileName);
     }
 
     /**
