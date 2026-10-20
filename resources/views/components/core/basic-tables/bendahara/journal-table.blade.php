@@ -1,4 +1,4 @@
-@props(['groupedJournals', 'journals', 'grandTotalDebit' => 0, 'grandTotalCredit' => 0])
+@props(['groupedJournals', 'journals', 'grandTotalDebit' => 0, 'grandTotalCredit' => 0, 'isPdf' => false])
 
 <div class="overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm rounded-xl">
     <div class="max-w-full overflow-x-auto">
@@ -45,53 +45,43 @@
                     </tr>
 
                     @php
-                        $subTotalDebit = 0;
-                        $subTotalCredit = 0;
                         $entryNumber = 1;
                     @endphp
 
-                    @foreach ($group['data'] as $journal)
+                    @foreach ($group['data'] as $pair)
                         @php
-                            // 1. Cek apakah transaksi memiliki detail akun selain Aset (Non-Asset)
-                            $hasNonAssetDetail = $journal->details->contains(function ($d) {
+                            $journal = $pair['journal'];
+                            $details = $pair['details'];
+
+                            $hasNonAssetDetail = $details->contains(function ($d) {
                                 $coa = $d->chartOfAccount;
                                 if (!$coa) {
                                     return false;
                                 }
-
                                 $typeName = strtoupper($coa->accountType->name ?? '');
-                                $isAsset =
+                                return !(
                                     str_contains($typeName, 'ASET') ||
                                     str_contains($typeName, 'ASSET') ||
-                                    str_starts_with((string) $coa->code, '1');
-
-                                return !$isAsset;
+                                    str_starts_with((string) $coa->code, '1')
+                                );
                             });
 
-                            // 2. Cek apakah ada akun COA yang sama digunakan di posisi Debit dan Kredit
-                            $debitCoas = $journal->details
+                            $debitCoas = $details
                                 ->filter(fn($d) => (float) $d->debit > 0)
                                 ->pluck('chartOfAccount.code')
                                 ->filter();
-
-                            $creditCoas = $journal->details
+                            $creditCoas = $details
                                 ->filter(fn($d) => (float) $d->credit > 0)
                                 ->pluck('chartOfAccount.code')
                                 ->filter();
-
                             $hasSameAccountInDebitCredit = $debitCoas->intersect($creditCoas)->isNotEmpty();
                         @endphp
 
-                        @foreach ($journal->details as $index => $detail)
+                        @foreach ($details as $index => $detail)
                             @php
                                 $isCreditRow = $detail->credit > 0;
                                 $detailCoaCode = $detail->chartOfAccount?->code ?? '';
 
-                                // LOGIKA REF:
-                                // Tampilkan Ref untuk SEMUA baris jika:
-                                // A. Transaksi mengandung akun Non-Aset
-                                // B. Transaksi memiliki akun yang sama di Debit & Kredit
-                                // C. Jika transaksi antar-Aset yang berbeda -> Sembunyikan HANYA jika kodenya sama dengan Header Grup
                                 if ($detailCoaCode === '') {
                                     $showRef = '';
                                 } elseif ($hasNonAssetDetail || $hasSameAccountInDebitCredit) {
@@ -102,7 +92,7 @@
                             @endphp
 
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                                {{-- NO (Hanya di baris pertama entri jurnal) --}}
+                                {{-- NO --}}
                                 <td class="px-3 py-3 text-center text-gray-400 font-mono text-xs">
                                     {{ $index === 0 ? $entryNumber++ : '' }}
                                 </td>
@@ -127,17 +117,23 @@
                                 {{-- PEMBUAT (POSTED BY) --}}
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     @if ($index === 0)
-                                        <div class="flex items-center gap-1.5">
-                                            <div
-                                                class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                                                {{ strtoupper(substr($journal->postedBy->name ?? 'S', 0, 1)) }}
-                                            </div>
-                                            <span
-                                                class="text-xs text-gray-600 dark:text-gray-300 font-medium truncate max-w-[110px]"
-                                                title="{{ $journal->postedBy->name ?? 'System' }}">
+                                        @if ($isPdf)
+                                            <span class="text-xs text-gray-700 font-medium">
                                                 {{ $journal->postedBy->name ?? 'System' }}
                                             </span>
-                                        </div>
+                                        @else
+                                            <div class="flex items-center gap-1.5">
+                                                <div
+                                                    class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                    {{ strtoupper(substr($journal->postedBy->name ?? 'S', 0, 1)) }}
+                                                </div>
+                                                <span
+                                                    class="text-xs text-gray-600 dark:text-gray-300 font-medium truncate max-w-[110px]"
+                                                    title="{{ $journal->postedBy->name ?? 'System' }}">
+                                                    {{ $journal->postedBy->name ?? 'System' }}
+                                                </span>
+                                            </div>
+                                        @endif
                                     @endif
                                 </td>
 
@@ -158,7 +154,6 @@
                                     class="px-5 py-3 text-right font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                                     @if ($detail->debit > 0)
                                         Rp{{ number_format($detail->debit, 0, ',', '.') }}
-                                        @php $subTotalDebit += $detail->debit @endphp
                                     @else
                                         <span class="text-gray-300 dark:text-gray-700">-</span>
                                     @endif
@@ -169,7 +164,6 @@
                                     class="px-5 py-3 text-right font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                                     @if ($detail->credit > 0)
                                         Rp{{ number_format($detail->credit, 0, ',', '.') }}
-                                        @php $subTotalCredit += $detail->credit @endphp
                                     @else
                                         <span class="text-gray-300 dark:text-gray-700">-</span>
                                     @endif
@@ -187,25 +181,18 @@
                         </td>
                         <td
                             class="px-5 py-3 text-right text-emerald-700 dark:text-emerald-400 whitespace-nowrap font-bold">
-                            Rp{{ number_format($subTotalDebit, 0, ',', '.') }}
+                            Rp{{ number_format($group['subtotal_debit'], 0, ',', '.') }}
                         </td>
                         <td class="px-5 py-3 text-right text-rose-700 dark:text-rose-400 whitespace-nowrap font-bold">
-                            Rp{{ number_format($subTotalCredit, 0, ',', '.') }}
+                            Rp{{ number_format($group['subtotal_credit'], 0, ',', '.') }}
                         </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="8" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
                             <div class="flex flex-col items-center justify-center space-y-2">
-                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
                                 <p class="font-semibold text-gray-700 dark:text-gray-300">Tidak ada data jurnal umum
                                     ditemukan</p>
-                                <p class="text-xs text-gray-400">Coba ubah kata kunci pencarian atau sesuaikan rentang
-                                    tanggal filter Anda.</p>
                             </div>
                         </td>
                     </tr>

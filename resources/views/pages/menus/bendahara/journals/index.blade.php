@@ -165,15 +165,10 @@
                             Terapkan Filter
                         </x-ui.button>
 
-                        <a href="" target="_blank">
+                        <a href="{{ route('bendahara.reports.journal.export-pdf', request()->query()) }}"
+                            target="_blank">
                             <x-ui.button type="button" variant="outline" class="rounded-xl px-4 py-2 text-xs">
                                 PDF
-                            </x-ui.button>
-                        </a>
-
-                        <a href="">
-                            <x-ui.button type="button" variant="outline" class="rounded-xl px-4 py-2 text-xs">
-                                Excel
                             </x-ui.button>
                         </a>
                     </div>

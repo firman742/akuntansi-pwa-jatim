@@ -387,8 +387,8 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
     */
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/journal', [App\Http\Controllers\Bendahara\JournalController::class, 'index'])->name('journal.index');
+        Route::get('/journal/export-pdf', [App\Http\Controllers\Bendahara\JournalController::class, 'exportPdf'])->name('journal.export-pdf'); // Route Baru
         Route::get('/journal/{id}', [App\Http\Controllers\Bendahara\JournalController::class, 'show'])->name('journal.show');
-        Route::get('/journal/export/{type}', [App\Http\Controllers\Bendahara\JournalController::class, 'export'])->name('journal.export');
 
         Route::get('/ledger', [App\Http\Controllers\Bendahara\LedgerController::class, 'index'])->name('ledger.index');
         Route::get('/ledger/export', [App\Http\Controllers\Bendahara\LedgerController::class, 'export'])->name('ledger.export');

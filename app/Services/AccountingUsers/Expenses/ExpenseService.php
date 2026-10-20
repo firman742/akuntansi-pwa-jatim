@@ -8,6 +8,7 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Helpers\TransactionHelper;
 use App\Models\Transaction;
+use App\Models\TransactionLine;
 use App\Models\UserAccountBalance;
 use App\Services\TransactionBaseService;
 use Exception;
@@ -19,8 +20,8 @@ class ExpenseService extends TransactionBaseService
      * Handle expense transaction.
      *
      * Journal:
-     * Debit  : Akun Pengeluaran (Beberapa line)
-     * Credit : Kas User
+     * Debit  : Akun Pengeluaran (Beberapa line) -> Mutasi Debit (Tambah income/remaining balance)
+     * Credit : Kas User (Sumber)                -> Mutasi Credit (Tambah used balance / Kurang remaining balance)
      *
      * @throws Exception
      */
@@ -74,7 +75,7 @@ class ExpenseService extends TransactionBaseService
                 );
             }
 
-            // Credit kas user
+            // Credit kas user (Sumber)
             $lines[] = $this->line(
                 $userBalance->userAccount->coa_id,
                 $totalExpense,
@@ -95,11 +96,11 @@ class ExpenseService extends TransactionBaseService
             );
 
             if ($status === TransactionStatus::POSTED->value) {
-                // Update saldo Kas Sumber (remaining_balance berkurang)
+                // Update saldo Kas Sumber (CREDIT: used_balance bertambah, remaining_balance berkurang)
                 $userBalance->increment('used_balance', $totalExpense);
                 $userBalance->decrement('remaining_balance', $totalExpense);
 
-                // Update saldo UserAccountBalance untuk tiap Akun Pengeluaran (jika terdaftar di UserAccount)
+                // Update saldo UserAccountBalance untuk tiap Akun Pengeluaran (DEBIT: income_balance bertambah, remaining_balance bertambah)
                 $this->updateExpenseAccountBalances(
                     $data['expense_lines'],
                     $transaction->period_id,
@@ -208,15 +209,17 @@ class ExpenseService extends TransactionBaseService
                 ->firstOrFail();
 
             $oldBalance = [
+                'allocated_balance' => $userBalance->allocated_balance,
+                'income_balance'    => $userBalance->income_balance,
                 'used_balance'      => $userBalance->used_balance,
                 'remaining_balance' => $userBalance->remaining_balance,
             ];
 
-            // Update Saldo Kas Sumber
+            // Update Saldo Kas Sumber (CREDIT)
             $userBalance->increment('used_balance', $transaction->gross_amount);
             $userBalance->decrement('remaining_balance', $transaction->gross_amount);
 
-            // Update Saldo UserAccountBalance Akun-Akun Pengeluaran
+            // Update Saldo UserAccountBalance Akun-Akun Pengeluaran (DEBIT)
             $debitLines = $transaction->transactionLines
                 ->where('position', NormalBalanceEnum::DEBIT->value)
                 ->map(fn($line) => [
@@ -277,9 +280,11 @@ class ExpenseService extends TransactionBaseService
                 action: 'UPDATE',
                 module: 'USER_ACCOUNT_BALANCE',
                 subject: $userBalance,
-                description: 'Posting transaksi mengurangi saldo user.',
+                description: 'Posting transaksi mengurangi saldo kas user.',
                 old: $oldBalance,
                 new: [
+                    'allocated_balance' => $userBalance->allocated_balance,
+                    'income_balance'    => $userBalance->income_balance,
                     'used_balance'      => $userBalance->used_balance,
                     'remaining_balance' => $userBalance->remaining_balance,
                 ],
@@ -306,7 +311,6 @@ class ExpenseService extends TransactionBaseService
                 ->lockForUpdate()
                 ->findOrFail($id);
 
-            // Cek apakah transaksi sudah diposting dan apakah sub periode lama sudah ditutup
             if ($transaction->subPeriod && $transaction->subPeriod->is_closed) {
                 throw new Exception('Sub periode transaksi ini sudah ditutup, data tidak dapat diubah.');
             }
@@ -326,7 +330,7 @@ class ExpenseService extends TransactionBaseService
 
             // 1. REVERT EFEK SALDO LAMA (Jika sebelumnya POSTED)
             if ($oldStatus === TransactionStatus::POSTED->value) {
-                // Kembalikan saldo kas sumber lama
+                // Kembalikan saldo kas sumber lama (Revert CREDIT)
                 $oldCashLine = $transaction->transactionLines->where('position', NormalBalanceEnum::CREDIT->value)->first();
                 if ($oldCashLine) {
                     $oldUserBalance = UserAccountBalance::whereHas('userAccount', fn($q) => $q->where('coa_id', $oldCashLine->chart_of_account_id))
@@ -337,6 +341,8 @@ class ExpenseService extends TransactionBaseService
 
                     if ($oldUserBalance) {
                         $oldCashBalanceSnapshot = [
+                            'allocated_balance' => $oldUserBalance->allocated_balance,
+                            'income_balance'    => $oldUserBalance->income_balance,
                             'used_balance'      => $oldUserBalance->used_balance,
                             'remaining_balance' => $oldUserBalance->remaining_balance,
                         ];
@@ -344,14 +350,15 @@ class ExpenseService extends TransactionBaseService
                         $oldUserBalance->decrement('used_balance', $oldGrossAmount);
                         $oldUserBalance->increment('remaining_balance', $oldGrossAmount);
 
-                        // Audit Log Revert Saldo Kas Sumber Lama
                         $this->logger->log(
                             action: 'UPDATE',
                             module: 'USER_ACCOUNT_BALANCE',
                             subject: $oldUserBalance,
-                            description: 'Pengembalian saldo kas sumber karena pembaharuan/revert transaksi pengeluaran.',
+                            description: 'Pengembalian saldo kas sumber karena pembaruan/revert transaksi pengeluaran.',
                             old: $oldCashBalanceSnapshot,
                             new: [
+                                'allocated_balance' => $oldUserBalance->allocated_balance,
+                                'income_balance'    => $oldUserBalance->income_balance,
                                 'used_balance'      => $oldUserBalance->used_balance,
                                 'remaining_balance' => $oldUserBalance->remaining_balance,
                             ],
@@ -364,7 +371,7 @@ class ExpenseService extends TransactionBaseService
                     }
                 }
 
-                // Kembalikan saldo akun pengeluaran lama (UserAccountBalance)
+                // Kembalikan saldo akun pengeluaran lama (Revert DEBIT: kurangi income_balance & remaining_balance)
                 $oldDebitLines = $transaction->transactionLines->where('position', NormalBalanceEnum::DEBIT->value);
                 foreach ($oldDebitLines as $dLine) {
                     $oldExpBalance = UserAccountBalance::query()
@@ -376,21 +383,24 @@ class ExpenseService extends TransactionBaseService
 
                     if ($oldExpBalance) {
                         $oldExpBalanceSnapshot = [
+                            'allocated_balance' => $oldExpBalance->allocated_balance,
+                            'income_balance'    => $oldExpBalance->income_balance,
                             'used_balance'      => $oldExpBalance->used_balance,
                             'remaining_balance' => $oldExpBalance->remaining_balance,
                         ];
 
-                        $oldExpBalance->decrement('used_balance', $dLine->amount);
-                        $oldExpBalance->increment('remaining_balance', $dLine->amount);
+                        $oldExpBalance->decrement('income_balance', $dLine->amount);
+                        $oldExpBalance->decrement('remaining_balance', $dLine->amount);
 
-                        // Audit Log Revert Saldo Akun Pengeluaran Lama
                         $this->logger->log(
                             action: 'UPDATE',
                             module: 'USER_ACCOUNT_BALANCE',
                             subject: $oldExpBalance,
-                            description: 'Pengembalian saldo akun pengeluaran karena pembaharuan transaksi.',
+                            description: 'Pengembalian saldo akun pengeluaran karena pembaruan transaksi.',
                             old: $oldExpBalanceSnapshot,
                             new: [
+                                'allocated_balance' => $oldExpBalance->allocated_balance,
+                                'income_balance'    => $oldExpBalance->income_balance,
                                 'used_balance'      => $oldExpBalance->used_balance,
                                 'remaining_balance' => $oldExpBalance->remaining_balance,
                             ],
@@ -419,6 +429,8 @@ class ExpenseService extends TransactionBaseService
                 ->findOrFail($data['user_account_balance_id']);
 
             $newCashBalanceOldSnapshot = [
+                'allocated_balance' => $newUserBalance->allocated_balance,
+                'income_balance'    => $newUserBalance->income_balance,
                 'used_balance'      => $newUserBalance->used_balance,
                 'remaining_balance' => $newUserBalance->remaining_balance,
             ];
@@ -439,7 +451,7 @@ class ExpenseService extends TransactionBaseService
             foreach ($data['expense_lines'] as $expense) {
                 $lineDesc = !empty($expense['description'])
                     ? $expense['description']
-                    : \App\Helpers\TransactionHelper::generateLineDescription($expense['coa_id'], null);
+                    : TransactionHelper::generateLineDescription($expense['coa_id'], null);
 
                 $lines[] = $this->line(
                     $expense['coa_id'],
@@ -481,7 +493,7 @@ class ExpenseService extends TransactionBaseService
 
             // Buat baris transaksi baru
             foreach ($lines as $line) {
-                \App\Models\TransactionLine::create([
+                TransactionLine::create([
                     'transaction_id'      => $transaction->id,
                     'chart_of_account_id' => $line['coa_id'],
                     'position'            => $line['position'],
@@ -496,7 +508,6 @@ class ExpenseService extends TransactionBaseService
                 $newUserBalance->increment('used_balance', $totalExpense);
                 $newUserBalance->decrement('remaining_balance', $totalExpense);
 
-                // Audit Log Update Saldo Kas Sumber Baru
                 $isDeficit = $newUserBalance->remaining_balance < 0;
                 $this->logger->log(
                     action: 'UPDATE',
@@ -507,6 +518,8 @@ class ExpenseService extends TransactionBaseService
                         : 'Saldo pengguna berkurang karena pembaruan transaksi pengeluaran.',
                     old: $newCashBalanceOldSnapshot,
                     new: [
+                        'allocated_balance' => $newUserBalance->allocated_balance,
+                        'income_balance'    => $newUserBalance->income_balance,
                         'used_balance'      => $newUserBalance->used_balance,
                         'remaining_balance' => $newUserBalance->remaining_balance,
                     ],
@@ -584,7 +597,6 @@ class ExpenseService extends TransactionBaseService
                 ->lockForUpdate()
                 ->findOrFail($id);
 
-            // Cek apakah sub periode sudah ditutup
             if ($transaction->subPeriod && $transaction->subPeriod->is_closed) {
                 throw new Exception('Sub periode transaksi ini sudah ditutup, data tidak dapat dihapus.');
             }
@@ -603,7 +615,7 @@ class ExpenseService extends TransactionBaseService
 
             // 1. REVERT EFEK SALDO LAMA (Jika sebelumnya POSTED)
             if ($oldStatus === TransactionStatus::POSTED->value) {
-                // Kembalikan saldo kas sumber
+                // Kembalikan saldo kas sumber (CREDIT: kurangi used_balance, tambah remaining_balance)
                 $oldCashLine = $transaction->transactionLines->where('position', NormalBalanceEnum::CREDIT->value)->first();
                 if ($oldCashLine) {
                     $oldUserBalance = UserAccountBalance::query()
@@ -615,6 +627,8 @@ class ExpenseService extends TransactionBaseService
 
                     if ($oldUserBalance) {
                         $oldCashBalanceSnapshot = [
+                            'allocated_balance' => $oldUserBalance->allocated_balance,
+                            'income_balance'    => $oldUserBalance->income_balance,
                             'used_balance'      => $oldUserBalance->used_balance,
                             'remaining_balance' => $oldUserBalance->remaining_balance,
                         ];
@@ -622,7 +636,6 @@ class ExpenseService extends TransactionBaseService
                         $oldUserBalance->decrement('used_balance', $oldGrossAmount);
                         $oldUserBalance->increment('remaining_balance', $oldGrossAmount);
 
-                        // Audit Log Revert Saldo Kas Sumber
                         $this->logger->log(
                             action: 'UPDATE',
                             module: 'USER_ACCOUNT_BALANCE',
@@ -630,6 +643,8 @@ class ExpenseService extends TransactionBaseService
                             description: 'Pengembalian saldo kas sumber karena penghapusan transaksi pengeluaran.',
                             old: $oldCashBalanceSnapshot,
                             new: [
+                                'allocated_balance' => $oldUserBalance->allocated_balance,
+                                'income_balance'    => $oldUserBalance->income_balance,
                                 'used_balance'      => $oldUserBalance->used_balance,
                                 'remaining_balance' => $oldUserBalance->remaining_balance,
                             ],
@@ -642,7 +657,7 @@ class ExpenseService extends TransactionBaseService
                     }
                 }
 
-                // Kembalikan saldo akun pengeluaran (UserAccountBalance)
+                // Kembalikan saldo akun pengeluaran (DEBIT: kurangi income_balance & remaining_balance)
                 $oldDebitLines = $transaction->transactionLines->where('position', NormalBalanceEnum::DEBIT->value);
                 foreach ($oldDebitLines as $dLine) {
                     $oldExpBalance = UserAccountBalance::query()
@@ -654,14 +669,15 @@ class ExpenseService extends TransactionBaseService
 
                     if ($oldExpBalance) {
                         $oldExpBalanceSnapshot = [
+                            'allocated_balance' => $oldExpBalance->allocated_balance,
+                            'income_balance'    => $oldExpBalance->income_balance,
                             'used_balance'      => $oldExpBalance->used_balance,
                             'remaining_balance' => $oldExpBalance->remaining_balance,
                         ];
 
-                        $oldExpBalance->decrement('used_balance', $dLine->amount);
-                        $oldExpBalance->increment('remaining_balance', $dLine->amount);
+                        $oldExpBalance->decrement('income_balance', $dLine->amount);
+                        $oldExpBalance->decrement('remaining_balance', $dLine->amount);
 
-                        // Audit Log Revert Saldo Akun Pengeluaran
                         $this->logger->log(
                             action: 'UPDATE',
                             module: 'USER_ACCOUNT_BALANCE',
@@ -669,6 +685,8 @@ class ExpenseService extends TransactionBaseService
                             description: 'Pengembalian saldo akun pengeluaran karena penghapusan transaksi.',
                             old: $oldExpBalanceSnapshot,
                             new: [
+                                'allocated_balance' => $oldExpBalance->allocated_balance,
+                                'income_balance'    => $oldExpBalance->income_balance,
                                 'used_balance'      => $oldExpBalance->used_balance,
                                 'remaining_balance' => $oldExpBalance->remaining_balance,
                             ],
@@ -715,7 +733,7 @@ class ExpenseService extends TransactionBaseService
     }
 
     /**
-     * Helper privat untuk meng-update UserAccountBalance milik COA pengeluaran.
+     * Helper privat untuk meng-update UserAccountBalance milik COA pengeluaran (DEBIT).
      */
     private function updateExpenseAccountBalances(array $expenseLines, string $periodId, string $subPeriodId, Transaction $transaction): void
     {
@@ -733,20 +751,25 @@ class ExpenseService extends TransactionBaseService
 
             if ($expenseUserBalance) {
                 $oldExpenseBalance = [
+                    'allocated_balance' => $expenseUserBalance->allocated_balance,
+                    'income_balance'    => $expenseUserBalance->income_balance,
                     'used_balance'      => $expenseUserBalance->used_balance,
                     'remaining_balance' => $expenseUserBalance->remaining_balance,
                 ];
 
-                $expenseUserBalance->increment('used_balance', $amount);
-                $expenseUserBalance->decrement('remaining_balance', $amount);
+                // DEBIT menambah penerimaan/saldo akun tujuan
+                $expenseUserBalance->increment('income_balance', $amount);
+                $expenseUserBalance->increment('remaining_balance', $amount);
 
                 $this->logger->log(
                     action: 'UPDATE',
                     module: 'USER_ACCOUNT_BALANCE',
                     subject: $expenseUserBalance,
-                    description: 'Saldo akun pengeluaran bertambah penggunaannya karena transaksi pengeluaran.',
+                    description: 'Saldo akun pengeluaran bertambah karena transaksi pengeluaran.',
                     old: $oldExpenseBalance,
                     new: [
+                        'allocated_balance' => $expenseUserBalance->allocated_balance,
+                        'income_balance'    => $expenseUserBalance->income_balance,
                         'used_balance'      => $expenseUserBalance->used_balance,
                         'remaining_balance' => $expenseUserBalance->remaining_balance,
                     ],

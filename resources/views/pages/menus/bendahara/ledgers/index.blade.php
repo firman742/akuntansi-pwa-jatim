@@ -170,6 +170,9 @@
                                 class="w-52 px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">Akun Lawan
                             </th>
                             <th rowspan="2"
+                                class="w-32 px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">Kode
+                                Akun</th>
+                            <th rowspan="2"
                                 class="w-32 px-4 py-3 text-left border-r border-gray-200 dark:border-gray-700">Posting Oleh
                             </th>
                             <th rowspan="2"
@@ -201,7 +204,7 @@
                                 class="px-4 py-3 text-blue-900 dark:text-blue-200 border-r border-gray-100 dark:border-gray-800">
                                 Saldo Awal Periode
                             </td>
-                            <td class="px-4 py-3 text-xs text-gray-400 border-r border-gray-100 dark:border-gray-800">-
+                            <td colspan="2" class="px-4 py-3 text-xs text-gray-400 border-r border-gray-100 dark:border-gray-800">-
                             </td>
                             <td
                                 class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-800">
@@ -245,13 +248,24 @@
                                         @forelse ($row['opposing_accounts'] as $opp)
                                             <div class="flex items-center gap-1.5">
                                                 <span
-                                                    class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded shrink-0">
-                                                    {{ $opp['code'] }}
-                                                </span>
-                                                <span
                                                     class="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[180px]"
                                                     title="{{ $opp['name'] }}">
                                                     {{ $opp['name'] }}
+                                                </span>
+                                            </div>
+                                        @empty
+                                            <span class="text-xs text-gray-400">-</span>
+                                        @endforelse
+                                    </div>
+                                </td>
+
+                                <td class="px-4 py-2.5 border-r border-gray-100 dark:border-gray-800">
+                                    <div class="space-y-1">
+                                        @forelse ($row['opposing_accounts'] as $opp)
+                                            <div class="flex items-center">
+                                                <span
+                                                    class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded shrink-0">
+                                                    {{ $opp['code'] }}
                                                 </span>
                                             </div>
                                         @empty
