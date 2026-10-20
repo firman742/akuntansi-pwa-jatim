@@ -20,7 +20,7 @@ class PeriodSeeder extends Seeder
                 "end_date" => "2022-12-31",
                 "sub_periods" => [
                     [
-                        "name" => "Juli 2022",
+                        "name" => "Desember 2022",
                         "description" => "Bulan Desember 2022",
                         "start_date" => "2022-12-01",
                         "end_date" => "2022-12-31",

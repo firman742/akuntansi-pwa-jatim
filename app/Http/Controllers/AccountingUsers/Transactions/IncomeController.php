@@ -14,6 +14,7 @@ use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
+use App\Services\AccountingUsers\GoogleDriveService;
 use App\Services\AccountingUsers\Incomes\DeleteIncomeService;
 use App\Services\AccountingUsers\Incomes\IncomeService;
 use App\Services\AccountingUsers\Incomes\UpdateIncomeService;
@@ -25,6 +26,17 @@ use Illuminate\View\View;
 
 class IncomeController extends Controller
 {
+    // /**
+    //  * ExpenseController constructor.
+    //  * Force refresh Google Drive access token for receipt transactions and set it in the filesystem configuration.
+    //  *
+    //  * @param GoogleDriveService $googleDriveService
+    //  */
+    // public function __construct(public GoogleDriveService $googleDriveService)
+    // {
+    //     config(['filesystems.disks.google_receipt_transaction.accessToken' => $this->googleDriveService->getAccessToken()]);
+    // }
+
     /**
      * Display a listing of the income transactions for the authenticated user.
      *

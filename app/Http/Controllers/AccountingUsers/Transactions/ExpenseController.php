@@ -15,6 +15,7 @@ use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Models\UserAccountBalance;
 use App\Services\AccountingUsers\Expenses\ExpenseService;
+use App\Services\AccountingUsers\GoogleDriveService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,17 @@ use Illuminate\View\View;
 
 class ExpenseController extends Controller
 {
+    /**
+     * ExpenseController constructor.
+     * Force refresh Google Drive access token for receipt transactions and set it in the filesystem configuration.
+     *
+     * @param GoogleDriveService $googleDriveService
+     */
+    public function __construct(public GoogleDriveService $googleDriveService)
+    {
+        config(['filesystems.disks.google_receipt_transaction.accessToken' => $this->googleDriveService->getAccessToken()]);
+    }
+
     /**
      * Display a listing of expense transactions for monitoring.
      */
@@ -324,7 +336,7 @@ class ExpenseController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     * 
+     *
      * @param string $id
      * @param ExpenseService $service
      * @return RedirectResponse
