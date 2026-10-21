@@ -29,56 +29,122 @@ class CoaBalanceController extends Controller
     {
         $periodId = $request->query('period_id');
         $subPeriodId = $request->query('sub_period_id');
-        $coaId = $request->query('coa_id', null);
+        $coaId = $request->query('coa_id');
         $search = $request->query('search');
 
         $periods = Period::all();
-        $subPeriods = collect();
-        $coas = ChartOfAccount::where('is_active', true)
-            ->orderBy('code')
-            ->get();
 
+        // ---------------------------------------------------------------------
+        // Set Default Query: Ambil Sub Periode terbaru jika filter belum dipilih
+        // ---------------------------------------------------------------------
+        if (! $subPeriodId && ! $periodId) {
+            $latestSubPeriod = SubPeriod::orderBy('start_date', 'desc')->first();
+            if ($latestSubPeriod) {
+                $subPeriodId = $latestSubPeriod->id;
+                $periodId = $latestSubPeriod->period_id;
+            }
+        } elseif ($periodId && ! $subPeriodId) {
+            $latestSubPeriod = SubPeriod::where('period_id', $periodId)
+                ->orderBy('start_date', 'desc')
+                ->first();
+            if ($latestSubPeriod) {
+                $subPeriodId = $latestSubPeriod->id;
+            }
+        }
+
+        $subPeriods = collect();
         if ($periodId) {
             $subPeriods = SubPeriod::where('period_id', $periodId)
                 ->orderBy('start_date')
                 ->get();
         }
 
-        $query = CoaBalance::query()->with([
-            'chartOfAccount:id,name,code',
-            'subPeriod:id,name,period_id,start_date,end_date',
-            'subPeriod.period:id,name,start_date,end_date',
-        ]);
-
-
-        if ($periodId) {
-            $query->where('period_id', $periodId);
-        }
-
-        if ($subPeriodId) {
-            $query->where('sub_period_id', $subPeriodId);
-        }
-
-        if ($coaId) {
-            $query->where('chart_of_account_id', $coaId);
-        }
-
-        $coaBalances = $query->whereHas('chartOfAccount', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            })
-            ->orderBy('created_at')
+        $coas = ChartOfAccount::where('is_active', true)
+            ->orderBy('code')
             ->get();
 
+        // ---------------------------------------------------------------------
+        // 1. Ambil Seluruh Chart of Account (COA) Aktif
+        // ---------------------------------------------------------------------
+        $coaQuery = ChartOfAccount::where('is_active', true)->orderBy('code', 'asc');
+
+        if ($coaId) {
+            $coaQuery->where('id', $coaId);
+        }
+
+        if ($search) {
+            $coaQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        $allCoas = $coaQuery->get();
+
+        // ---------------------------------------------------------------------
+        // 2. Ambil data CoaBalance yang ada pada Sub Periode / Periode terpilih
+        // ---------------------------------------------------------------------
+        $existingBalances = collect();
+        if ($subPeriodId || $periodId) {
+            $balanceQuery = CoaBalance::query();
+
+            if ($subPeriodId) {
+                $balanceQuery->where('sub_period_id', $subPeriodId);
+            } elseif ($periodId) {
+                $balanceQuery->where('period_id', $periodId);
+            }
+
+            $existingBalances = $balanceQuery->get()->keyBy('chart_of_account_id');
+        }
+
+        // ---------------------------------------------------------------------
+        // 3. Petakan seluruh COA dengan data CoaBalance jika ada
+        // ---------------------------------------------------------------------
+        $coaBalances = $allCoas->map(function ($coa) use ($existingBalances) {
+            /** @var CoaBalance|null $balance */
+            $balance = $existingBalances->get($coa->id);
+
+            return [
+                'id' => $balance?->id, // Null jika belum ada data saldo
+                'chart_of_account_id' => $coa->id,
+                'chart_of_account' => [
+                    'id' => $coa->id,
+                    'name' => $coa->name,
+                    'code' => $coa->code,
+                ],
+                'opening_balance' => $balance ? (float) $balance->opening_balance : 0,
+                'debit_total' => $balance ? (float) $balance->debit_total : 0,
+                'credit_total' => $balance ? (float) $balance->credit_total : 0,
+                'current_balance' => $balance ? (float) $balance->current_balance : 0,
+            ];
+        });
+
+        // Label Header Sub Periode Aktif
+        $selectedSubPeriodName = null;
+        if ($subPeriodId && $subPeriods->isNotEmpty()) {
+            $activeSub = $subPeriods->firstWhere('id', $subPeriodId);
+            if ($activeSub) {
+                $selectedSubPeriodName = $activeSub->name;
+            }
+        } elseif ($periodId && $periods->isNotEmpty()) {
+            $activePeriod = $periods->firstWhere('id', $periodId);
+            if ($activePeriod) {
+                $selectedSubPeriodName = 'PERIODE ' . $activePeriod->name;
+            }
+        }
+
         return view('pages.menus.bendahara.coa_balances.index', compact(
-            "subPeriodId",
-            "periodId",
-            "subPeriods",
-            "periods",
-            "coas",
-            "coaBalances"
+            'subPeriodId',
+            'periodId',
+            'coaId',
+            'subPeriods',
+            'periods',
+            'coas',
+            'coaBalances',
+            'selectedSubPeriodName'
         ));
     }
+
 
     /**
      * Display the specified resource with details.

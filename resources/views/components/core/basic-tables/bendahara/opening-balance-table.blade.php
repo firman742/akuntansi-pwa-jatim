@@ -16,6 +16,7 @@
     showEditModal: false,
     editRowData: {},
     openEditModal(row) {
+        if (!row.id) return;
         this.showEditModal = true;
         this.editRowData = { ...row };
     },
@@ -35,19 +36,20 @@
     formatCurrency(amount) {
         if (amount === null || amount === undefined || amount === '') return '';
         const num = parseFloat(amount);
-        if (num === 0) return 'Rp-';
+        if (num === 0) return '';
         return 'Rp' + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(num);
     },
 
     canEdit(row) {
-        return !row.has_transaction && !row.has_allocation && !row.sub_period_closed && !row.sub_period_expired;
+        return row.id && !row.has_transaction && !row.has_allocation && !row.sub_period_closed && !row.sub_period_expired;
     },
 
     canDelete(row) {
-        return !row.has_transaction && !row.has_allocation && !row.sub_period_closed && !row.sub_period_expired;
+        return row.id && !row.has_transaction && !row.has_allocation && !row.sub_period_closed && !row.sub_period_expired;
     },
 
     getLockReason(row) {
+        if (!row.id) return 'Belum ada saldo awal ditetapkan untuk akun ini.';
         if (row.has_transaction) return 'Tidak dapat diubah karena sudah ada transaksi.';
         if (row.has_allocation) return 'Tidak dapat diubah karena sudah ada alokasi.';
         if (row.sub_period_closed) return 'Tidak dapat diubah karena periode sudah ditutup.';
@@ -57,9 +59,9 @@
 }">
 
     <!-- Judul Format Laporan Akuntansi -->
-    <div class="mb-4 text-center">
-        <h2 class="text-base font-bold tracking-wider text-gray-800 uppercase dark:text-gray-100 mt-4">
-            SALDO AWAL
+    <div class="mb-4 mt-4 text-center">
+        <h2 class="text-base font-bold tracking-wider text-gray-800 uppercase dark:text-gray-100">
+            NERACA SALDO AWAL
         </h2>
         <p class="text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
             PER {{ $selectedSubPeriodName ?? 'SELURUH PERIODE' }}
@@ -84,12 +86,12 @@
                 <!-- Body Tabel -->
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-800 font-mono text-xs sm:text-sm">
                     <template x-if="tableRowData.length > 0">
-                        <template x-for="(row, index) in tableRowData" :key="row.id">
+                        <template x-for="(row, index) in tableRowData" :key="row.chart_of_account_id">
                             <tr :class="index % 2 === 0 ? 'bg-white dark:bg-transparent' : 'bg-gray-50/50 dark:bg-white/[0.02]'"
                                 class="transition hover:bg-gray-100/80 dark:hover:bg-white/[0.05]">
 
                                 <!-- No -->
-                                <td class="px-4 py-2.5 text-center text-gray-500 border-r border-gray-200 dark:border-gray-800"
+                                <td class="px-4 py-2.5 text-center text-gray-500 border-r border-gray-200 dark:border-gray-800 font-sans"
                                     x-text="index + 1"></td>
 
                                 <!-- Nama Perkiraan -->
@@ -102,11 +104,11 @@
 
                                 <!-- Debit -->
                                 <td class="px-6 py-2.5 text-right font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-800"
-                                    x-text="row.debit > 0 ? formatCurrency(row.debit) : (row.credit > 0 ? '' : 'Rp-')"></td>
+                                    x-text="row.debit > 0 ? formatCurrency(row.debit) : (row.credit > 0 ? '' : '')"></td>
 
                                 <!-- Kredit -->
                                 <td class="px-6 py-2.5 text-right font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-800"
-                                    x-text="row.credit > 0 ? formatCurrency(row.credit) : (row.debit > 0 ? '' : 'Rp-')"></td>
+                                    x-text="row.credit > 0 ? formatCurrency(row.credit) : (row.debit > 0 ? '' : '')"></td>
 
                                 <!-- Action -->
                                 <td class="px-4 py-2 text-center">
@@ -123,20 +125,30 @@
                                         </button>
 
                                         <!-- Delete Button -->
-                                        <form :action="destroyUrl.replace(':id', row.id)" method="POST"
-                                            x-on:submit="if (!canDelete(row)) $event.preventDefault();">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" :disabled="!canDelete(row)"
-                                                :title="canDelete(row) ? 'Hapus Saldo Awal' : getLockReason(row)"
-                                                class="p-1 rounded transition"
-                                                :class="canDelete(row) ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10' : 'cursor-not-allowed text-gray-300 dark:text-gray-700'"
-                                                onclick="return confirm('Yakin hapus saldo awal ini?')">
+                                        <template x-if="row.id">
+                                            <form :action="destroyUrl.replace(':id', row.id)" method="POST"
+                                                x-on:submit="if (!canDelete(row)) $event.preventDefault();">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" :disabled="!canDelete(row)"
+                                                    :title="canDelete(row) ? 'Hapus Saldo Awal' : getLockReason(row)"
+                                                    class="p-1 rounded transition"
+                                                    :class="canDelete(row) ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10' : 'cursor-not-allowed text-gray-300 dark:text-gray-700'"
+                                                    onclick="return confirm('Yakin hapus saldo awal ini?')">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </template>
+
+                                        <template x-if="!row.id">
+                                            <span class="p-1 cursor-not-allowed text-gray-300 dark:text-gray-700" :title="getLockReason(row)">
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
-                                            </button>
-                                        </form>
+                                            </span>
+                                        </template>
                                     </div>
                                 </td>
                             </tr>
@@ -147,7 +159,7 @@
                     <template x-if="tableRowData.length === 0">
                         <tr>
                             <td colspan="6" class="px-6 py-10 text-center font-sans">
-                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Belum ada data saldo awal untuk periode ini.</p>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tidak ada akun COA yang ditemukan.</p>
                             </td>
                         </tr>
                     </template>

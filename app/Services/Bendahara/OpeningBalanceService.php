@@ -32,7 +32,7 @@ class OpeningBalanceService extends BaseService
         $periods = Period::all();
 
         // ---------------------------------------------------------------------
-        // Set Default: Jika sub_period_id & period_id kosong, ambil Sub Periode terbaru
+        // 1. Set Default: Jika sub_period_id & period_id kosong, ambil Sub Periode terbaru
         // ---------------------------------------------------------------------
         if (! $subPeriodId && ! $periodId) {
             $latestSubPeriod = SubPeriod::orderBy('start_date', 'desc')->first();
@@ -41,7 +41,6 @@ class OpeningBalanceService extends BaseService
                 $periodId = $latestSubPeriod->period_id;
             }
         } elseif ($periodId && ! $subPeriodId) {
-            // Jika hanya period_id yang dipilih, ambil sub periode terbaru di periode tersebut
             $latestSubPeriod = SubPeriod::where('period_id', $periodId)
                 ->orderBy('start_date', 'desc')
                 ->first();
@@ -51,44 +50,65 @@ class OpeningBalanceService extends BaseService
         }
 
         $subPeriods = collect();
-
         if ($periodId) {
             $subPeriods = SubPeriod::where('period_id', $periodId)
                 ->orderBy('start_date')
                 ->get();
         }
 
-        $openingBalanceQuery = OpeningBalance::with([
-            'chartOfAccount:id,name,code',
-            'subPeriod:id,name,period_id,start_date,end_date,is_closed',
-            'subPeriod.period:id,name,start_date,end_date',
-        ]);
-
-        // Filter & search
-        if ($periodId) {
-            $openingBalanceQuery->where('period_id', $periodId);
-        }
-
-        if ($subPeriodId) {
-            $openingBalanceQuery->where('sub_period_id', $subPeriodId);
-        }
+        // ---------------------------------------------------------------------
+        // 2. Ambil Seluruh Chart of Account (COA) Aktif
+        // ---------------------------------------------------------------------
+        $coaQuery = ChartOfAccount::where('is_active', true)->orderBy('code', 'asc');
 
         if ($search) {
-            $openingBalanceQuery->whereHas('chartOfAccount', function ($q) use ($search) {
+            $coaQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
-        $openingBalance = $openingBalanceQuery
-            ->select('opening_balances.*')
-            ->join('chart_of_accounts', 'opening_balances.chart_of_account_id', '=', 'chart_of_accounts.id')
-            ->orderBy('chart_of_accounts.code', 'asc')
-            ->get()
-            ->map(function ($item) {
+        $allCoas = $coaQuery->get();
 
+        // ---------------------------------------------------------------------
+        // 3. Ambil data OpeningBalance pada Sub Periode / Periode terpilih
+        // ---------------------------------------------------------------------
+        $existingOpeningBalances = collect();
+        if ($subPeriodId || $periodId) {
+            $obQuery = OpeningBalance::with([
+                'subPeriod:id,name,period_id,start_date,end_date,is_closed',
+            ]);
+
+            if ($subPeriodId) {
+                $obQuery->where('sub_period_id', $subPeriodId);
+            } elseif ($periodId) {
+                $obQuery->where('period_id', $periodId);
+            }
+
+            $existingOpeningBalances = $obQuery->get()->keyBy('chart_of_account_id');
+        }
+
+        // Context status sub periode saat ini untuk akumulasi status
+        $currentSubPeriod = $subPeriodId ? SubPeriod::find($subPeriodId) : null;
+        $defaultSubPeriodExpired = $currentSubPeriod?->end_date
+            ? Carbon::now()->gt(Carbon::parse($currentSubPeriod->end_date))
+            : false;
+        $defaultSubPeriodClosed = $currentSubPeriod?->is_closed ?? false;
+
+        // ---------------------------------------------------------------------
+        // 4. Petakan seluruh COA dengan data OpeningBalance jika ada
+        // ---------------------------------------------------------------------
+        $openingBalanceData = $allCoas->map(function ($coa) use (
+            $existingOpeningBalances,
+            $defaultSubPeriodExpired,
+            $defaultSubPeriodClosed
+        ) {
+            /** @var OpeningBalance|null $item */
+            $item = $existingOpeningBalances->get($coa->id);
+
+            if ($item) {
                 $hasTransaction = TransactionLine::query()
-                    ->where('chart_of_account_id', $item->chart_of_account_id)
+                    ->where('chart_of_account_id', $coa->id)
                     ->whereHas('transaction', function ($q) use ($item) {
                         $q->where('period_id', $item->period_id)
                             ->where('sub_period_id', $item->sub_period_id);
@@ -98,26 +118,27 @@ class OpeningBalanceService extends BaseService
                 $hasAllocation = BudgetAllocation::query()
                     ->where('period_id', $item->period_id)
                     ->where('sub_period_id', $item->sub_period_id)
-                    ->where(function ($q) use ($item) {
-                        $q->where(
-                            'from_chart_of_account_id',
-                            $item->chart_of_account_id
-                        )->orWhere(
-                            'to_chart_of_account_id',
-                            $item->chart_of_account_id
-                        );
+                    ->where(function ($q) use ($coa) {
+                        $q->where('from_chart_of_account_id', $coa->id)
+                            ->orWhere('to_chart_of_account_id', $coa->id);
                     })
                     ->exists();
 
                 $subPeriodExpired = $item->subPeriod?->end_date
                     ? Carbon::now()->gt(Carbon::parse($item->subPeriod->end_date))
-                    : false;
-                $subPeriodClosed = $item->subPeriod->is_closed ?? false;
+                    : $defaultSubPeriodExpired;
+                $subPeriodClosed = $item->subPeriod->is_closed ?? $defaultSubPeriodClosed;
+
+                $canEdit = ! $hasTransaction
+                    && ! $hasAllocation
+                    && ! $subPeriodExpired
+                    && ! $subPeriodClosed;
 
                 return [
                     'id' => $item->id,
-                    'account_name' => $item->chartOfAccount->name,
-                    'account_code' => $item->chartOfAccount->code,
+                    'chart_of_account_id' => $coa->id,
+                    'account_name' => $coa->name,
+                    'account_code' => $coa->code,
                     'sub_period' => $item->subPeriod?->name,
 
                     'debit' => $item->balance_type === NormalBalanceEnum::DEBIT->value
@@ -133,22 +154,33 @@ class OpeningBalanceService extends BaseService
                     'sub_period_closed' => $subPeriodClosed,
                     'sub_period_expired' => $subPeriodExpired,
 
-                    'can_edit' => ! $hasTransaction
-                        && ! $hasAllocation
-                        && ! $subPeriodExpired
-                        && ! $subPeriodClosed,
-
-                    'can_delete' => ! $hasTransaction
-                        && ! $hasAllocation
-                        && ! $subPeriodExpired
-                        && ! $subPeriodClosed,
+                    'can_edit' => $canEdit,
+                    'can_delete' => $canEdit,
                 ];
-            });
+            }
+
+            // COA yang belum memiliki saldo awal
+            return [
+                'id' => null,
+                'chart_of_account_id' => $coa->id,
+                'account_name' => $coa->name,
+                'account_code' => $coa->code,
+                'sub_period' => null,
+                'debit' => 0,
+                'credit' => 0,
+                'has_transaction' => false,
+                'has_allocation' => false,
+                'sub_period_closed' => $defaultSubPeriodClosed,
+                'sub_period_expired' => $defaultSubPeriodExpired,
+                'can_edit' => false,
+                'can_delete' => false,
+            ];
+        });
 
         return [
             'periods' => $periods,
             'subPeriods' => $subPeriods,
-            'openingBalances' => $openingBalance,
+            'openingBalances' => $openingBalanceData,
             'periodId' => $periodId,
             'subPeriodId' => $subPeriodId,
         ];

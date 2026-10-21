@@ -3,8 +3,8 @@
 @section('title', 'Saldo Awal')
 
 @section('content')
-    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Kelola Saldo Awal"
-        pageDescription="Buat dan kelola saldo awal berdasarkan periode" pageIcon="money" />
+    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Penetapan Saldo Awal"
+        pageDescription="Monitoring dan kelola saldo awal berdasarkan periode" pageIcon="money" />
 
     @if (session('success'))
         <div class="mb-6">
