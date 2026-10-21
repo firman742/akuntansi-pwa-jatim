@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Class UserAccount
@@ -18,7 +17,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property User $user
  * @property ChartOfAccount $coa
- * @property UserAccountBalance[]|HasMany $balances
  */
 class UserAccount extends Model
 {
@@ -48,15 +46,5 @@ class UserAccount extends Model
     public function coa(): BelongsTo
     {
         return $this->belongsTo(ChartOfAccount::class, 'coa_id');
-    }
-
-    /*
-     * Undocumented function
-     *
-     * @return HasMany
-     */
-    public function balances(): HasMany
-    {
-        return $this->hasMany(UserAccountBalance::class, 'user_account_id');
     }
 }

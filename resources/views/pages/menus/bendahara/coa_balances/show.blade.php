@@ -269,20 +269,6 @@
                             {{ $budgetAllocations->count() }}
                         </span>
                     </button>
-
-                    <button @click="activeTab='user'"
-                        :class="activeTab === 'user' ? 'border-primary-500 text-primary-600 dark:text-primary-400' :
-                            'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                        class="flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-all">
-                        Alokasi Pengguna
-                        <span
-                            :class="activeTab === 'user' ?
-                                'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-400' :
-                                'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'"
-                            class="rounded-full px-2 py-0.5 text-xs font-bold">
-                            {{ $userAccountBalances->count() }}
-                        </span>
-                    </button>
                 </div>
 
                 {{-- Konten Tab --}}
@@ -376,35 +362,6 @@
                             <div
                                 class="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center text-sm text-gray-400 dark:text-gray-500">
                                 Belum ada alokasi antar akun.</div>
-                        @endforelse
-                    </div>
-
-                    {{-- Tab 4: Alokasi User --}}
-                    <div x-show="activeTab === 'user'" x-transition class="space-y-3">
-                        @forelse($userAccountBalances as $allocation)
-                            <div
-                                class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 gap-2">
-                                <div>
-                                    <h4 class="font-bold text-gray-800 dark:text-gray-200">
-                                        {{ $allocation->userAccount?->user->name ?? '-' }}</h4>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Dialokasikan oleh: <span
-                                            class="font-medium text-gray-700 dark:text-gray-300">{{ $allocation->allocatedBy?->name }}</span>
-                                    </p>
-                                    <p class="text-xs font-medium text-purple-700 dark:text-purple-400 mt-1">Sisa Saldo: Rp
-                                        {{ number_format($allocation->remaining_balance, 0, ',', '.') }}</p>
-                                </div>
-                                <div
-                                    class="sm:text-right w-full sm:w-auto border-t border-gray-100 dark:border-gray-700 sm:border-t-0 pt-2 sm:pt-0">
-                                    <p class="text-base font-black text-purple-600 dark:text-purple-400">Rp
-                                        {{ number_format($allocation->allocated_balance, 0, ',', '.') }}</p>
-                                    <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
-                                        {{ $allocation->allocated_at }}</p>
-                                </div>
-                            </div>
-                        @empty
-                            <div
-                                class="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center text-sm text-gray-400 dark:text-gray-500">
-                                Belum ada alokasi pengguna.</div>
                         @endforelse
                     </div>
 

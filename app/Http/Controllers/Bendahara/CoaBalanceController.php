@@ -11,7 +11,6 @@ use App\Models\OpeningBalance;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
-use App\Models\UserAccountBalance;
 use App\Services\Bendahara\TopUpBalanceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -245,24 +244,6 @@ class CoaBalanceController extends Controller
             ->limit(10)
             ->get();
 
-        /**
-         * ==========================================================
-         * RIWAYAT ALOKASI DANA KE USER
-         * ==========================================================
-         */
-        $userAccountBalances = UserAccountBalance::with([
-            'userAccount',
-            'userAccount.user:id,name',
-            'allocatedBy:id,name',
-        ])
-            ->where('coa_balance_id', $coaBalance->id)
-            ->latest('allocated_at')
-            ->limit(10)
-            ->get();
-
-
-
-
 
         /**
          * ==========================================================
@@ -305,18 +286,6 @@ class CoaBalanceController extends Controller
             ]);
         }
 
-        // User Allocation
-        foreach ($userAccountBalances as $userAllocation) {
-            $timeline->push([
-                'type' => 'user_allocation',
-                'date' => $userAllocation->allocated_at,
-                'title' => 'Alokasi ke Pengguna',
-                'amount' => $userAllocation->allocated_balance,
-                'data' => $userAllocation,
-            ]);
-        }
-
-
         $timeline = $timeline
             ->sortByDesc('date')
             ->values();
@@ -352,7 +321,6 @@ class CoaBalanceController extends Controller
             'openingBalances' => $openingBalances,
             'transactions' => $transactions,
             'budgetAllocations' => $budgetAllocations,
-            'userAccountBalances' => $userAccountBalances,
             'timeline' => $timeline,
             'chartData' => $chartData,
             'hasChartData' => $hasChartData,

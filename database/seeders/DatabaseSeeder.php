@@ -27,9 +27,6 @@ class DatabaseSeeder extends Seeder
             // // /** Group 3 : Budget Allocation & Journal */
             // BudgetAllocationSeeder::class,
 
-            // // /** Group 4 : User Account Balance & Journal */
-            // UserAccountBalanceSeeder::class,
-
             // // /** Group 5 : Transaction */
             // TransactionExpenseSeeder::class,
 
