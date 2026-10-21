@@ -232,12 +232,12 @@ class Menu
                     '/user/coas',
                     ['user/coas*']
                 ),
-                self::item(
-                    'Saldo Saya',
-                    'money',
-                    '/user/user-account-balances',
-                    ['user/user-account-balances*']
-                ),
+                // self::item(
+                //     'Saldo Akun & Mutasi',
+                //     'money',
+                //     '/user/coa-balances',
+                //     ['user/coa-balances*']
+                // ),
             ]),
             self::section('Transaksi', [
                 self::item(

@@ -412,16 +412,6 @@ Route::middleware(['auth', 'role:ACCOUNTING USER'])->prefix('user')->name('user.
 
     /*
     |--------------------------------------------------------------------------
-    | USER ACCOUNT BALANCE
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('user-account-balances')->name('user-account-balances.')->group(function () {
-        Route::get('/', [App\Http\Controllers\AccountingUsers\UserAccountBalanceController::class, 'index'])->name('index');
-        Route::get('/{id}', [App\Http\Controllers\AccountingUsers\UserAccountBalanceController::class, 'show'])->name('show');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
     | PERIOD HELPER
     |--------------------------------------------------------------------------
     */
