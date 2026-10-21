@@ -147,7 +147,7 @@ class Menu
                     ],
                     'subItems' => [
                         self::item(
-                            'Penetapan Saldo Awal',
+                            'Neraca Saldo Awal',
                             null,
                             '/bendahara/opening-balances',
                             ['bendahara/opening-balances*']
@@ -162,13 +162,6 @@ class Menu
                             ['bendahara/budget-allocations*']
                         ),
                         ------------------------------------------------------------- */
-                        self::item(
-                            'Alokasi Kas Operasional',
-                            null,
-                            '/bendahara/user-account-balances',
-                            ['bendahara/user-account-balances*']
-                        ),
-
                         self::item(
                             'Mutasi dan Posisi Saldo Akun',
                             null,

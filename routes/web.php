@@ -356,18 +356,6 @@ Route::middleware(['auth', 'role:BENDAHARA'])->prefix('bendahara')->name('bendah
 
     /*
     |--------------------------------------------------------------------------
-    | USER ACCOUNT BALANCE
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('user-account-balances')->name('user-account-balances.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'index'])->name('index');
-        Route::get('/create', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'create'])->name('create');
-        Route::post('/', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'store'])->name('store');
-        Route::get('/coas/{coa}/users', [App\Http\Controllers\Bendahara\UserAccountBalanceController::class, 'getUserAccountsByCoa'])->name('users-by-coa');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
     | REQUEST BALANCE
     |--------------------------------------------------------------------------
     */
