@@ -31,23 +31,45 @@ class OpeningBalanceController extends Controller
 
         $data = $service->getIndexData($periodId, $subPeriodId, $search);
 
-        return view('pages.menus.bendahara.opening_balances.index',
+        // Ambil periodId & subPeriodId hasil penentuan default dari Service
+        $periodId = $data['periodId'];
+        $subPeriodId = $data['subPeriodId'];
+
+        // Cari nama label yang sedang aktif
+        $selectedSubPeriodName = null;
+
+        if ($subPeriodId && isset($data['subPeriods'])) {
+            $activeSub = $data['subPeriods']->firstWhere('id', $subPeriodId);
+            if ($activeSub) {
+                $selectedSubPeriodName = $activeSub->name;
+            }
+        } elseif ($periodId && isset($data['periods'])) {
+            $activePeriod = $data['periods']->firstWhere('id', $periodId);
+            if ($activePeriod) {
+                $selectedSubPeriodName = 'PERIODE ' . $activePeriod->name;
+            }
+        }
+
+        return view(
+            'pages.menus.bendahara.opening_balances.index',
             array_merge($data, [
                 'periodId' => $periodId,
                 'subPeriodId' => $subPeriodId,
+                'selectedSubPeriodName' => $selectedSubPeriodName,
             ])
         );
     }
 
     /**
      * Show the form for creating a new resource.
-     * 
+     *
      * @param OpeningBalanceService $service
      * @return View
      */
     public function create(OpeningBalanceService $service): View
     {
-        return view('pages.menus.bendahara.opening_balances.create',
+        return view(
+            'pages.menus.bendahara.opening_balances.create',
             $service->getCreateData()
         );
     }
@@ -58,7 +80,7 @@ class OpeningBalanceController extends Controller
      * @param StoreOpeningBalanceRequest $request
      * @return RedirectResponse
      * @throws Exception
-     * 
+     *
      */
     public function store(OpeningBalanceService $service, StoreOpeningBalanceRequest $request): RedirectResponse
     {

@@ -3,8 +3,8 @@
 @section('title', 'Saldo Awal')
 
 @section('content')
-    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Kelola Saldo Awal" pageDescription="Buat dan kelola saldo awal berdasarkan periode"
-        pageIcon="money" />
+    <x-common.page-breadcrumb defaultTitle="Saldo Awal" pageTitle="Kelola Saldo Awal"
+        pageDescription="Buat dan kelola saldo awal berdasarkan periode" pageIcon="money" />
 
     @if (session('success'))
         <div class="mb-6">
@@ -24,43 +24,29 @@
         </div>
     @endif
 
-
     {{-- TABLE --}}
     <div class="space-y-6">
         <x-core.basic-tables.core-table needFilter resetUrl="{{ route('bendahara.opening-balances.index') }}">
             {{-- SLOT search --}}
             <x-slot name="search">
-                    <x-form.input
-                    id="searchId"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Cari berdasarkan Akun atau kode COA..."
-                    startIconSearch
-                    endIconSearch
-                />
+                <x-form.input id="searchId" name="search" value="{{ request('search') }}"
+                    placeholder="Cari berdasarkan Akun atau kode COA..." startIconSearch endIconSearch />
             </x-slot>
 
             {{-- SLOT filter --}}
             <x-slot name="filters">
-                <x-form.select 
-                    id="filter_period" 
-                    name="period_id" 
-                    label="Periode" 
-                    placeholder="Pilih Periode">
+                <x-form.select id="filter_period" name="period_id" label="Periode" placeholder="Pilih Periode">
                     @foreach ($periods as $period)
-                        <option value="{{ $period->id }}" @selected(request('period_id') == $period->id)>
+                        <option value="{{ $period->id }}" @selected($periodId == $period->id)>
                             {{ $period->name }}
                         </option>
                     @endforeach
                 </x-form.select>
 
-                <x-form.select 
-                    id="filter_sub_period" 
-                    name="sub_period_id" 
-                    label="Sub Periode"
+                <x-form.select id="filter_sub_period" name="sub_period_id" label="Sub Periode"
                     placeholder="Pilih Sub Periode">
                     @foreach ($subPeriods as $sub)
-                        <option value="{{ $sub->id }}" @selected(request('sub_period_id') == $sub->id)>
+                        <option value="{{ $sub->id }}" @selected($subPeriodId == $sub->id)>
                             {{ $sub->name }}
                         </option>
                     @endforeach
@@ -78,7 +64,7 @@
             </x-slot>
 
             <x-core.basic-tables.bendahara.opening-balance-table :openingBalances="$openingBalances" :periods="$periods" :periodId="$periodId"
-                :subPeriods="$subPeriods" :subPeriodId="$subPeriodId" />
+                :subPeriods="$subPeriods" :subPeriodId="$subPeriodId" :selectedSubPeriodName="$selectedSubPeriodName" />
 
         </x-core.basic-tables.core-table>
     </div>
@@ -88,40 +74,45 @@
         const periodFilter = document.getElementById('filter_period');
         const subPeriodFilter = document.getElementById('filter_sub_period');
         const searchInput = document.getElementById('searchId');
-
         let timeout = null;
 
+        // 1. Ketika Filter Periode Berubah
+        periodFilter.addEventListener('change', function() {
+            const urlParams = new URLSearchParams(window.location.search);
 
-        periodFilter.addEventListener('change', async function() {
-            let periodId = this.value;
-
-            subPeriodFilter.innerHTML = '<option>Loading...</option>';
-
-            if (!periodId) {
-                subPeriodFilter.innerHTML = '<option value="">Semua</option>';
-                return;
+            if (this.value) {
+                urlParams.set('period_id', this.value);
+            } else {
+                urlParams.delete('period_id');
             }
 
-            const res = await fetch(`/bendahara/periods/${periodId}/sub-periods`);
-            const data = await res.json();
+            // Reset sub_period_id jika periode utama diganti
+            urlParams.delete('sub_period_id');
 
-            subPeriodFilter.innerHTML = '<option value="">Semua</option>';
-
-            data.forEach(sub => {
-                subPeriodFilter.innerHTML += `
-                    <option value="${sub.id}">${sub.name}</option>
-                `;
-            });
+            window.location.search = urlParams.toString();
         });
 
-        searchInput.addEventListener('input', function () {
+        // 2. Ketika Filter Sub Periode Berubah
+        subPeriodFilter.addEventListener('change', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if (this.value) {
+                urlParams.set('sub_period_id', this.value);
+            } else {
+                urlParams.delete('sub_period_id');
+            }
+
+            window.location.search = urlParams.toString();
+        });
+
+        // 3. Search Input dengan Debounce
+        searchInput.addEventListener('input', function() {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
-                const searchValue = this.value;
                 const urlParams = new URLSearchParams(window.location.search);
 
-                if (searchValue) {
-                    urlParams.set('search', searchValue);
+                if (this.value) {
+                    urlParams.set('search', this.value);
                 } else {
                     urlParams.delete('search');
                 }

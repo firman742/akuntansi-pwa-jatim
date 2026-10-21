@@ -24,11 +24,31 @@ class OpeningBalanceService extends BaseService
      *
      * @param  string|null  $periodId
      * @param  string|null  $subPeriodId
+     * @param  string|null  $search
      * @return array
      */
     public function getIndexData(?string $periodId, ?string $subPeriodId, ?string $search = null): array
     {
         $periods = Period::all();
+
+        // ---------------------------------------------------------------------
+        // Set Default: Jika sub_period_id & period_id kosong, ambil Sub Periode terbaru
+        // ---------------------------------------------------------------------
+        if (! $subPeriodId && ! $periodId) {
+            $latestSubPeriod = SubPeriod::orderBy('start_date', 'desc')->first();
+            if ($latestSubPeriod) {
+                $subPeriodId = $latestSubPeriod->id;
+                $periodId = $latestSubPeriod->period_id;
+            }
+        } elseif ($periodId && ! $subPeriodId) {
+            // Jika hanya period_id yang dipilih, ambil sub periode terbaru di periode tersebut
+            $latestSubPeriod = SubPeriod::where('period_id', $periodId)
+                ->orderBy('start_date', 'desc')
+                ->first();
+            if ($latestSubPeriod) {
+                $subPeriodId = $latestSubPeriod->id;
+            }
+        }
 
         $subPeriods = collect();
 
@@ -37,6 +57,7 @@ class OpeningBalanceService extends BaseService
                 ->orderBy('start_date')
                 ->get();
         }
+
         $openingBalanceQuery = OpeningBalance::with([
             'chartOfAccount:id,name,code',
             'subPeriod:id,name,period_id,start_date,end_date,is_closed',
@@ -60,7 +81,9 @@ class OpeningBalanceService extends BaseService
         }
 
         $openingBalance = $openingBalanceQuery
-            ->orderByDesc('created_at')
+            ->select('opening_balances.*')
+            ->join('chart_of_accounts', 'opening_balances.chart_of_account_id', '=', 'chart_of_accounts.id')
+            ->orderBy('chart_of_accounts.code', 'asc')
             ->get()
             ->map(function ($item) {
 
@@ -76,7 +99,6 @@ class OpeningBalanceService extends BaseService
                     ->where('period_id', $item->period_id)
                     ->where('sub_period_id', $item->sub_period_id)
                     ->where(function ($q) use ($item) {
-
                         $q->where(
                             'from_chart_of_account_id',
                             $item->chart_of_account_id
@@ -127,6 +149,8 @@ class OpeningBalanceService extends BaseService
             'periods' => $periods,
             'subPeriods' => $subPeriods,
             'openingBalances' => $openingBalance,
+            'periodId' => $periodId,
+            'subPeriodId' => $subPeriodId,
         ];
     }
 
