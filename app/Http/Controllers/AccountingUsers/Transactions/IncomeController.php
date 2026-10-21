@@ -175,27 +175,28 @@ class IncomeController extends Controller
         $selectedSubPeriodId = request('sub_period_id')
             ?? $subPeriods->first()?->id;
 
-        $cashCoas = UserAccountBalance::query()
-            ->with('userAccount.coa')
-            ->whereHas('userAccount', function ($q) use ($userId) {
+        // 1. Ambil COA kas yang diizinkan untuk User dari user_accounts
+        // 2. Join/With ke coa_balances untuk mengambil saldo periode berjalan
+        $cashCoas = ChartOfAccount::query()
+            ->whereHas('userAccounts', function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             })
-            ->where('period_id', $selectedPeriodId)
-            ->where('sub_period_id', $selectedSubPeriodId)
+            ->with(['coaBalances' => function ($q) use ($selectedPeriodId, $selectedSubPeriodId) {
+                $q->where('period_id', $selectedPeriodId)
+                    ->where('sub_period_id', $selectedSubPeriodId);
+            }])
+            ->orderBy('code')
             ->get()
-            ->sortBy(fn($balance) => $balance->userAccount->coa->code)
-            ->values()
-            ->map(function ($balance) {
+            ->map(function ($coa) {
+                $coaBalance = $coa->coaBalances->first();
                 return [
-                    'user_account_balance_id' => $balance->id,
-                    'coa_id' => $balance->userAccount->coa->id,
-                    'coa_code' => $balance->userAccount->coa->code,
-                    'coa_name' => $balance->userAccount->coa->name,
-                    'remaining_balance' => $balance->remaining_balance,
+                    'coa_id' => $coa->id,
+                    'coa_code' => $coa->code,
+                    'coa_name' => $coa->name,
+                    'remaining_balance' => $coaBalance ? $coaBalance->current_balance : 0,
                 ];
             });
 
-        // 1. Ambil daftar COA ID dari semua akun kas user
         $cashCoaIds = $cashCoas->pluck('coa_id')->toArray();
 
         // 2. Query Akun Penerimaan (DEBIT) dengan mengecualikan semua COA Kas milik user
@@ -265,18 +266,20 @@ class IncomeController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        $cashCoas = UserAccountBalance::query()
-            ->with('userAccount.coa')
-            ->whereHas('userAccount', fn($q) => $q->where('user_id', $userId))
-            ->where('period_id', $selectedPeriodId)
-            ->where('sub_period_id', $transaction->sub_period_id)
+        // Fetch COA Kas milik user beserta saldo CoaBalance pada periode berjalan
+        $cashCoas = ChartOfAccount::query()
+            ->whereHas('userAccounts', fn($q) => $q->where('user_id', $userId))
+            ->with(['coaBalances' => function ($q) use ($selectedPeriodId, $transaction) {
+                $q->where('period_id', $selectedPeriodId)
+                    ->where('sub_period_id', $transaction->sub_period_id);
+            }])
+            ->orderBy('code')
             ->get()
-            ->map(fn($balance) => [
-                'user_account_balance_id' => $balance->id,
-                'coa_id' => $balance->userAccount->coa->id,
-                'coa_code' => $balance->userAccount->coa->code,
-                'coa_name' => $balance->userAccount->coa->name,
-                'remaining_balance' => $balance->remaining_balance,
+            ->map(fn($coa) => [
+                'coa_id' => $coa->id,
+                'coa_code' => $coa->code,
+                'coa_name' => $coa->name,
+                'remaining_balance' => $coa->coaBalances->first()?->current_balance ?? 0,
             ]);
 
         $incomeCoas = ChartOfAccount::query()
@@ -284,18 +287,12 @@ class IncomeController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
-        // Ambil data line lama untuk prefill form
+        // Ambil data line lama
         $selectedDebitLine = $transaction->transactionLines->where('position', NormalBalanceEnum::DEBIT)->first();
         $selectedCreditLine = $transaction->transactionLines->where('position', NormalBalanceEnum::CREDIT)->first();
 
-        $selectedUserBalanceId = null;
-        if ($selectedDebitLine) {
-            $matchedBalance = UserAccountBalance::whereHas('userAccount', fn($q) => $q->where('coa_id', $selectedDebitLine->chart_of_account_id))
-                ->where('period_id', $transaction->period_id)
-                ->where('sub_period_id', $transaction->sub_period_id)
-                ->first();
-            $selectedUserBalanceId = $matchedBalance?->id;
-        }
+        $selectedDebitCoaId = $selectedDebitLine?->chart_of_account_id;
+        $selectedCreditCoaId = $selectedCreditLine?->chart_of_account_id;
 
         return view('pages.menus.user.transactions.incomes.edit', compact(
             'transaction',
@@ -303,8 +300,8 @@ class IncomeController extends Controller
             'incomeCoas',
             'subPeriods',
             'selectedPeriodId',
-            'selectedUserBalanceId',
-            'selectedCreditLine'
+            'selectedDebitCoaId',
+            'selectedCreditCoaId'
         ));
     }
 

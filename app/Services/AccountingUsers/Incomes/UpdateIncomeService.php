@@ -4,12 +4,10 @@ namespace App\Services\AccountingUsers\Incomes;
 
 use App\Enums\MetaTypeTransactionEnum;
 use App\Enums\NormalBalanceEnum;
-use App\Enums\TransactionType;
 use App\Models\CoaBalance;
 use App\Models\Journal;
 use App\Models\Transaction;
 use App\Models\TransactionLine;
-use App\Models\UserAccountBalance;
 use App\Services\TransactionBaseService;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -28,62 +26,9 @@ class UpdateIncomeService extends TransactionBaseService
     public function handle(Transaction $transaction, array $data): Transaction
     {
         return DB::transaction(function () use ($transaction, $data) {
-            $userId = $transaction->created_by;
             $oldAmount = (float) $transaction->gross_amount;
 
-            // ... (kode rollback saldo & jurnal lama tetap sama) ...
-            $oldDebitLine = $transaction->transactionLines()->where('position', NormalBalanceEnum::DEBIT)->first();
-            $oldCreditLine = $transaction->transactionLines()->where('position', NormalBalanceEnum::CREDIT)->first();
-
-            $oldUserBalance = null;
-            $oldSourceBalance = null;
-            $oldUserBalanceSnapshot = [];
-            $oldSourceBalanceSnapshot = [];
-
-            if ($oldDebitLine) {
-                $oldUserBalance = UserAccountBalance::query()
-                    ->whereHas('userAccount', fn($q) => $q->where('coa_id', $oldDebitLine->chart_of_account_id))
-                    ->where('period_id', $transaction->period_id)
-                    ->where('sub_period_id', $transaction->sub_period_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($oldUserBalance) {
-                    $oldUserBalanceSnapshot = [
-                        'allocated_balance' => $oldUserBalance->allocated_balance,
-                        'income_balance'    => $oldUserBalance->income_balance,
-                        'used_balance'      => $oldUserBalance->used_balance,
-                        'remaining_balance' => $oldUserBalance->remaining_balance,
-                    ];
-
-                    $oldUserBalance->decrement('income_balance', $oldAmount);
-                    $oldUserBalance->decrement('remaining_balance', $oldAmount);
-                    $oldUserBalance->refresh();
-                }
-            }
-
-            if ($oldCreditLine) {
-                $oldSourceBalance = UserAccountBalance::query()
-                    ->whereHas('userAccount', fn($q) => $q->where('coa_id', $oldCreditLine->chart_of_account_id))
-                    ->where('period_id', $transaction->period_id)
-                    ->where('sub_period_id', $transaction->sub_period_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($oldSourceBalance) {
-                    $oldSourceBalanceSnapshot = [
-                        'allocated_balance' => $oldSourceBalance->allocated_balance,
-                        'income_balance'    => $oldSourceBalance->income_balance,
-                        'used_balance'      => $oldSourceBalance->used_balance,
-                        'remaining_balance' => $oldSourceBalance->remaining_balance,
-                    ];
-
-                    $oldSourceBalance->decrement('used_balance', $oldAmount);
-                    $oldSourceBalance->increment('remaining_balance', $oldAmount);
-                    $oldSourceBalance->refresh();
-                }
-            }
-
+            // 1. ROLLBACK JURNAL & COA BALANCE LAMA
             $oldJournal = Journal::where('transaction_id', $transaction->id)->with('details')->first();
             if ($oldJournal) {
                 foreach ($oldJournal->details as $detail) {
@@ -99,49 +44,23 @@ class UpdateIncomeService extends TransactionBaseService
                 $oldJournal->delete();
             }
 
+            // Hapus detail line transaksi lama
             $transaction->transactionLines()->delete();
 
-            // 2. TERAPKAN DATA BARU
+            // 2. PROSES DATA BARU
             $newAmount = (float) $data['amount'];
 
-            $newUserBalance = UserAccountBalance::query()
-                ->with('userAccount')
-                ->lockForUpdate()
-                ->findOrFail($data['user_account_balance_id']);
-
-            $newUserBalanceBeforeSnapshot = [
-                'allocated_balance' => $newUserBalance->allocated_balance,
-                'income_balance'    => $newUserBalance->income_balance,
-                'used_balance'      => $newUserBalance->used_balance,
-                'remaining_balance' => $newUserBalance->remaining_balance,
-            ];
-
-            $newSourceBalance = UserAccountBalance::query()
-                ->whereHas('userAccount', fn($q) => $q->where('coa_id', $data['income_coa_id']))
-                ->where('period_id', $data['period_id'])
-                ->where('sub_period_id', $data['sub_period_id'])
-                ->lockForUpdate()
-                ->first();
-
-            $newSourceBalanceBeforeSnapshot = [];
-            if ($newSourceBalance) {
-                $newSourceBalanceBeforeSnapshot = [
-                    'allocated_balance' => $newSourceBalance->allocated_balance,
-                    'income_balance'    => $newSourceBalance->income_balance,
-                    'used_balance'      => $newSourceBalance->used_balance,
-                    'remaining_balance' => $newSourceBalance->remaining_balance,
-                ];
-            }
-
             $lines = [];
+            // Debit Kas Penerima
             $lines[] = $this->line(
-                $newUserBalance->userAccount->coa_id,
+                $data['coa_id'],
                 $newAmount,
                 NormalBalanceEnum::DEBIT->value,
                 MetaTypeTransactionEnum::MAIN,
                 'Mutasi Kas Masuk (Updated)'
             );
 
+            // Credit Akun Sumber Penerimaan
             $lines[] = $this->line(
                 $data['income_coa_id'],
                 $newAmount,
@@ -150,6 +69,7 @@ class UpdateIncomeService extends TransactionBaseService
                 $data['description'] ?? 'Penerimaan (Updated)'
             );
 
+            // Update Transaction Header
             $transaction->update([
                 'transaction_date' => $data['transaction_date'],
                 'description'      => $data['description'],
@@ -159,6 +79,7 @@ class UpdateIncomeService extends TransactionBaseService
                 'sub_period_id'    => $data['sub_period_id'],
             ]);
 
+            // Create Transaction Lines Baru
             foreach ($lines as $line) {
                 TransactionLine::create([
                     'transaction_id'      => $transaction->id,
@@ -170,16 +91,7 @@ class UpdateIncomeService extends TransactionBaseService
                 ]);
             }
 
-            $newUserBalance->increment('income_balance', $newAmount);
-            $newUserBalance->increment('remaining_balance', $newAmount);
-            $newUserBalance->refresh();
-
-            if ($newSourceBalance) {
-                $newSourceBalance->increment('used_balance', $newAmount);
-                $newSourceBalance->decrement('remaining_balance', $newAmount);
-                $newSourceBalance->refresh();
-            }
-
+            // Post Jurnal Baru & Update CoaBalance
             $this->generateJournal(
                 [
                     'transaction_date' => $transaction->transaction_date,
@@ -194,21 +106,15 @@ class UpdateIncomeService extends TransactionBaseService
                 $transaction
             );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Handle File Upload to Google Drive (Update)
-            |--------------------------------------------------------------------------
-            */
+            // 3. HANDLE FILE UPLOAD (Google Drive)
             if (isset($data['receipt_file']) && $data['receipt_file'] instanceof \Illuminate\Http\UploadedFile) {
                 try {
-                    // Hapus file lama di Google Drive jika ada
                     if ($transaction->receipt_path && Storage::disk('google_receipt_transaction')->exists($transaction->receipt_path)) {
                         Storage::disk('google_receipt_transaction')->delete($transaction->receipt_path);
                     }
 
                     $file = $data['receipt_file'];
                     $extension = $file->getClientOriginalExtension();
-
                     $transaction->load(['period', 'subPeriod']);
 
                     $jenis         = strtoupper($transaction->transaction_type->value);
@@ -220,31 +126,35 @@ class UpdateIncomeService extends TransactionBaseService
                     $fileName  = $trxNumber . '.' . $extension;
 
                     Storage::disk('google_receipt_transaction')->putFileAs($directory, $file, $fileName);
-
                     $receiptPath = trim($directory, '/') . '/' . $fileName;
 
-                    $transaction->update([
-                        'receipt_path' => $receiptPath
-                    ]);
+                    $transaction->update(['receipt_path' => $receiptPath]);
                 } catch (\Exception $e) {
                     throw new Exception('Gagal mengunggah bukti transaksi ke Google Drive: ' . $e->getMessage());
                 }
             }
 
-            // ... (Log audit dan return tetap sama) ...
+            // 4. AUDIT LOG
+            $this->logger->log(
+                action: 'UPDATE',
+                module: 'TRANSACTION_INCOME',
+                subject: $transaction,
+                description: 'Perbarui transaksi penerimaan.',
+                old: ['gross_amount' => $oldAmount],
+                new: [
+                    'transaction_id'     => $transaction->id,
+                    'transaction_number' => $transaction->transaction_number,
+                    'total_amount'       => $newAmount,
+                    'status'             => $transaction->status,
+                ]
+            );
+
             return $transaction;
         });
     }
 
     /**
-     * Rollback CoaBalance for a specific chart of account, period, and sub-period.
-     *
-     * @param string $coaId
-     * @param string $periodId
-     * @param string $subPeriodId
-     * @param float $debit
-     * @param float $credit
-     * @return void
+     * Rollback CoaBalance untuk akun, periode, dan sub-periode tertentu.
      */
     protected static function rollbackCoaBalance(string $coaId, string $periodId, string $subPeriodId, float $debit, float $credit): void
     {

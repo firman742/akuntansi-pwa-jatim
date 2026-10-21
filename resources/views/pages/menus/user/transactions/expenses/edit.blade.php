@@ -35,32 +35,29 @@
     @endif
 
     {{-- FORM CONTAINER --}}
-    <div class="mx-auto pb-10" x-data="expenseEditForm(@js($cashCoas), @js($oldLines), '{{ $selectedCashBalanceId }}')" x-init="init()">
+    <div class="mx-auto pb-10" x-data="expenseEditForm(@js($cashCoas), @js($oldLines), '{{$selectedCashCoaId }}')" x-init="init()">
         <form action="{{ route('user.transactions.expenses.update', $transaction->id) }}" method="POST"
             enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <input type="hidden" name="period_id" value="{{ $selectedPeriodId }}">
-            {{-- Hidden inputs untuk field yang dikunci agar tetap terkirim ke request --}}
             <input type="hidden" name="sub_period_id" value="{{ $selectedSubPeriodId }}">
-            <input type="hidden" name="user_account_balance_id" value="{{ $selectedCashBalanceId }}">
+            <input type="hidden" name="cash_coa_id" value="{{ $selectedCashCoaId }}">
 
             <div class="grid lg:grid-cols-3 gap-8 items-start">
 
                 {{-- LEFT COLUMN: FORM INPUTS --}}
                 <div class="lg:col-span-2 space-y-6">
 
-                    {{-- CARD 1: INFORMASI TRANSAKSI (Sub Periode Locked, Tanggal Editable) --}}
+                    {{-- CARD 1: INFORMASI TRANSAKSI --}}
                     <x-common.component-card title="Informasi Transaksi"
                         desc="Informasi dasar waktu dan periode pengeluaran">
                         <div class="grid md:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Sub
-                                    Periode</label>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Sub Periode</label>
                                 <input type="text" value="{{ $subPeriodName }}" disabled
                                     class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed">
-                                <p class="text-[11px] text-slate-400 mt-1">Sub periode tidak dapat diubah pada mode edit.
-                                </p>
+                                <p class="text-[11px] text-slate-400 mt-1">Sub periode tidak dapat diubah pada mode edit.</p>
                             </div>
                             <div>
                                 <x-form.date-picker id="transaction_date" name="transaction_date" label="Tanggal Transaksi"
@@ -70,12 +67,11 @@
                         </div>
                     </x-common.component-card>
 
-                    {{-- CARD 2: KAS SUMBER PENGELUARAN (Locked) --}}
+                    {{-- CARD 2: KAS SUMBER PENGELUARAN --}}
                     <x-common.component-card title="Sumber Kas Pengeluaran" desc="Akun kas sumber pembayaran transaksi">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Akun
-                                    Kas Sumber</label>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Akun Kas Sumber</label>
                                 <input type="text" value="{{ $selectedCashName }}" disabled
                                     class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed">
                                 <p class="text-[11px] text-slate-400 mt-1">Sumber kas pembayaran bersifat tetap.</p>
@@ -88,8 +84,7 @@
                                     <div class="w-2.5 h-2.5 rounded-full"
                                         :class="balance < 0 ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500 animate-pulse'">
                                     </div>
-                                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sisa Saldo
-                                        Kas Terpilih</span>
+                                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sisa Saldo Kas Terpilih</span>
                                 </div>
                                 <span class="text-base font-black font-mono"
                                     :class="balance < 0 ? 'text-rose-600' : 'text-slate-900'"
@@ -119,21 +114,18 @@
                                     </div>
                                     <div class="space-y-3">
                                         <div>
-                                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Akun
-                                                Pengeluaran (COA) <span class="text-rose-500">*</span></label>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Akun Pengeluaran (COA) <span class="text-rose-500">*</span></label>
                                             <select :name="`expense_lines[${index}][coa_id]`" x-model="line.coa_id" required
                                                 class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white text-slate-800">
                                                 <option value="">-- Pilih Akun Keluar --</option>
                                                 @foreach ($expenseCoas as $coa)
-                                                    <option value="{{ $coa->id }}">{{ $coa->code }} -
-                                                        {{ $coa->name }}</option>
+                                                    <option value="{{ $coa->id }}">{{ $coa->code }} - {{$coa->name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             <div>
-                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Nominal
-                                                    (Rp) <span class="text-rose-500">*</span></label>
+                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Nominal (Rp) <span class="text-rose-500">*</span></label>
                                                 <input type="text" @input="onAmountInput($event, index)"
                                                     :value="formatRupiah(line.amount)" placeholder="Rp 0" required
                                                     class="w-full h-10 px-3 py-2 text-sm font-mono rounded-lg border border-slate-300 bg-white">
@@ -141,8 +133,7 @@
                                                     x-model="line.amount">
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Keterangan
-                                                    Detail</label>
+                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Keterangan Detail</label>
                                                 <input type="text" :name="`expense_lines[${index}][description]`"
                                                     x-model="line.description" placeholder="Catatan detail item..."
                                                     class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white">
@@ -158,13 +149,6 @@
                         </div>
                     </x-common.component-card>
 
-                    {{-- CARD 4: BUKTI TRANSAKSI (Disembunyikan Sesuai Permintaan) --}}
-                    {{-- 
-                    <x-common.component-card title="Bukti Transaksi" desc="Perbarui dokumen atau struk pengeluaran jika diperlukan">
-                        ...
-                    </x-common.component-card> 
-                    --}}
-
                 </div>
 
                 {{-- RIGHT COLUMN: RINGKASAN PERUBAHAN & AKSI --}}
@@ -173,7 +157,6 @@
                         <h3 class="text-base font-bold text-slate-900 border-b pb-4">Ringkasan Perubahan</h3>
 
                         <div class="space-y-3 text-xs text-slate-600">
-                            {{-- Info Tanggal --}}
                             <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
                                 <span class="text-slate-400">Tanggal Transaksi:</span>
                                 <div class="text-right font-mono font-medium">
@@ -182,25 +165,21 @@
                                 </div>
                             </div>
 
-                            {{-- Info Sub Periode --}}
                             <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
                                 <span class="text-slate-400">Sub Periode:</span>
                                 <span class="font-medium text-slate-800">{{ $subPeriodName }}</span>
                             </div>
 
-                            {{-- Info Total Item --}}
                             <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
                                 <span class="text-slate-400">Jumlah Item Rincian:</span>
                                 <span class="font-semibold text-slate-800" x-text="lines.length + ' Item'"></span>
                             </div>
                         </div>
 
-                        {{-- Perhitungan Keuangan --}}
                         <div class="space-y-3 text-sm pt-2">
                             <div class="flex items-center justify-between text-xs">
                                 <span class="text-slate-500">Total Nominal Lama:</span>
-                                <span class="font-mono text-slate-400 line-through">Rp
-                                    {{ number_format($oldTotal, 0, ',', '.') }}</span>
+                                <span class="font-mono text-slate-400 line-through">Rp {{ number_format($oldTotal, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-slate-500 font-medium">Total Nominal Baru:</span>
@@ -208,10 +187,8 @@
                             </div>
                             <div class="border-t pt-3">
                                 <div class="p-3.5 rounded-xl border bg-indigo-50/60 border-indigo-100 space-y-1">
-                                    <div class="text-[11px] font-semibold uppercase tracking-wider text-indigo-800">
-                                        Proyeksi Saldo Kas Akhir</div>
-                                    <div class="text-xl font-black font-mono text-indigo-600"
-                                        x-text="formatRupiah(balance - total)"></div>
+                                    <div class="text-[11px] font-semibold uppercase tracking-wider text-indigo-800">Proyeksi Saldo Kas Akhir</div>
+                                    <div class="text-xl font-black font-mono text-indigo-600" x-text="formatRupiah(balance - total)"></div>
                                 </div>
                             </div>
                         </div>
@@ -244,10 +221,9 @@
 
                     init() {
                         if (!this.selectedCash && this.cashCoas.length > 0) {
-                            this.selectedCash = this.cashCoas[0].user_account_balance_id;
+                            this.selectedCash = this.cashCoas[0].coa_id;
                         }
 
-                        // Tangkap perubahan pada date-picker DOM jika ada interaksi plugin external
                         const dateInput = document.getElementById('transaction_date');
                         if (dateInput) {
                             dateInput.addEventListener('change', (e) => {
@@ -258,8 +234,7 @@
 
                     get balance() {
                         if (!this.selectedCash) return 0;
-                        const found = this.cashCoas.find(item => String(item.user_account_balance_id) === String(this
-                            .selectedCash));
+                        const found = this.cashCoas.find(item => String(item.coa_id) === String(this.selectedCash));
                         return found ? Number(found.remaining_balance) : 0;
                     },
 
@@ -268,7 +243,7 @@
                     },
 
                     onlyNumber(value) {
-                        return String(value).replace(/\D/g, '');
+                        return String(value).replace(/D/g, '');
                     },
 
                     formatRupiah(value) {

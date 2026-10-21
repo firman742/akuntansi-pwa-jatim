@@ -13,7 +13,7 @@ use App\Models\ChartOfAccount;
 use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
-use App\Models\UserAccountBalance;
+use App\Models\UserAccount;
 use App\Services\AccountingUsers\Expenses\ExpenseService;
 use App\Services\AccountingUsers\GoogleDriveService;
 use Exception;
@@ -127,8 +127,8 @@ class ExpenseController extends Controller
 
         // ── Period ─────────────────────────────────────────
         $activePeriod = Period::query()
-            ->orderByDesc('start_date') // Urutkan dari periode paling baru
-            ->first(); // Ambil 1 record object (atau null)
+            ->orderByDesc('start_date')
+            ->first();
 
         if (! $activePeriod) {
             throw new Exception(
@@ -146,30 +146,30 @@ class ExpenseController extends Controller
         $selectedSubPeriodId = request('sub_period_id')
             ?? $subPeriods->first()?->id;
 
-        // ── Kas User (Distribusi Bendahara) ────────────────
-        // ExpenseController.php (method create)
-        $cashCoas = UserAccountBalance::query()
-            ->with(['userAccount.coa'])
-            ->whereHas('userAccount', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
-            ->where('period_id', $selectedPeriodId)
-            ->where('sub_period_id', $selectedSubPeriodId)
-            // ->where('remaining_balance', '>', 0) // <-- DIHAPUS agar akun minus/0 tetap muncul
+        // ── Kas User (Via user_accounts & match saldo di coa_balances) ──
+        $cashCoas = UserAccount::query()
+            ->with(['coa'])
+            ->where('user_id', $userId)
             ->get()
-            ->sortBy(fn($balance) => $balance->userAccount->coa->code)
-            ->values()
-            ->map(function ($balance) {
-                return [
-                    'user_account_balance_id' => $balance->id,
-                    'coa_id' => $balance->userAccount->coa->id,
-                    'coa_code' => $balance->userAccount->coa->code,
-                    'coa_name' => $balance->userAccount->coa->name,
-                    'remaining_balance' => (float) $balance->remaining_balance,
-                ];
-            });
+            ->map(function ($account) use ($selectedPeriodId, $selectedSubPeriodId) {
+                $coa = $account->coa;
+                $balance = CashBalanceHelper::getBalance(
+                    $coa->id,
+                    $selectedPeriodId,
+                    $selectedSubPeriodId
+                );
 
-        // ── Semua akun CREDIT ─────────────────────────────
+                return [
+                    'coa_id' => $coa->id,
+                    'coa_code' => $coa->code,
+                    'coa_name' => $coa->name,
+                    'remaining_balance' => (float) $balance,
+                ];
+            })
+            ->sortBy('coa_code')
+            ->values();
+
+        // ── Semua akun Pengeluaran / COA Aktif ────────────────
         $expenseCoas = ChartOfAccount::query()
             ->where('is_active', true)
             ->orderBy('code', 'asc')
@@ -229,7 +229,7 @@ class ExpenseController extends Controller
     {
         $userId = Auth::id();
 
-        $transaction = Transaction::with(['transactionLines', 'period', 'subPeriod'])
+        $transaction = Transaction::with(['transactionLines.chartOfAccount', 'period', 'subPeriod'])
             ->where('transaction_type', TransactionType::EXPENSE)
             ->where('created_by', $userId)
             ->findOrFail($id);
@@ -246,53 +246,53 @@ class ExpenseController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        // Ambil kas user terkait
-        $cashCoas = UserAccountBalance::query()
-            ->with(['userAccount.coa'])
-            ->whereHas('userAccount', fn($q) => $q->where('user_id', $userId))
-            ->where('period_id', $selectedPeriodId)
-            ->where('sub_period_id', $selectedSubPeriodId)
+        // ── Kas User (Via user_accounts & match saldo di coa_balances) ──
+        $cashCoas = UserAccount::query()
+            ->with(['coa'])
+            ->where('user_id', $userId)
             ->get()
-            ->sortBy(fn($balance) => $balance->userAccount->coa->code)
-            ->values()
-            ->map(function ($balance) {
+            ->map(function ($account) use ($selectedPeriodId, $selectedSubPeriodId) {
+                $coa = $account->coa;
+                $balance = CashBalanceHelper::getBalance(
+                    $coa->id,
+                    $selectedPeriodId,
+                    $selectedSubPeriodId
+                );
+
                 return [
-                    'user_account_balance_id' => $balance->id,
-                    'coa_id' => $balance->userAccount->coa->id,
-                    'coa_code' => $balance->userAccount->coa->code,
-                    'coa_name' => $balance->userAccount->coa->name,
-                    'remaining_balance' => (float) $balance->remaining_balance,
+                    'coa_id' => $coa->id,
+                    'coa_code' => $coa->code,
+                    'coa_name' => $coa->name,
+                    'remaining_balance' => (float) $balance,
                 ];
-            });
+            })
+            ->sortBy('coa_code')
+            ->values();
 
         $expenseCoas = ChartOfAccount::query()
             ->where('is_active', true)
             ->orderBy('code', 'asc')
             ->get();
 
-        // Format data baris transaksi lama agar terbaca Alpine.js
+        // Format data baris transaksi lama (DEBIT) agar terbaca Alpine.js
         $oldLines = $transaction->transactionLines
-            ->where('position', NormalBalanceEnum::DEBIT)
+            ->where('position', NormalBalanceEnum::DEBIT->value)
             ->map(fn($line) => [
                 'coa_id' => $line->chart_of_account_id,
                 'amount' => (float) $line->amount,
                 'description' => $line->description ?? '',
             ])->values();
 
-        // Ambil balance ID akun kas yang sedang dipakai di transaksi ini
-        $currentCashLine = $transaction->transactionLines->where('position', NormalBalanceEnum::CREDIT)->first();
-        $selectedCashBalanceId = '';
+        // Ambil COA ID akun kas yang dipakai (CREDIT)
+        $currentCashLine = $transaction->transactionLines
+            ->where('position', NormalBalanceEnum::CREDIT->value)
+            ->first();
+
+        $selectedCashCoaId = $currentCashLine?->chart_of_account_id ?? '';
         $selectedCashName = '-';
-        if ($currentCashLine) {
-            $matchingBalance = UserAccountBalance::with('userAccount.coa')
-                ->whereHas('userAccount', fn($q) => $q->where('coa_id', $currentCashLine->chart_of_account_id))
-                ->where('period_id', $selectedPeriodId)
-                ->where('sub_period_id', $selectedSubPeriodId)
-                ->first();
-            $selectedCashBalanceId = $matchingBalance?->id ?? '';
-            if ($matchingBalance && $matchingBalance->userAccount && $matchingBalance->userAccount->coa) {
-                $selectedCashName = $matchingBalance->userAccount->coa->code . ' - ' . $matchingBalance->userAccount->coa->name;
-            }
+
+        if ($currentCashLine && $currentCashLine->chartOfAccount) {
+            $selectedCashName = $currentCashLine->chartOfAccount->code . ' - ' . $currentCashLine->chartOfAccount->name;
         }
 
         $oldDate = $transaction->transaction_date->format('Y-m-d');
@@ -307,7 +307,7 @@ class ExpenseController extends Controller
             'selectedPeriodId',
             'selectedSubPeriodId',
             'oldLines',
-            'selectedCashBalanceId',
+            'selectedCashCoaId',
             'selectedCashName',
             'oldDate',
             'oldTotal',
@@ -336,11 +336,6 @@ class ExpenseController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param string $id
-     * @param ExpenseService $service
-     * @return RedirectResponse
-     * @throws Exception
      */
     public function destroy(string $id, ExpenseService $service): RedirectResponse
     {
@@ -377,8 +372,6 @@ class ExpenseController extends Controller
 
     /**
      * Get the cash balance for a specific COA and period.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getCashBalance(Request $request)
     {

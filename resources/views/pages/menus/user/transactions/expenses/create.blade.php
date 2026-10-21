@@ -79,12 +79,12 @@
                         desc="Pilih akun kas yang digunakan untuk pembayaran">
                         <div class="space-y-4">
                             <div>
-                                <x-form.select id="user_account_balance_id" name="user_account_balance_id"
+                                <x-form.select id="cash_coa_id" name="cash_coa_id"
                                     label="Pilih Sumber Kas" x-model="selectedCash" required>
                                     <option value="">-- Pilih Sumber Kas --</option>
                                     @foreach ($cashCoas as $cash)
-                                        <option value="{{ $cash['user_account_balance_id'] }}">
-                                            {{ $cash['coa_code'] }} - {{ $cash['coa_name'] }}
+                                        <option value="{{ $cash['coa_id'] }}">
+                                            {{ $cash['coa_code'] }} - {{$cash['coa_name'] }}
                                             ({{ $cash['remaining_balance'] < 0 ? 'Defisit: ' : 'Saldo: ' }}{{ number_format($cash['remaining_balance'], 0, ',', '.') }})
                                         </option>
                                     @endforeach
@@ -139,7 +139,7 @@
                         </div>
                     </x-common.component-card>
 
-                    {{-- CARD 3: RINCIAN PENGELUARAN (STACKED 2-TIER CARD LAYOUT) --}}
+                    {{-- CARD 3: RINCIAN PENGELUARAN --}}
                     <x-common.component-card title="Rincian Pengeluaran"
                         desc="Tambahkan rincian akun pengeluaran beserta nominalnya">
                         <div class="space-y-4">
@@ -149,7 +149,6 @@
                                 <div
                                     class="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/70 transition-all hover:border-indigo-300 dark:hover:border-indigo-800 space-y-4 shadow-sm">
 
-                                    {{-- LAPIS 1: HEADER ITEM & TOMBOL HAPUS (Proporsi 10 : 2 / Flex Between) --}}
                                     <div
                                         class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
                                         <div class="flex items-center gap-2">
@@ -173,10 +172,7 @@
                                         </button>
                                     </div>
 
-                                    {{-- LAPIS 2: BAGIAN INPUT BERSIFAT FULL WIDTH / GRID RESPONSID --}}
                                     <div class="space-y-3">
-
-                                        {{-- Baris 1: Akun Pengeluaran (COA) - Lebar Penuh --}}
                                         <div>
                                             <label
                                                 class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
@@ -192,10 +188,7 @@
                                             </select>
                                         </div>
 
-                                        {{-- Baris 2 & 3: Nominal (Rp) & Keterangan Detail --}}
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-
-                                            {{-- Nominal Input --}}
                                             <div>
                                                 <label
                                                     class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
@@ -208,7 +201,6 @@
                                                     x-model="line.amount">
                                             </div>
 
-                                            {{-- Keterangan Detail Input --}}
                                             <div>
                                                 <label
                                                     class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
@@ -219,9 +211,7 @@
                                                     x-model="line.description" placeholder="Catatan detail item..."
                                                     class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                             </div>
-
                                         </div>
-
                                     </div>
 
                                 </div>
@@ -240,7 +230,8 @@
 
                         </div>
                     </x-common.component-card>
-                    {{-- CARD 4: BUKTI TRANSAKSI (TANPA DESKRIPSI PARENT) --}}
+
+                    {{-- CARD 4: BUKTI TRANSAKSI --}}
                     <x-common.component-card title="Bukti Transaksi"
                         desc="Unggah dokumen atau struk pengeluaran (Opsional)">
                         <div class="space-y-2">
@@ -248,7 +239,6 @@
                                 <label for="proof_file"
                                     class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all relative overflow-hidden group">
 
-                                    {{-- Belum ada file --}}
                                     <template x-if="!proofPreview && !proofFileName">
                                         <div class="flex flex-col items-center justify-center pt-4 pb-5 px-4 text-center">
                                             <div
@@ -268,7 +258,6 @@
                                         </div>
                                     </template>
 
-                                    {{-- Preview Gambar --}}
                                     <template x-if="proofPreview">
                                         <div class="relative w-full h-full p-2 flex items-center justify-center">
                                             <img :src="proofPreview"
@@ -277,7 +266,6 @@
                                         </div>
                                     </template>
 
-                                    {{-- Preview Non-Gambar (PDF) --}}
                                     <template x-if="!proofPreview && proofFileName">
                                         <div class="flex flex-col items-center justify-center p-4 text-center">
                                             <div
@@ -298,7 +286,6 @@
                                 </label>
                             </div>
 
-                            {{-- Footer File --}}
                             <template x-if="proofFileName">
                                 <div
                                     class="flex items-center justify-between p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
@@ -341,7 +328,6 @@
                         </div>
 
                         <div class="space-y-4">
-                            {{-- Saldo Kas Saat Ini --}}
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-slate-500 dark:text-slate-400">Saldo Kas Saat Ini:</span>
                                 <span class="font-semibold font-mono"
@@ -350,14 +336,12 @@
                                     x-text="formatRupiah(balance)"></span>
                             </div>
 
-                            {{-- Total Pengeluaran --}}
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-slate-500 dark:text-slate-400">Total Pengeluaran:</span>
                                 <span class="font-bold font-mono text-rose-600 dark:text-rose-400"
                                     x-text="'- ' + formatRupiah(total)"></span>
                             </div>
 
-                            {{-- Proyeksi Saldo Akhir --}}
                             <div class="border-t border-slate-100 dark:border-slate-700/60 pt-4">
                                 <div class="p-4 rounded-xl border transition-colors space-y-1"
                                     :class="afterBalance() < 0 ?
@@ -377,7 +361,6 @@
                             </div>
                         </div>
 
-                        {{-- Alert Proyeksi Defisit --}}
                         <template x-if="selectedCash && afterBalance() < 0">
                             <div
                                 class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2.5">
@@ -390,7 +373,6 @@
                             </div>
                         </template>
 
-                        {{-- Action Buttons --}}
                         <div class="space-y-3 pt-2">
                             <button type="submit" name="status" value="POSTED"
                                 class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
@@ -435,14 +417,14 @@
 
                     init() {
                         if (this.cashCoas.length > 0) {
-                            this.selectedCash = this.cashCoas[0].user_account_balance_id;
+                            this.selectedCash = this.cashCoas[0].coa_id;
                         }
                     },
 
                     get balance() {
                         if (!this.selectedCash) return 0;
                         const found = this.cashCoas.find(
-                            item => String(item.user_account_balance_id) === String(this.selectedCash)
+                            item => String(item.coa_id) === String(this.selectedCash)
                         );
                         return found ? Number(found.remaining_balance) : 0;
                     },
@@ -459,7 +441,7 @@
                     },
 
                     onlyNumber(value) {
-                        return String(value).replace(/\D/g, '');
+                        return String(value).replace(/D/g, '');
                     },
 
                     formatRupiah(value) {

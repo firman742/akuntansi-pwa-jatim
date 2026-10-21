@@ -25,7 +25,7 @@
             <x-ui.alert variant="error" title="Gagal Mengunggah / Menyimpan" message="{{ session('error') }}" />
         </div>
     @endif
-    
+
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
@@ -87,11 +87,11 @@
                     <x-common.component-card title="Kas Penerima" desc="Pilih akun kas yang akan menerima uang">
                         <div class="space-y-4">
                             <div>
-                                <x-form.select id="user_account_balance_id" name="user_account_balance_id"
-                                    label="Akun Kas Penerima" x-model="selectedCash" required>
+                                <x-form.select id="coa_id" name="coa_id" label="Akun Kas Penerima"
+                                    x-model="selectedCash" required>
                                     <option value="">-- Pilih Akun Kas --</option>
                                     @foreach ($cashCoas as $cash)
-                                        <option value="{{ $cash['user_account_balance_id'] }}">
+                                        <option value="{{ $cash['coa_id'] }}">
                                             {{ $cash['coa_code'] }} - {{ $cash['coa_name'] }}
                                         </option>
                                     @endforeach
@@ -107,8 +107,7 @@
                                         Ini:</span>
                                 </div>
                                 <span class="text-sm font-bold text-slate-900 dark:text-slate-100"
-                                    x-text="'Rp ' + format(balance)">
-                                </span>
+                                    x-text="'Rp ' + format(balance)"></span>
                             </div>
                         </div>
                     </x-common.component-card>
@@ -325,17 +324,15 @@
 
                     init() {
                         if (this.cashCoas.length > 0) {
-                            this.selectedCash = this.cashCoas[0].user_account_balance_id;
+                            this.selectedCash = this.cashCoas[0].coa_id;
                         }
                     },
 
                     get balance() {
                         if (!this.selectedCash) return 0;
-
                         const found = this.cashCoas.find(
-                            item => String(item.user_account_balance_id) === String(this.selectedCash)
+                            item => String(item.coa_id) === String(this.selectedCash)
                         );
-
                         return found ? Number(found.remaining_balance) : 0;
                     },
 

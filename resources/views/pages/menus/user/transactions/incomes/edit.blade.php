@@ -33,15 +33,14 @@
 
     @php
         $initialSubPeriodName = $subPeriods->firstWhere('id', $transaction->sub_period_id)?->name ?? '-';
-        $initialCashName = collect($cashCoas)->firstWhere('user_account_balance_id', $selectedUserBalanceId);
+        $initialCashName = collect($cashCoas)->firstWhere('coa_id', $selectedDebitCoaId);
         $initialCashLabel = $initialCashName ? "{$initialCashName['coa_code']} - {$initialCashName['coa_name']}" : '-';
 
-        $initialIncomeCoa = $incomeCoas->firstWhere('id', $selectedCreditLine?->chart_of_account_id);
+        $initialIncomeCoa = $incomeCoas->firstWhere('id', $selectedCreditCoaId);
         $initialIncomeCoaLabel = $initialIncomeCoa ? "{$initialIncomeCoa->code} - {$initialIncomeCoa->name}" : '-';
 
-        // Cek data file lama
         $existingReceiptPath = $transaction->receipt_path;
-        $existingReceiptUrl = $transaction->receipt_url; // Memanfaatkan accessor getReceiptUrlAttribute
+        $existingReceiptUrl = $transaction->receipt_url;
         $existingReceiptName = $existingReceiptPath ? basename($existingReceiptPath) : '';
         $isExistingImage = $existingReceiptPath && preg_match('/\.(jpg|jpeg|png|webp)$/i', $existingReceiptPath);
     @endphp
@@ -49,14 +48,13 @@
     <div class="mx-auto pb-10" x-data="incomeForm(
         @js($cashCoas),
         @js($transaction->gross_amount),
-        @js($selectedUserBalanceId),
+        @js($selectedDebitCoaId),
         @js($transaction->transaction_date->format('Y-m-d')),
         @js($transaction->description),
         @js($existingReceiptUrl && $isExistingImage ? $existingReceiptUrl : null),
         @js($existingReceiptName)
     )" x-init="init()">
 
-        {{-- enctype ditambahkan agar file upload terkirim --}}
         <form action="{{ route('user.transactions.incomes.update', $transaction->id) }}" method="POST"
             enctype="multipart/form-data">
             @csrf
@@ -64,8 +62,8 @@
 
             <input type="hidden" name="period_id" value="{{ $selectedPeriodId }}">
             <input type="hidden" name="sub_period_id" value="{{ $transaction->sub_period_id }}">
-            <input type="hidden" name="user_account_balance_id" value="{{ $selectedUserBalanceId }}">
-            <input type="hidden" name="income_coa_id" value="{{ $selectedCreditLine?->chart_of_account_id }}">
+            <input type="hidden" name="coa_id" value="{{ $selectedDebitCoaId }}">
+            <input type="hidden" name="income_coa_id" value="{{ $selectedCreditCoaId }}">
 
             <div class="grid lg:grid-cols-3 gap-8 items-start">
                 <div class="lg:col-span-2 space-y-6">
@@ -94,11 +92,11 @@
                     {{-- KAS PENERIMA --}}
                     <x-common.component-card title="Kas Penerima" desc="Akun kas penerima (Terkunci)">
                         <div class="space-y-4">
-                            <x-form.select id="user_account_balance_id_disabled" name="user_account_balance_id_disabled"
+                            <x-form.select id="coa_id_disabled" name="coa_id_disabled"
                                 label="Akun Kas Penerima" disabled>
                                 <option value="">-- Pilih Akun Kas --</option>
                                 @foreach ($cashCoas as $cash)
-                                    <option value="{{ $cash['user_account_balance_id'] }}" @selected($selectedUserBalanceId == $cash['user_account_balance_id'])>
+                                    <option value="{{ $cash['coa_id'] }}" @selected($selectedDebitCoaId == $cash['coa_id'])>
                                         {{ $cash['coa_code'] }} - {{ $cash['coa_name'] }}
                                     </option>
                                 @endforeach
@@ -111,7 +109,7 @@
                         <div class="space-y-5">
                             <x-form.select name="income_coa_id_disabled" label="Akun Sumber Penerimaan (Terkunci)" disabled>
                                 @foreach ($incomeCoas as $coa)
-                                    <option value="{{ $coa->id }}" @selected($selectedCreditLine?->chart_of_account_id == $coa->id)>
+                                    <option value="{{ $coa->id }}" @selected($selectedCreditCoaId == $coa->id)>
                                         {{ $coa->code }} - {{ $coa->name }}
                                     </option>
                                 @endforeach
@@ -130,7 +128,7 @@
                         </div>
                     </x-common.component-card>
 
-                    {{-- BUKTI TRANSAKSI (NEW) --}}
+                    {{-- BUKTI TRANSAKSI --}}
                     <x-common.component-card title="Bukti Transaksi"
                         desc="Unggah atau ubah foto nota, kwitansi, atau bukti transfer (Opsional)">
                         <div class="space-y-4">
@@ -138,27 +136,22 @@
                                 <label for="receipt_file"
                                     class="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-emerald-500 dark:hover:border-emerald-400 transition-all relative overflow-hidden group">
 
-                                    {{-- State 1: Belum ada file dipilih --}}
                                     <template x-if="!recieptPreview && !recieptFileName">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
                                             <div
                                                 class="p-3 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
                                             </div>
                                             <p class="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                                <span class="text-emerald-600 dark:text-emerald-400">Klik untuk unggah file
-                                                    baru</span> atau seret ke sini
+                                                <span class="text-emerald-600 dark:text-emerald-400">Klik untuk unggah file baru</span> atau seret ke sini
                                             </p>
-                                            <p class="text-xs text-slate-500 dark:text-slate-400">Format: JPG, PNG, JPEG,
-                                                WEBP, atau PDF (Maks. 2MB)</p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">Format: JPG, PNG, JPEG, WEBP, atau PDF (Maks. 2MB)</p>
                                         </div>
                                     </template>
 
-                                    {{-- State 2: Preview jika file gambar --}}
                                     <template x-if="recieptPreview">
                                         <div class="relative w-full h-full p-2 flex items-center justify-center">
                                             <img :src="recieptPreview"
@@ -167,13 +160,10 @@
                                         </div>
                                     </template>
 
-                                    {{-- State 3: Tampilan file non-gambar (contoh: PDF) --}}
                                     <template x-if="!recieptPreview && recieptFileName">
                                         <div class="flex flex-col items-center justify-center p-4 text-center">
-                                            <div
-                                                class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 mb-2">
-                                                <svg class="w-8 h-8" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
+                                            <div class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 mb-2">
+                                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
@@ -188,7 +178,6 @@
                                 </label>
                             </div>
 
-                            {{-- File Info Footer & Clear Button --}}
                             <template x-if="recieptFileName">
                                 <div
                                     class="flex items-center justify-between p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
@@ -203,8 +192,7 @@
                                     </div>
                                     <button type="button" @click="removeFile()"
                                         class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 font-semibold transition-colors shrink-0 flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -300,7 +288,7 @@
 
                     init() {
                         if (!this.selectedCash && this.cashCoas.length > 0) {
-                            this.selectedCash = this.cashCoas[0].user_account_balance_id;
+                            this.selectedCash = this.cashCoas[0].coa_id;
                         }
                     },
                     inputAmount(event) {
