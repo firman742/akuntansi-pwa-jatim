@@ -22,6 +22,7 @@ class StoreExpenseRequest extends FormRequest
      */
     public function rules(): array
     {
+        // dd($this);
         return [
             'period_id'        => [
                 'required',
@@ -63,9 +64,9 @@ class StoreExpenseRequest extends FormRequest
                 'string',
                 'max:255'
             ],
-            'user_account_balance_id' => [
+            'cash_coa_id' => [
                 'required',
-                'exists:user_account_balances,id'
+                'exists:chart_of_accounts,id'
             ],
             'status' => [
                 'required',
@@ -102,8 +103,10 @@ class StoreExpenseRequest extends FormRequest
             'expense_lines.*.amount.min' => 'Jumlah minimal adalah 0.01.',
             'expense_lines.*.description.string' => 'Deskripsi baris pengeluaran harus berupa teks.',
             'expense_lines.*.description.max' => 'Deskripsi baris pengeluaran tidak boleh lebih dari 255 karakter.',
-            'user_account_balance_id.required' => 'Akun pengguna harus dipilih.',
-            'user_account_balance_id.exists' => 'Akun pengguna yang dipilih tidak valid.'
+            'cash_coa_id.required' => 'Chart of Account kas harus dipilih.',
+            'cash_coa_id.exists' => 'Chart of Account kas yang dipilih tidak valid.',
+            'status.required' => 'Status harus dipilih.',
+            'status.in' => 'Status yang dipilih tidak valid. Pilih antara DRAFT atau POSTED.',
         ];
     }
 }

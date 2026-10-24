@@ -243,7 +243,7 @@
                     },
 
                     onlyNumber(value) {
-                        return String(value).replace(/D/g, '');
+                        return String(value).replace(/\D/g, '');
                     },
 
                     formatRupiah(value) {
