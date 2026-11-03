@@ -33,10 +33,6 @@ class ChartOfAccountSeeder extends Seeder
             ['11500', 'Penyertaan Modal Bueka Assakinah', '11000', 2, 5, 'ASET', "DEBIT"],
             ['11600', 'Tabungan Bueka Assakinah', '11000', 2, 6, 'ASET', "DEBIT"],
             ['11700', 'Kos Wonorejo', '11000', 2, 7, 'ASET', "DEBIT"],
-            // Tambahan untuk akun pajak dibayar dimuka
-            ['11800', 'Pajak Dibayar Dimuka', '11000', 2, 8, 'ASET', "DEBIT"],
-            ['11810', 'PPN Masukan', '11800', 3, 1, 'ASET', "DEBIT"],
-            ['11820', 'PPh Dibayar Dimuka', '11800', 3, 2, 'ASET', "DEBIT"],
 
             ['12000', 'Aset Tidak Lancar', null, 1, 2, 'ASET', "DEBIT"],
             ['12100', 'Tanah', '12000', 2, 1, 'ASET', "DEBIT"],
@@ -52,13 +48,7 @@ class ChartOfAccountSeeder extends Seeder
 
             /* ================= KEWAJIBAN ================= */
             ['21000', 'Hutang Pihak Lain', null, 1, 3, 'KEWAJIBAN', "CREDIT"],
-            // Tambahan untuk akun hutang pajak
-            ['22000', 'Hutang Pajak', null, 1, 4, 'KEWAJIBAN', "CREDIT"],
-            ['22100', 'Hutang PPN', '22000', 2, 1, 'KEWAJIBAN', "CREDIT"],
-            ['22200', 'Hutang PPh 21', '22000', 2, 2, 'KEWAJIBAN', "CREDIT"],
-            ['22300', 'Hutang PPh 23', '22000', 2, 3, 'KEWAJIBAN', "CREDIT"],
-            ['22400', 'Hutang PPh Final', '22000', 2, 4, 'KEWAJIBAN', "CREDIT"],
-
+            
             /* ================= EKUITAS ================= */
             ['31000', 'Aset Bersih', null, 1, 4, 'EKUITAS', "CREDIT"],
             ['31100', 'Modal Tetap', '31000', 2, 1, 'EKUITAS', "CREDIT"],
@@ -84,10 +74,6 @@ class ChartOfAccountSeeder extends Seeder
             ['42500', 'Kontribusi Lainnya', '42000', 3, 5, 'PENDAPATAN', "DEBIT"],
 
             ['43000', 'Pendapatan Jasa Bank (Neto)', '40000', 2, 3, 'PENDAPATAN', "DEBIT"],
-            // Tambahan untuk akun pendapatan jasa bank
-            ['43100', 'Pendapatan Bunga Bank', '43000', 3, 1, 'PENDAPATAN', "DEBIT"],
-            ['43200', 'Pendapatan Deposito', '43000', 3, 2, 'PENDAPATAN', "DEBIT"],
-
             ['44000', 'Pendapatan Kerjasama', '40000', 2, 4, 'PENDAPATAN', "DEBIT"],
             ['44001', 'Kerjasama Internal', '44000', 3, 1, 'PENDAPATAN', "DEBIT"],
             ['44002', 'Kerjasama Eksternal', '44000', 3, 2, 'PENDAPATAN', "DEBIT"],
@@ -167,13 +153,7 @@ class ChartOfAccountSeeder extends Seeder
             ['58300', 'Hadiah', '58000', 3, 3, 'BEBAN', "CREDIT"],
 
             ['59000', 'Biaya Administrasi Bank', '50000', 2, 9, 'BEBAN', "CREDIT"], 
-            // untuk biaya administrasi bank, biaya transfer, dll
-            ['59100', 'Biaya Pajak Bank', '59000', 3, 1, 'BEBAN', "CREDIT"],
-            ['59200', 'Biaya Bunga Bank', '59000', 3, 2, 'BEBAN', "CREDIT"],
-            ['59300', 'Biaya Materai', '59000', 3, 3, 'BEBAN', "CREDIT"],
-            
             ['59999', 'Biaya Sosial & Lainnya', '50000', 2, 10, 'BEBAN', "CREDIT"],
-
         ];
 
 

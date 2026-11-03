@@ -15,7 +15,7 @@
                 <p class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Total Aktiva (Aset)
                 </p>
                 <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1 tabular-nums">
-                    Rp{{ number_format($totalAktiva, 0, ',', '.') }}
+                    Rp{{ $totalAktiva < 0 ? '(' . number_format(abs($totalAktiva), 0, ',', '.') . ')' : number_format($totalAktiva, 0, ',', '.') }}
                 </h3>
             </div>
             <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
@@ -32,7 +32,7 @@
                 <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Total Pasiva
                     (Kewajiban & Ekuitas)</p>
                 <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1 tabular-nums">
-                    Rp{{ number_format($totalPasiva, 0, ',', '.') }}
+                    Rp{{ $totalPasiva < 0 ? '(' . number_format(abs($totalPasiva), 0, ',', '.') . ')' : number_format($totalPasiva, 0, ',', '.') }}
                 </h3>
             </div>
             <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
@@ -157,7 +157,7 @@
                                     1. Aset Lancar
                                 </td>
                             </tr>
-                            @foreach ($data['aset_lancar'] as $index => $item)
+                            @foreach ($data['aset_lancar'] as $item)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                                     <td class="px-6 py-2.5 font-mono text-xs text-gray-400 w-24">
                                         {{ $item['code'] }}
@@ -178,7 +178,7 @@
                                     Subtotal Aset Lancar
                                 </td>
                                 <td class="px-6 py-2.5 text-right font-mono text-blue-700 dark:text-blue-300 tabular-nums">
-                                    {{ number_format($totalAsetLancar, 0, ',', '.') }}
+                                    {{ $totalAsetLancar < 0 ? '(' . number_format(abs($totalAsetLancar), 0, ',', '.') . ')' : number_format($totalAsetLancar, 0, ',', '.') }}
                                 </td>
                             </tr>
 
@@ -189,7 +189,7 @@
                                     2. Aset Tidak Lancar
                                 </td>
                             </tr>
-                            @foreach ($data['aset_tidak_lancar'] as $index => $item)
+                            @foreach ($data['aset_tidak_lancar'] as $item)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                                     <td class="px-6 py-2.5 font-mono text-xs text-gray-400 w-24">
                                         {{ $item['code'] }}
@@ -210,7 +210,7 @@
                                     Subtotal Aset Tidak Lancar
                                 </td>
                                 <td class="px-6 py-2.5 text-right font-mono text-blue-700 dark:text-blue-300 tabular-nums">
-                                    {{ number_format($totalAsetTidakLancar, 0, ',', '.') }}
+                                    {{ $totalAsetTidakLancar < 0 ? '(' . number_format(abs($totalAsetTidakLancar), 0, ',', '.') . ')' : number_format($totalAsetTidakLancar, 0, ',', '.') }}
                                 </td>
                             </tr>
                         </tbody>
@@ -225,7 +225,7 @@
                             <h4 class="text-base font-black uppercase">TOTAL AKTIVA (ASET)</h4>
                         </div>
                         <div class="text-xl font-mono font-black tabular-nums">
-                            Rp{{ number_format($totalAktiva, 0, ',', '.') }}
+                            Rp{{ $totalAktiva < 0 ? '(' . number_format(abs($totalAktiva), 0, ',', '.') . ')' : number_format($totalAktiva, 0, ',', '.') }}
                         </div>
                     </div>
                 </div>
@@ -254,27 +254,24 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                                 <td class="px-6 py-2.5 font-mono text-xs text-gray-400 w-24">31000</td>
                                 <td class="px-2 py-2.5 text-gray-700 dark:text-gray-300 font-medium">Modal Tetap</td>
-                                <td
-                                    class="px-6 py-2.5 text-right font-mono font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
-                                    {{ number_format($modalTetap, 0, ',', '.') }}
+                                <td class="px-6 py-2.5 text-right font-mono font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
+                                    {{ $modalTetap < 0 ? '(' . number_format(abs($modalTetap), 0, ',', '.') . ')' : ($modalTetap != 0 ? number_format($modalTetap, 0, ',', '.') : '-') }}
                                 </td>
                             </tr>
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                                 <td class="px-6 py-2.5 font-mono text-xs text-gray-400 w-24">32000</td>
                                 <td class="px-2 py-2.5 text-gray-700 dark:text-gray-300 font-medium">Modal Lancar</td>
-                                <td
-                                    class="px-6 py-2.5 text-right font-mono font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
-                                    {{ number_format($modalLancar, 0, ',', '.') }}
+                                <td class="px-6 py-2.5 text-right font-mono font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
+                                    {{ $modalLancar < 0 ? '(' . number_format(abs($modalLancar), 0, ',', '.') . ')' : ($modalLancar != 0 ? number_format($modalLancar, 0, ',', '.') : '-') }}
                                 </td>
                             </tr>
                             <tr class="bg-emerald-50/40 dark:bg-emerald-950/20 hover:bg-emerald-50/60 transition-colors">
-                                <td class="px-6 py-2.5 font-mono text-xs text-emerald-600 dark:text-emerald-400 w-24">-
+                                <td class="px-6 py-2.5 font-mono text-xs text-emerald-600 dark:text-emerald-400 w-24">-</td>
+                                <td class="px-2 py-2.5 text-emerald-800 dark:text-emerald-300 font-bold italic">
+                                    Surplus / Defisit Berjalan
                                 </td>
-                                <td class="px-2 py-2.5 text-emerald-800 dark:text-emerald-300 font-bold italic">Surplus /
-                                    Defisit Berjalan</td>
-                                <td
-                                    class="px-6 py-2.5 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
-                                    {{ number_format($surplusDeficit, 0, ',', '.') }}
+                                <td class="px-6 py-2.5 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
+                                    {{ $surplusDeficit < 0 ? '(' . number_format(abs($surplusDeficit), 0, ',', '.') . ')' : ($surplusDeficit != 0 ? number_format($surplusDeficit, 0, ',', '.') : '-') }}
                                 </td>
                             </tr>
 
@@ -285,7 +282,7 @@
                                     2. Kewajiban (Hutang)
                                 </td>
                             </tr>
-                            @foreach ($data['hutang'] as $index => $item)
+                            @foreach ($data['hutang'] as $item)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                                     <td class="px-6 py-2.5 font-mono text-xs text-gray-400 w-24">
                                         {{ $item['code'] }}
@@ -295,7 +292,7 @@
                                     </td>
                                     <td
                                         class="px-6 py-2.5 text-right font-mono font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
-                                        {{ $item['amount'] != 0 ? number_format($item['amount'], 0, ',', '.') : '-' }}
+                                        {{ $item['amount'] < 0 ? '(' . number_format(abs($item['amount']), 0, ',', '.') . ')' : ($item['amount'] != 0 ? number_format($item['amount'], 0, ',', '.') : '-') }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -307,7 +304,7 @@
                                 </td>
                                 <td
                                     class="px-6 py-2.5 text-right font-mono text-emerald-700 dark:text-emerald-300 tabular-nums">
-                                    {{ number_format($totalHutang, 0, ',', '.') }}
+                                    {{ $totalHutang < 0 ? '(' . number_format(abs($totalHutang), 0, ',', '.') . ')' : number_format($totalHutang, 0, ',', '.') }}
                                 </td>
                             </tr>
                         </tbody>
@@ -318,12 +315,11 @@
                 <div class="bg-emerald-600 dark:bg-emerald-700 px-6 py-4 text-white mt-auto">
                     <div class="flex justify-between items-center">
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-200">Total Keseluruhan
-                            </p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-200">Total Keseluruhan</p>
                             <h4 class="text-base font-black uppercase">TOTAL PASIVA (HUTANG & MODAL)</h4>
                         </div>
                         <div class="text-xl font-mono font-black tabular-nums">
-                            Rp{{ number_format($totalPasiva, 0, ',', '.') }}
+                            Rp{{ $totalPasiva < 0 ? '(' . number_format(abs($totalPasiva), 0, ',', '.') . ')' : number_format($totalPasiva, 0, ',', '.') }}
                         </div>
                     </div>
                 </div>
@@ -370,3 +366,4 @@
         });
     </script>
 @endsection
+

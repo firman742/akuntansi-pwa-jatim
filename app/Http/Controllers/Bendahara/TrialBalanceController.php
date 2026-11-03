@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Bendahara;
 
+use App\Enums\NormalBalanceEnum;
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use App\Models\Journal;
@@ -37,31 +38,50 @@ class TrialBalanceController extends Controller
         ];
 
         foreach ($coas as $coa) {
-            // Opening Balance
+            // 1. OPENING BALANCE (Diselaraskan dengan LedgerController)
             $opening = OpeningBalance::where('chart_of_account_id', $coa->id)
                 ->where('period_id', $periodId)
                 ->when($subPeriodId, fn($q) => $q->where('sub_period_id', $subPeriodId))
                 ->first();
 
-            $openingAmount = $opening ? $opening->amount : 0;
+            $openingDebit = 0;
+            $openingCredit = 0;
 
-            // Mutation Query
+            if ($opening) {
+                $openingType = is_object($opening->balance_type) ? $opening->balance_type->value : $opening->balance_type;
+                $isOpeningDebit = ($openingType === NormalBalanceEnum::DEBIT->value || strtoupper((string)$openingType) === 'DEBIT');
+
+                if ($isOpeningDebit) {
+                    $openingDebit = (float) $opening->amount;
+                } else {
+                    $openingCredit = (float) $opening->amount;
+                }
+            }
+
+            // 2. QUERY MUTASI JURNAL (Disaring transaction_id != null persis seperti Buku Besar)
             $mutationQuery = JournalDetail::where('chart_of_account_id', $coa->id)
                 ->whereHas('journal', function ($q) use ($periodId, $subPeriodId) {
                     $q->where('period_id', $periodId);
                     if ($subPeriodId) {
                         $q->where('sub_period_id', $subPeriodId);
                     }
+                    $q->whereNotNull('transaction_id');
                 });
 
-            $debit  = (clone $mutationQuery)->sum('debit');
-            $credit = (clone $mutationQuery)->sum('credit');
+            $debit  = (float) (clone $mutationQuery)->sum('debit');
+            $credit = (float) (clone $mutationQuery)->sum('credit');
 
-            // Ending Balance
-            if ($coa->normal_balance === 'DEBIT') {
-                $balance = $openingAmount + $debit - $credit;
+            // 3. HITUNG AKUMULASI SALDO (Sinkron Realtime dengan Buku Besar / Ledger)
+            $isAktiva = str_starts_with($coa->code, '1');
+
+            if ($isAktiva) {
+                // Sisi Aktiva (Perspektif DEBIT)
+                // Total Akumulasi = (Opening Debit - Opening Credit) + (Mutasi Debit - Mutasi Kredit)
+                $balance = ($openingDebit - $openingCredit) + ($debit - $credit);
             } else {
-                $balance = $openingAmount + $credit - $debit;
+                // Sisi Pasiva (Perspektif KREDIT)
+                // Total Akumulasi = (Opening Credit - Opening Debit) + (Mutasi Kredit - Mutasi Debit)
+                $balance = ($openingCredit - $openingDebit) + ($credit - $debit);
             }
 
             $row = [
@@ -81,12 +101,13 @@ class TrialBalanceController extends Controller
             }
         }
 
-        // Surplus / Defisit Query
+        // Surplus / Defisit Query (Tambahkan filter transaction_id agar valid)
         $journalFilter = function ($q) use ($periodId, $subPeriodId) {
             $q->where('period_id', $periodId);
             if ($subPeriodId) {
                 $q->where('sub_period_id', $subPeriodId);
             }
+            $q->whereNotNull('transaction_id');
         };
 
         $totalRevenue = JournalDetail::whereHas('chartOfAccount', fn($q) => $q->where('code', 'like', '4%'))
