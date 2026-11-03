@@ -3,11 +3,16 @@
 @section('title', 'Detail Transaksi Pengeluaran - ' . $transaction->transaction_number)
 
 @section('content')
+    @php
+        $isSubPeriodClosed = (bool) ($transaction->subPeriod?->is_closed ?? false);
+    @endphp
+
     <div class="space-y-6">
         {{-- BREADCRUMB & TOP ACTIONS --}}
         <x-common.page-breadcrumb pageTitle="Detail Transaksi Pengeluaran" defaultTitle="Detail Transaksi Pengeluaran"
             pageDescription="Rincian informasi lengkap, jurnal, dan lampiran transaksi pengeluaran" pageIcon="transaction"
             parentTitle="Transaksi Pengeluaran" :parentRoute="route('user.transactions.expenses.index')" currentTitle="{{ $transaction->transaction_number }}" />
+
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
             {{-- ACTION BUTTONS --}}
@@ -23,8 +28,19 @@
                     </x-ui.button>
                 </a>
 
-                @if ($transaction->status === \App\Enums\TransactionStatus::DRAFT)
-                    {{-- EDIT --}}
+
+                {{-- EDIT LINK / DISABLED BUTTON --}}
+                @if ($isSubPeriodClosed)
+                    <x-ui.button variant="outline" size="sm" disabled
+                        class="rounded-xl border-slate-200 text-slate-400 bg-slate-100 cursor-not-allowed opacity-60 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-500"
+                        title="Sub periode transaksi ini sudah ditutup">
+                        <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Edit Transaksi
+                    </x-ui.button>
+                @else
                     <a href="{{ route('user.transactions.expenses.edit', $transaction) }}">
                         <x-ui.button variant="outline" size="sm"
                             class="rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-400">
@@ -32,40 +48,72 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                            Edit
+                            Edit Transaksi
                         </x-ui.button>
                     </a>
+                @endif
 
-                    {{-- POSTING --}}
-                    <form action="{{ route('user.transactions.expenses.post', $transaction) }}" method="POST"
-                        onsubmit="return confirm('Apakah Anda yakin ingin memposting transaksi ini? Transaksi yang diposting tidak dapat diubah.')">
-                        @csrf
-                        <x-ui.button type="submit" variant="primary" size="sm"
-                            class="rounded-xl bg-emerald-600 hover:bg-emerald-700">
+                @if ($transaction->status === \App\Enums\TransactionStatus::DRAFT)
+                    {{-- POSTING BUTTON / DISABLED --}}
+                    @if ($isSubPeriodClosed)
+                        <x-ui.button type="button" variant="primary" size="sm" disabled
+                            class="rounded-xl bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 dark:bg-slate-800 dark:text-slate-500"
+                            title="Sub periode transaksi ini sudah ditutup">
                             <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             Posting Transaksi
                         </x-ui.button>
-                    </form>
+                    @else
+                        <form action="{{ route('user.transactions.expenses.post', $transaction) }}" method="POST"
+                            onsubmit="return confirm('Apakah Anda yakin ingin memposting transaksi pengeluaran ini? Transaksi yang diposting akan langsung mengurangi saldo kas.')">
+                            @csrf
+                            <x-ui.button type="submit" variant="primary" size="sm"
+                                class="rounded-xl bg-emerald-600 hover:bg-emerald-700">
+                                <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Posting Transaksi
+                            </x-ui.button>
+                        </form>
+                    @endif
 
-                    {{-- BATALKAN --}}
-                    <form action="{{ route('user.transactions.expenses.cancel', $transaction) }}" method="POST"
-                        onsubmit="return confirm('Apakah Anda yakin ingin membatalkan transaksi ini?')">
-                        @csrf
-                        <x-ui.button type="submit" variant="danger" size="sm" class="rounded-xl">
+                    {{-- BATALKAN BUTTON / DISABLED --}}
+                    @if ($isSubPeriodClosed)
+                        <x-ui.button type="button" variant="danger" size="sm" disabled
+                            class="rounded-xl bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 dark:bg-slate-800 dark:text-slate-500"
+                            title="Sub periode transaksi ini sudah ditutup">
                             <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M6 18L18 6M6 6l12 12" />
                             </svg>
                             Batalkan
                         </x-ui.button>
-                    </form>
+                    @else
+                        <form action="{{ route('user.transactions.expenses.cancel', $transaction) }}" method="POST"
+                            onsubmit="return confirm('Apakah Anda yakin ingin membatalkan transaksi ini?')">
+                            @csrf
+                            <x-ui.button type="submit" variant="danger" size="sm" class="rounded-xl">
+                                <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Batalkan
+                            </x-ui.button>
+                        </form>
+                    @endif
                 @endif
             </div>
         </div>
 
         {{-- ALERT MESSAGES --}}
+        @if ($isSubPeriodClosed)
+            <x-ui.alert variant="warning" title="Sub Periode Telah Ditutup">
+                Sub periode <strong>{{ $transaction->subPeriod?->name ?? 'Terkait' }}</strong> untuk transaksi ini telah ditutup. Seluruh aksi seperti pengeditan, posting, maupun pembatalan transaksi telah dinonaktifkan.
+            </x-ui.alert>
+        @endif
+
         @if ($errors->any())
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
@@ -98,9 +146,23 @@
                             </h2>
 
                             {{-- STATUS BADGE --}}
+                            @php
+                                $statusClasses = [
+                                    \App\Enums\TransactionStatus::DRAFT->value =>
+                                        'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+                                    \App\Enums\TransactionStatus::POSTED->value =>
+                                        'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+                                    \App\Enums\TransactionStatus::REVERSED->value =>
+                                        'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
+                                ];
+                                $currentStatus =
+                                    $transaction->status instanceof \BackedEnum
+                                        ? $transaction->status->value
+                                        : $transaction->status;
+                            @endphp
                             <span
-                                class="inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold {{ $transaction->status->badgeClass() }}">
-                                {{ $transaction->status->label() }}
+                                class="inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold {{ $statusClasses[$currentStatus] ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ $transaction->status instanceof \App\Enums\TransactionStatus ? $transaction->status->label() : $transaction->status }}
                             </span>
                         </div>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -136,13 +198,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Informasi Umum
+                        Informasi Umum Transaksi
                     </h3>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400 block">Periode Anggaran</span>
-                            <span class="font-medium text-gray-900 dark:text-white">{{ $transaction->period->name }}</span>
+                            <span
+                                class="font-medium text-gray-900 dark:text-white">{{ $transaction->period->name }}</span>
                         </div>
 
                         <div>
@@ -305,33 +368,67 @@
                     </h3>
 
                     @php
+                        $receiptPath = $transaction->receipt_path;
                         $receiptUrl =
                             $transaction->receipt_url ??
                             ($transaction->hasMedia('receipts') ? $transaction->getFirstMediaUrl('receipts') : null);
+
+                        $isPdf = $receiptPath && strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION)) === 'pdf';
                     @endphp
 
                     @if ($receiptUrl)
                         <div class="space-y-3">
-                            <div
-                                class="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                                <img src="{{ $receiptUrl }}" alt="Bukti Transaksi"
-                                    class="w-full h-48 object-cover transition transform duration-300 group-hover:scale-105" />
+                            @if ($isPdf)
                                 <div
-                                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                                    class="flex flex-col items-center justify-center p-6 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-center space-y-3">
+                                    <div
+                                        class="p-3 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p
+                                            class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[240px]">
+                                            {{ basename($receiptPath) }}
+                                        </p>
+                                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Dokumen PDF Bukti
+                                            Transaksi</p>
+                                    </div>
                                     <a href="{{ $receiptUrl }}" target="_blank"
-                                        class="p-2 bg-white rounded-lg shadow-sm text-gray-800 hover:bg-gray-100 transition"
-                                        title="Buka Gambar">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        class="inline-flex items-center justify-center w-full px-4 py-2.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-sm">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
+                                        Buka Dokumen PDF di Tab Baru
                                     </a>
                                 </div>
-                            </div>
-                            <a href="{{ $receiptUrl }}" target="_blank"
-                                class="block w-full text-center text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                                Lihat Ukuran Penuh (Tab Baru)
-                            </a>
+                            @else
+                                <div
+                                    class="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                    <img src="{{ $receiptUrl }}" alt="Bukti Transaksi"
+                                        class="w-full h-48 object-cover transition transform duration-300 group-hover:scale-105" />
+                                    <div
+                                        class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                                        <a href="{{ $receiptUrl }}" target="_blank"
+                                            class="p-2 bg-white rounded-lg shadow-sm text-gray-800 hover:bg-gray-100 transition"
+                                            title="Buka Gambar di Tab Baru">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <a href="{{ $receiptUrl }}" target="_blank"
+                                    class="block w-full text-center text-xs font-medium text-rose-600 dark:text-rose-400 hover:underline">
+                                    Lihat Gambar Ukuran Penuh (Tab Baru)
+                                </a>
+                            @endif
                         </div>
                     @else
                         <div

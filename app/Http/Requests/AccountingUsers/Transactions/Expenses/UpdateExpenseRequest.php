@@ -31,7 +31,7 @@ class UpdateExpenseRequest extends FormRequest
             'expense_lines.*.description' => ['nullable', 'string', 'max:255'],
             'cash_coa_id' => ['required', 'exists:chart_of_accounts,id'],
             'status' => ['required', Rule::in(['DRAFT', 'POSTED'])],
-            'proof_file' => ['nullable', 'file', 'mimes:jpeg,png,jpg,pdf', 'max:2048'],
+            'receipt_file' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp,pdf', 'max:2048'],
         ];
     }
 
@@ -41,6 +41,7 @@ class UpdateExpenseRequest extends FormRequest
             'period_id.required' => 'Periode harus dipilih.',
             'sub_period_id.required' => 'Sub Periode harus dipilih.',
             'transaction_date.required' => 'Tanggal transaksi harus diisi.',
+            'transaction_date.before_or_equal' => 'Tanggal transaksi tidak boleh di masa depan.',
             'expense_lines.required' => 'Baris pengeluaran harus diisi.',
             'expense_lines.*.coa_id.required_with' => 'COA pada baris pengeluaran harus dipilih.',
             'expense_lines.*.coa_id.exists' => 'COA pada baris pengeluaran tidak valid.',
@@ -52,9 +53,9 @@ class UpdateExpenseRequest extends FormRequest
             'cash_coa_id.required' => 'COA kas harus dipilih.',
             'cash_coa_id.exists' => 'COA kas yang dipilih tidak valid.',
             'status.required' => 'Status harus dipilih.',
-            'proof_file.file' => 'Bukti transaksi harus berupa file.',
-            'proof_file.mimes' => 'Bukti transaksi harus berupa file dengan format: jpeg, png, jpg, pdf.',
-            'proof_file.max' => 'Bukti transaksi tidak boleh lebih dari 2MB.',
+            'receipt_file.file' => 'Bukti transaksi harus berupa file.',
+            'receipt_file.mimes' => 'Bukti transaksi harus berupa file dengan format: jpeg, png, jpg, webp, pdf.',
+            'receipt_file.max' => 'Bukti transaksi tidak boleh lebih dari 2MB.',
         ];
     }
 }

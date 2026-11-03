@@ -3,14 +3,18 @@
 @section('title', 'Detail Transaksi Penerimaan - ' . $transaction->transaction_number)
 
 @section('content')
+    @php
+        $isSubPeriodClosed = (bool) ($transaction->subPeriod?->is_closed ?? false);
+    @endphp
+
     <div class="space-y-6">
         {{-- BREADCRUMB & TOP ACTIONS --}}
         <x-common.page-breadcrumb pageTitle="Detail Transaksi Penerimaan" defaultTitle="Detail Transaksi Penerimaan"
             pageDescription="Rincian informasi lengkap, jurnal, dan lampiran transaksi penerimaan kas" pageIcon="transaction"
             parentTitle="Transaksi Penerimaan" :parentRoute="route('user.transactions.incomes.index')" currentTitle="{{ $transaction->transaction_number }}" />
 
+        {{-- TOP ACTION BUTTONS --}}
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {{-- ACTION BUTTONS --}}
             <div class="flex flex-wrap items-center gap-2.5">
                 {{-- BACK --}}
                 <a href="{{ route('user.transactions.incomes.index') }}">
@@ -23,49 +27,90 @@
                     </x-ui.button>
                 </a>
 
-                {{-- EDIT LINK (Selalu tampil atau dapat disesuaikan kondisinya) --}}
-                <a href="{{ route('user.transactions.incomes.edit', $transaction) }}">
-                    <x-ui.button variant="outline" size="sm"
-                        class="rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-400">
+                {{-- EDIT LINK / DISABLED BUTTON --}}
+                @if ($isSubPeriodClosed)
+                    <x-ui.button variant="outline" size="sm" disabled
+                        class="rounded-xl border-slate-200 text-slate-400 bg-slate-100 cursor-not-allowed opacity-60 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-500"
+                        title="Sub periode transaksi ini sudah ditutup">
                         <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                         Edit Transaksi
                     </x-ui.button>
-                </a>
+                @else
+                    <a href="{{ route('user.transactions.incomes.edit', $transaction) }}">
+                        <x-ui.button variant="outline" size="sm"
+                            class="rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-400">
+                            <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit Transaksi
+                        </x-ui.button>
+                    </a>
+                @endif
 
                 @if ($transaction->status === \App\Enums\TransactionStatus::DRAFT)
-                    {{-- POSTING --}}
-                    <form action="{{ route('user.transactions.incomes.post', $transaction) }}" method="POST"
-                        onsubmit="return confirm('Apakah Anda yakin ingin memposting transaksi penerimaan ini? Transaksi yang diposting akan langsung menambah saldo kas.')">
-                        @csrf
-                        <x-ui.button type="submit" variant="primary" size="sm"
-                            class="rounded-xl bg-emerald-600 hover:bg-emerald-700">
+                    {{-- POSTING BUTTON / DISABLED --}}
+                    @if ($isSubPeriodClosed)
+                        <x-ui.button type="button" variant="primary" size="sm" disabled
+                            class="rounded-xl bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 dark:bg-slate-800 dark:text-slate-500"
+                            title="Sub periode transaksi ini sudah ditutup">
                             <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             Posting Transaksi
                         </x-ui.button>
-                    </form>
+                    @else
+                        <form action="{{ route('user.transactions.incomes.post', $transaction) }}" method="POST"
+                            onsubmit="return confirm('Apakah Anda yakin ingin memposting transaksi penerimaan ini? Transaksi yang diposting akan langsung menambah saldo kas.')">
+                            @csrf
+                            <x-ui.button type="submit" variant="primary" size="sm"
+                                class="rounded-xl bg-emerald-600 hover:bg-emerald-700">
+                                <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Posting Transaksi
+                            </x-ui.button>
+                        </form>
+                    @endif
 
-                    {{-- BATALKAN --}}
-                    <form action="{{ route('user.transactions.incomes.cancel', $transaction) }}" method="POST"
-                        onsubmit="return confirm('Apakah Anda yakin ingin membatalkan transaksi ini?')">
-                        @csrf
-                        <x-ui.button type="submit" variant="danger" size="sm" class="rounded-xl">
+                    {{-- BATALKAN BUTTON / DISABLED --}}
+                    @if ($isSubPeriodClosed)
+                        <x-ui.button type="button" variant="danger" size="sm" disabled
+                            class="rounded-xl bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 dark:bg-slate-800 dark:text-slate-500"
+                            title="Sub periode transaksi ini sudah ditutup">
                             <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M6 18L18 6M6 6l12 12" />
                             </svg>
                             Batalkan
                         </x-ui.button>
-                    </form>
+                    @else
+                        <form action="{{ route('user.transactions.incomes.cancel', $transaction) }}" method="POST"
+                            onsubmit="return confirm('Apakah Anda yakin ingin membatalkan transaksi ini?')">
+                            @csrf
+                            <x-ui.button type="submit" variant="danger" size="sm" class="rounded-xl">
+                                <svg class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Batalkan
+                            </x-ui.button>
+                        </form>
+                    @endif
                 @endif
             </div>
         </div>
 
         {{-- ALERT MESSAGES --}}
+        @if ($isSubPeriodClosed)
+            <x-ui.alert variant="warning" title="Sub Periode Telah Ditutup">
+                Sub periode <strong>{{ $transaction->subPeriod?->name ?? 'Terkait' }}</strong> untuk transaksi ini telah ditutup. Seluruh aksi seperti pengeditan, posting, maupun pembatalan transaksi telah dinonaktifkan.
+            </x-ui.alert>
+        @endif
+
         @if ($errors->any())
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
                 <ul class="list-disc list-inside space-y-1">
@@ -160,8 +205,17 @@
 
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400 block">Sub Periode</span>
-                            <span
-                                class="font-medium text-gray-900 dark:text-white">{{ $transaction->subPeriod?->name ?? '-' }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-gray-900 dark:text-white">{{ $transaction->subPeriod?->name ?? '-' }}</span>
+                                @if ($isSubPeriodClosed)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                        Ditutup
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         <div>

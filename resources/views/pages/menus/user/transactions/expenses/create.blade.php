@@ -22,6 +22,12 @@
     </div>
 
     {{-- ALERTS --}}
+    @if (session('error'))
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Gagal Mengunggah / Menyimpan" message="{{ session('error') }}" />
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
@@ -79,12 +85,12 @@
                         desc="Pilih akun kas yang digunakan untuk pembayaran">
                         <div class="space-y-4">
                             <div>
-                                <x-form.select id="cash_coa_id" name="cash_coa_id"
-                                    label="Pilih Sumber Kas" x-model="selectedCash" required>
+                                <x-form.select id="cash_coa_id" name="cash_coa_id" label="Pilih Sumber Kas"
+                                    x-model="selectedCash" required>
                                     <option value="">-- Pilih Sumber Kas --</option>
                                     @foreach ($cashCoas as $cash)
                                         <option value="{{ $cash['coa_id'] }}">
-                                            {{ $cash['coa_code'] }} - {{$cash['coa_name'] }}
+                                            {{ $cash['coa_code'] }} - {{ $cash['coa_name'] }}
                                             ({{ $cash['remaining_balance'] < 0 ? 'Defisit: ' : 'Saldo: ' }}{{ number_format($cash['remaining_balance'], 0, ',', '.') }})
                                         </option>
                                     @endforeach
@@ -231,18 +237,19 @@
                         </div>
                     </x-common.component-card>
 
-                    {{-- CARD 4: BUKTI TRANSAKSI --}}
+                    {{-- CARD 4: BUKTI TRANSAKSI (UPLOAD KONSISTEN) --}}
                     <x-common.component-card title="Bukti Transaksi"
-                        desc="Unggah dokumen atau struk pengeluaran (Opsional)">
-                        <div class="space-y-2">
+                        desc="Unggah foto nota, kwitansi, atau bukti pengeluaran (Opsional)">
+                        <div class="space-y-4">
                             <div class="flex items-center justify-center w-full">
-                                <label for="proof_file"
-                                    class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all relative overflow-hidden group">
+                                <label for="receipt_file"
+                                    class="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all relative overflow-hidden group">
 
-                                    <template x-if="!proofPreview && !proofFileName">
-                                        <div class="flex flex-col items-center justify-center pt-4 pb-5 px-4 text-center">
+                                    {{-- State 1: Belum ada file dipilih --}}
+                                    <template x-if="!receiptPreview && !receiptFileName">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
                                             <div
-                                                class="p-3 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform">
+                                                class="p-3 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 mb-3 group-hover:scale-110 transition-transform">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -258,15 +265,17 @@
                                         </div>
                                     </template>
 
-                                    <template x-if="proofPreview">
+                                    {{-- State 2: Preview jika file gambar --}}
+                                    <template x-if="receiptPreview">
                                         <div class="relative w-full h-full p-2 flex items-center justify-center">
-                                            <img :src="proofPreview"
+                                            <img :src="receiptPreview"
                                                 class="max-h-full max-w-full object-contain rounded-lg shadow-sm"
                                                 alt="Preview Bukti">
                                         </div>
                                     </template>
 
-                                    <template x-if="!proofPreview && proofFileName">
+                                    {{-- State 3: Tampilan file non-gambar (PDF) --}}
+                                    <template x-if="!receiptPreview && receiptFileName">
                                         <div class="flex flex-col items-center justify-center p-4 text-center">
                                             <div
                                                 class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 mb-2">
@@ -277,16 +286,17 @@
                                                 </svg>
                                             </div>
                                             <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[200px]"
-                                                x-text="proofFileName"></p>
+                                                x-text="receiptFileName"></p>
                                         </div>
                                     </template>
 
-                                    <input id="proof_file" name="proof_file" type="file" class="hidden"
+                                    <input id="receipt_file" name="receipt_file" type="file" class="hidden"
                                         accept="image/*,.pdf" @change="handleFileChange($event)" />
                                 </label>
                             </div>
 
-                            <template x-if="proofFileName">
+                            {{-- File Info Footer & Clear Button --}}
+                            <template x-if="receiptFileName">
                                 <div
                                     class="flex items-center justify-between p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
                                     <div class="flex items-center gap-2 truncate pr-2">
@@ -296,7 +306,7 @@
                                                 d="M5 13l4 4L19 7" />
                                         </svg>
                                         <span class="text-slate-700 dark:text-slate-300 font-medium truncate"
-                                            x-text="proofFileName"></span>
+                                            x-text="receiptFileName"></span>
                                     </div>
                                     <button type="button" @click="removeFile()"
                                         class="text-rose-500 hover:text-rose-700 font-semibold transition-colors shrink-0 flex items-center gap-1">
@@ -383,7 +393,7 @@
                                 Simpan Transaksi
                             </button>
 
-                            <button type="submit" name="status" value="DRAFT"
+                            {{-- <button type="submit" name="status" value="DRAFT"
                                 class="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all shadow-sm cursor-pointer">
                                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -391,7 +401,7 @@
                                         d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                 </svg>
                                 Simpan sebagai Draft
-                            </button>
+                            </button> --}}
                         </div>
 
                     </div>
@@ -408,8 +418,8 @@
                     cashCoas: cashCoas,
                     selectedCash: '',
                     subPeriod: '{{ $selectedSubPeriodId }}',
-                    proofPreview: null,
-                    proofFileName: '',
+                    receiptPreview: null,
+                    receiptFileName: '',
                     lines: [{
                         amount: 0,
                         description: '',
@@ -473,19 +483,23 @@
                         const file = event.target.files[0];
                         if (!file) return;
 
-                        this.proofFileName = file.name;
+                        this.receiptFileName = file.name;
 
                         if (file.type.startsWith('image/')) {
-                            this.proofPreview = URL.createObjectURL(file);
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                this.receiptPreview = e.target.result;
+                            };
+                            reader.readAsDataURL(file);
                         } else {
-                            this.proofPreview = null;
+                            this.receiptPreview = null;
                         }
                     },
 
                     removeFile() {
-                        this.proofPreview = null;
-                        this.proofFileName = '';
-                        const input = document.getElementById('proof_file');
+                        this.receiptPreview = null;
+                        this.receiptFileName = '';
+                        const input = document.getElementById('receipt_file');
                         if (input) input.value = '';
                     }
                 };

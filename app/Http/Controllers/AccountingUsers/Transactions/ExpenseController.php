@@ -14,7 +14,10 @@ use App\Models\Period;
 use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Models\UserAccount;
-use App\Services\AccountingUsers\Expenses\ExpenseService;
+use App\Services\AccountingUsers\Expenses\DestroyExpenseService;
+use App\Services\AccountingUsers\Expenses\PostTransactionExpenseService;
+use App\Services\AccountingUsers\Expenses\StoreExpenseService;
+use App\Services\AccountingUsers\Expenses\UpdateExpenseService;
 use App\Services\AccountingUsers\GoogleDriveService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -24,19 +27,22 @@ use Illuminate\View\View;
 
 class ExpenseController extends Controller
 {
-    /**
-     * ExpenseController constructor.
-     * Force refresh Google Drive access token for receipt transactions and set it in the filesystem configuration.
-     *
-     * @param GoogleDriveService $googleDriveService
-     */
-    public function __construct(public GoogleDriveService $googleDriveService)
-    {
-        config(['filesystems.disks.google_receipt_transaction.accessToken' => $this->googleDriveService->getAccessToken()]);
-    }
+    // /**
+    //  * ExpenseController constructor.
+    //  * Force refresh Google Drive access token for receipt transactions and set it in the filesystem configuration.
+    //  *
+    //  * @param GoogleDriveService $googleDriveService
+    //  */
+    // public function __construct(public GoogleDriveService $googleDriveService)
+    // {
+    //     config(['filesystems.disks.google_receipt_transaction.accessToken' => $this->googleDriveService->getAccessToken()]);
+    // }
 
     /**
      * Display a listing of expense transactions for monitoring.
+     *
+     * @param Request $request
+     * @return View
      */
     public function index(Request $request): View
     {
@@ -44,7 +50,7 @@ class ExpenseController extends Controller
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
-            'subPeriod:id,name',
+            'subPeriod:id,name,start_date,end_date,is_closed',
         ])
             ->where('transaction_type', TransactionType::EXPENSE)
             ->where('created_by', Auth::id());
@@ -117,6 +123,27 @@ class ExpenseController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     *
+     * @param string $id
+     * @return View
+     * @throws Exception
+     */
+    public function show(string $id): View
+    {
+        $transaction = Transaction::with([
+            'creator:id,name,email',
+            'transactionLines.chartOfAccount:id,code,name',
+            'period:id,name,start_date,end_date',
+            'subPeriod:id,name,start_date,end_date,is_closed',
+        ])
+            ->where('transaction_type', TransactionType::EXPENSE)
+            ->findOrFail($id);
+
+        return view('pages.menus.user.transactions.expenses.show', compact('transaction'));
+    }
+
+    /**
      * Show the form for creating a new resource.
      *
      * @throws Exception
@@ -185,28 +212,14 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
-    {
-        $transaction = Transaction::with([
-            'creator:id,name,email',
-            'transactionLines.chartOfAccount:id,code,name',
-            'period:id,name,start_date,end_date',
-            'subPeriod:id,name,start_date,end_date',
-        ])
-            ->where('transaction_type', TransactionType::EXPENSE)
-            ->findOrFail($id);
-
-        return view('pages.menus.user.transactions.expenses.show', compact('transaction'));
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
+     * @param StoreExpenseService $service
+     * @param StoreExpenseRequest $request
+     * @return RedirectResponse
      * @throws Exception
      */
-    public function store(ExpenseService $service, StoreExpenseRequest $request): RedirectResponse
+    public function store(StoreExpenseService $service, StoreExpenseRequest $request): RedirectResponse
     {
         try {
             $service->handle($request->validated());
@@ -224,6 +237,10 @@ class ExpenseController extends Controller
 
     /**
      * Show the form for editing the specified resource.
+     *
+     * @param string $id
+     * @return View
+     * @throws Exception
      */
     public function edit(string $id): View
     {
@@ -234,10 +251,6 @@ class ExpenseController extends Controller
             ->where('created_by', $userId)
             ->findOrFail($id);
 
-        if ($transaction->subPeriod && $transaction->subPeriod->is_closed) {
-            abort(403, 'Sub periode transaksi ini sudah ditutup, data tidak dapat diedit.');
-        }
-
         $selectedPeriodId = $transaction->period_id;
         $selectedSubPeriodId = $transaction->sub_period_id;
 
@@ -246,7 +259,7 @@ class ExpenseController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        // ── Kas User (Via user_accounts & match saldo di coa_balances) ──
+        // ── Kas User ──
         $cashCoas = UserAccount::query()
             ->with(['coa'])
             ->where('user_id', $userId)
@@ -274,7 +287,7 @@ class ExpenseController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
-        // Format data baris transaksi lama (DEBIT) agar terbaca Alpine.js
+        // Format data baris transaksi lama (DEBIT)
         $oldLines = $transaction->transactionLines
             ->where('position', NormalBalanceEnum::DEBIT->value)
             ->map(fn($line) => [
@@ -299,6 +312,12 @@ class ExpenseController extends Controller
         $oldTotal = (float) $transaction->gross_amount;
         $subPeriodName = $transaction->subPeriod?->name ?? '-';
 
+        // ── Data Bukti Transaksi Eksisting (Google Drive) ──
+        $existingReceiptPath = $transaction->receipt_path;
+        $existingReceiptUrl = $transaction->receipt_url;
+        $existingReceiptName = $existingReceiptPath ? basename($existingReceiptPath) : '';
+        $isExistingImage = $existingReceiptPath && preg_match('/\.(jpg|jpeg|png|webp)$/i', $existingReceiptPath);
+
         return view('pages.menus.user.transactions.expenses.edit', compact(
             'transaction',
             'cashCoas',
@@ -311,17 +330,21 @@ class ExpenseController extends Controller
             'selectedCashName',
             'oldDate',
             'oldTotal',
-            'subPeriodName'
+            'subPeriodName',
+            'existingReceiptPath',
+            'existingReceiptUrl',
+            'existingReceiptName',
+            'isExistingImage'
         ));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateExpenseRequest $request, string $id, ExpenseService $service): RedirectResponse
+    public function update(UpdateExpenseRequest $request, string $id, UpdateExpenseService $service): RedirectResponse
     {
         try {
-            $service->update($id, $request->validated());
+            $service->handle($id, $request->validated());
 
             return redirect()
                 ->route('user.transactions.expenses.index')
@@ -335,16 +358,25 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified expense transaction from storage.
+     *
+     * @param DestroyExpenseService $service
+     * @param string $id
+     * @return RedirectResponse
      */
-    public function destroy(string $id, ExpenseService $service): RedirectResponse
+    public function destroy(DestroyExpenseService $service, string $id): RedirectResponse
     {
         try {
-            $service->delete($id);
+            $transaction = Transaction::with(['subPeriod'])
+                ->where('transaction_type', TransactionType::EXPENSE)
+                ->where('created_by', Auth::id())
+                ->findOrFail($id);
+
+            $service->handle($transaction);
 
             return redirect()
                 ->route('user.transactions.expenses.index')
-                ->with('success', 'Transaksi Pengeluaran berhasil dihapus');
+                ->with('success', 'Transaksi Pengeluaran berhasil dihapus.');
         } catch (Exception $e) {
             return redirect()
                 ->back()
@@ -354,11 +386,16 @@ class ExpenseController extends Controller
 
     /**
      * Post the specified resource in storage.
+     *
+     * @param string $id
+     * @param PostTransactionExpenseService $service
+     * @return RedirectResponse
+     * @throws Exception
      */
-    public function post(string $id, ExpenseService $service): RedirectResponse
+    public function post(string $id, PostTransactionExpenseService $service): RedirectResponse
     {
         try {
-            $service->postTransaction($id);
+            $service->handle($id);
 
             return redirect()
                 ->route('user.transactions.expenses.index')

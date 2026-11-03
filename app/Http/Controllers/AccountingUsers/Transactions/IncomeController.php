@@ -15,7 +15,7 @@ use App\Models\SubPeriod;
 use App\Models\Transaction;
 use App\Services\AccountingUsers\GoogleDriveService;
 use App\Services\AccountingUsers\Incomes\DeleteIncomeService;
-use App\Services\AccountingUsers\Incomes\IncomeService;
+use App\Services\AccountingUsers\Incomes\StoreIncomeService;
 use App\Services\AccountingUsers\Incomes\UpdateIncomeService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -128,6 +128,7 @@ class IncomeController extends Controller
      *
      * @param string $id
      * @return View
+     * @throws Exception
      */
     public function show(string $id): View
     {
@@ -135,7 +136,7 @@ class IncomeController extends Controller
             'creator:id,name',
             'transactionLines.chartOfAccount:id,code,name',
             'period:id,name,start_date,end_date',
-            'subPeriod:id,name,start_date,end_date',
+            'subPeriod:id,name,start_date,end_date,is_closed',
         ])
             ->where('transaction_type', TransactionType::INCOME)
             ->findOrFail($id);
@@ -220,12 +221,12 @@ class IncomeController extends Controller
      * Store a newly created income transaction in storage. This method handles the complex logic of saving the transaction,
      * including updating the relevant account balances and ensuring data integrity.
      *
-     * @param IncomeService $service
+     * @param StoreIncomeService $service
      * @param StoreIncomeRequest $request
      * @return RedirectResponse
      * @throws Exception
      */
-    public function store(IncomeService $service, StoreIncomeRequest $request): RedirectResponse
+    public function store(StoreIncomeService $service, StoreIncomeRequest $request): RedirectResponse
     {
         try {
             $service->handle($request->validated());
@@ -347,11 +348,6 @@ class IncomeController extends Controller
                 ->where('transaction_type', TransactionType::INCOME)
                 ->where('created_by', Auth::id())
                 ->findOrFail($id);
-
-            // Validasi: pastikan sub periode belum ditutup
-            if ($transaction->subPeriod && $transaction->subPeriod->is_closed) {
-                throw new Exception('Tidak dapat menghapus transaksi karena sub periode sudah ditutup.');
-            }
 
             $service->handle($transaction);
 

@@ -22,13 +22,12 @@ class StoreExpenseRequest extends FormRequest
      */
     public function rules(): array
     {
-        // dd($this);
         return [
-            'period_id'        => [
+            'period_id' => [
                 'required',
                 'exists:periods,id',
             ],
-            'sub_period_id'    => [
+            'sub_period_id' => [
                 'required',
                 'exists:sub_periods,id',
                 Rule::exists('sub_periods', 'id')->where(function ($query) {
@@ -40,7 +39,7 @@ class StoreExpenseRequest extends FormRequest
                 'date',
                 'before_or_equal:today',
             ],
-            'description'      => [
+            'description' => [
                 'nullable',
                 'string',
                 'max:255',
@@ -48,33 +47,38 @@ class StoreExpenseRequest extends FormRequest
             'expense_lines' => [
                 'required',
                 'array',
-                'min:1'
+                'min:1',
             ],
             'expense_lines.*.coa_id' => [
                 'required_with:expense_lines',
-                'exists:chart_of_accounts,id'
+                'exists:chart_of_accounts,id',
             ],
             'expense_lines.*.amount' => [
                 'required_with:expense_lines',
                 'numeric',
-                'min:0.01'
+                'min:0.01',
             ],
             'expense_lines.*.description' => [
                 'nullable',
                 'string',
-                'max:255'
+                'max:255',
             ],
             'cash_coa_id' => [
                 'required',
-                'exists:chart_of_accounts,id'
+                'exists:chart_of_accounts,id',
             ],
             'status' => [
                 'required',
-                Rule::in(['DRAFT', 'POSTED'])
-            ]
+                Rule::in(['DRAFT', 'POSTED']),
+            ],
+            'receipt_file' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:2048', // Maksimal 2MB
+            ],
         ];
     }
-
 
     /**
      * Get custom messages for validator errors.
@@ -107,6 +111,9 @@ class StoreExpenseRequest extends FormRequest
             'cash_coa_id.exists' => 'Chart of Account kas yang dipilih tidak valid.',
             'status.required' => 'Status harus dipilih.',
             'status.in' => 'Status yang dipilih tidak valid. Pilih antara DRAFT atau POSTED.',
+            'receipt_file.file' => 'Bukti transaksi harus berupa file.',
+            'receipt_file.mimes' => 'Bukti transaksi harus berupa file dengan format: jpg, jpeg, png, pdf.',
+            'receipt_file.max' => 'Bukti transaksi maksimal berukuran 2MB.',
         ];
     }
 }

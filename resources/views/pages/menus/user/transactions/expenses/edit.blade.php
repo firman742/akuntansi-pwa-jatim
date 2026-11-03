@@ -22,6 +22,12 @@
     </div>
 
     {{-- ALERTS --}}
+    @if (session('error'))
+        <div class="mb-6">
+            <x-ui.alert variant="error" title="Gagal Mengunggah / Menyimpan" message="{{ session('error') }}" />
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="mb-6">
             <x-ui.alert variant="error" title="Terjadi Kesalahan">
@@ -35,7 +41,13 @@
     @endif
 
     {{-- FORM CONTAINER --}}
-    <div class="mx-auto pb-10" x-data="expenseEditForm(@js($cashCoas), @js($oldLines), '{{$selectedCashCoaId }}')" x-init="init()">
+    <div class="mx-auto pb-10" x-data="expenseEditForm(
+        @js($cashCoas),
+        @js($oldLines),
+        @js($selectedCashCoaId),
+        @js($existingReceiptUrl && $isExistingImage ? $existingReceiptUrl : null),
+        @js($existingReceiptName)
+    )" x-init="init()">
         <form action="{{ route('user.transactions.expenses.update', $transaction->id) }}" method="POST"
             enctype="multipart/form-data">
             @csrf
@@ -54,10 +66,12 @@
                         desc="Informasi dasar waktu dan periode pengeluaran">
                         <div class="grid md:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Sub Periode</label>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Sub
+                                    Periode</label>
                                 <input type="text" value="{{ $subPeriodName }}" disabled
                                     class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed">
-                                <p class="text-[11px] text-slate-400 mt-1">Sub periode tidak dapat diubah pada mode edit.</p>
+                                <p class="text-[11px] text-slate-400 mt-1">Sub periode tidak dapat diubah pada mode edit.
+                                </p>
                             </div>
                             <div>
                                 <x-form.date-picker id="transaction_date" name="transaction_date" label="Tanggal Transaksi"
@@ -71,7 +85,8 @@
                     <x-common.component-card title="Sumber Kas Pengeluaran" desc="Akun kas sumber pembayaran transaksi">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Akun Kas Sumber</label>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Akun
+                                    Kas Sumber</label>
                                 <input type="text" value="{{ $selectedCashName }}" disabled
                                     class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed">
                                 <p class="text-[11px] text-slate-400 mt-1">Sumber kas pembayaran bersifat tetap.</p>
@@ -84,7 +99,8 @@
                                     <div class="w-2.5 h-2.5 rounded-full"
                                         :class="balance < 0 ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500 animate-pulse'">
                                     </div>
-                                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sisa Saldo Kas Terpilih</span>
+                                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sisa Saldo
+                                        Kas Terpilih</span>
                                 </div>
                                 <span class="text-base font-black font-mono"
                                     :class="balance < 0 ? 'text-rose-600' : 'text-slate-900'"
@@ -114,18 +130,21 @@
                                     </div>
                                     <div class="space-y-3">
                                         <div>
-                                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Akun Pengeluaran (COA) <span class="text-rose-500">*</span></label>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Akun
+                                                Pengeluaran (COA) <span class="text-rose-500">*</span></label>
                                             <select :name="`expense_lines[${index}][coa_id]`" x-model="line.coa_id" required
                                                 class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white text-slate-800">
                                                 <option value="">-- Pilih Akun Keluar --</option>
                                                 @foreach ($expenseCoas as $coa)
-                                                    <option value="{{ $coa->id }}">{{ $coa->code }} - {{$coa->name }}</option>
+                                                    <option value="{{ $coa->id }}">{{ $coa->code }} -
+                                                        {{ $coa->name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             <div>
-                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Nominal (Rp) <span class="text-rose-500">*</span></label>
+                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Nominal
+                                                    (Rp) <span class="text-rose-500">*</span></label>
                                                 <input type="text" @input="onAmountInput($event, index)"
                                                     :value="formatRupiah(line.amount)" placeholder="Rp 0" required
                                                     class="w-full h-10 px-3 py-2 text-sm font-mono rounded-lg border border-slate-300 bg-white">
@@ -133,7 +152,8 @@
                                                     x-model="line.amount">
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Keterangan Detail</label>
+                                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Keterangan
+                                                    Detail</label>
                                                 <input type="text" :name="`expense_lines[${index}][description]`"
                                                     x-model="line.description" placeholder="Catatan detail item..."
                                                     class="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white">
@@ -146,6 +166,87 @@
                                 class="w-full border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl py-3 text-slate-600 hover:text-indigo-600 transition-all font-medium text-sm bg-white">
                                 + Tambah Baris Pengeluaran
                             </button>
+                        </div>
+                    </x-common.component-card>
+
+                    {{-- CARD 4: BUKTI TRANSAKSI (UPLOAD EKSISTING / BARU) --}}
+                    <x-common.component-card title="Bukti Transaksi"
+                        desc="Unggah atau ubah foto nota, kwitansi, atau bukti pengeluaran (Opsional)">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-center w-full">
+                                <label for="receipt_file"
+                                    class="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all relative overflow-hidden group">
+
+                                    <template x-if="!receiptPreview && !receiptFileName">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+                                            <div
+                                                class="p-3 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 mb-3 group-hover:scale-110 transition-transform">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                            <p class="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                                <span class="text-indigo-600 dark:text-indigo-400">Klik untuk unggah file
+                                                    baru</span> atau seret ke sini
+                                            </p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">Format: JPG, PNG, JPEG,
+                                                WEBP, atau PDF (Maks. 2MB)</p>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="receiptPreview">
+                                        <div class="relative w-full h-full p-2 flex items-center justify-center">
+                                            <img :src="receiptPreview"
+                                                class="max-h-full max-w-full object-contain rounded-lg shadow-sm"
+                                                alt="Preview Bukti">
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!receiptPreview && receiptFileName">
+                                        <div class="flex flex-col items-center justify-center p-4 text-center">
+                                            <div
+                                                class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 mb-2">
+                                                <svg class="w-8 h-8" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[200px]"
+                                                x-text="receiptFileName"></p>
+                                        </div>
+                                    </template>
+
+                                    <input id="receipt_file" name="receipt_file" type="file" class="hidden"
+                                        accept="image/*,.pdf" @change="handleFileChange($event)" />
+                                </label>
+                            </div>
+
+                            <template x-if="receiptFileName">
+                                <div
+                                    class="flex items-center justify-between p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
+                                    <div class="flex items-center gap-2 truncate pr-2">
+                                        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span class="text-slate-700 dark:text-slate-300 font-medium truncate"
+                                            x-text="receiptFileName"></span>
+                                    </div>
+                                    <button type="button" @click="removeFile()"
+                                        class="text-rose-500 hover:text-rose-700 font-semibold transition-colors shrink-0 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Hapus
+                                    </button>
+                                </div>
+                            </template>
                         </div>
                     </x-common.component-card>
 
@@ -179,7 +280,8 @@
                         <div class="space-y-3 text-sm pt-2">
                             <div class="flex items-center justify-between text-xs">
                                 <span class="text-slate-500">Total Nominal Lama:</span>
-                                <span class="font-mono text-slate-400 line-through">Rp {{ number_format($oldTotal, 0, ',', '.') }}</span>
+                                <span class="font-mono text-slate-400 line-through">Rp
+                                    {{ number_format($oldTotal, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-slate-500 font-medium">Total Nominal Baru:</span>
@@ -187,8 +289,10 @@
                             </div>
                             <div class="border-t pt-3">
                                 <div class="p-3.5 rounded-xl border bg-indigo-50/60 border-indigo-100 space-y-1">
-                                    <div class="text-[11px] font-semibold uppercase tracking-wider text-indigo-800">Proyeksi Saldo Kas Akhir</div>
-                                    <div class="text-xl font-black font-mono text-indigo-600" x-text="formatRupiah(balance - total)"></div>
+                                    <div class="text-[11px] font-semibold uppercase tracking-wider text-indigo-800">
+                                        Proyeksi Saldo Kas Akhir</div>
+                                    <div class="text-xl font-black font-mono text-indigo-600"
+                                        x-text="formatRupiah(balance - total)"></div>
                                 </div>
                             </div>
                         </div>
@@ -208,12 +312,14 @@
 
     @push('scripts')
         <script>
-            function expenseEditForm(cashCoas = [], oldLines = [], selectedCashId = '') {
+            function expenseEditForm(cashCoas = [], oldLines = [], selectedCashId = '', initialReceiptPreview = null,
+                initialReceiptName = '') {
                 return {
                     cashCoas: cashCoas,
                     selectedCash: selectedCashId,
                     transactionDate: '{{ old('transaction_date', $transaction->transaction_date->format('Y-m-d')) }}',
-                    proofFileName: '',
+                    receiptPreview: initialReceiptPreview,
+                    receiptFileName: initialReceiptName,
                     lines: oldLines.length > 0 ? oldLines : [{
                         amount: 0,
                         description: ''
@@ -268,6 +374,31 @@
                     removeLine(index) {
                         if (this.lines.length > 1) {
                             this.lines.splice(index, 1);
+                        }
+                    },
+
+                    handleFileChange(event) {
+                        const file = event.target.files[0];
+                        if (file) {
+                            this.receiptFileName = file.name;
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    this.receiptPreview = e.target.result;
+                                };
+                                reader.readAsDataURL(file);
+                            } else {
+                                this.receiptPreview = null;
+                            }
+                        }
+                    },
+
+                    removeFile() {
+                        this.receiptFileName = '';
+                        this.receiptPreview = null;
+                        const fileInput = document.getElementById('receipt_file');
+                        if (fileInput) {
+                            fileInput.value = '';
                         }
                     }
                 };

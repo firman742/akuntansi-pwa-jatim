@@ -12,8 +12,9 @@ use App\Models\TransactionLine;
 use App\Services\TransactionBaseService;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
-class ExpenseService extends TransactionBaseService
+class StoreExpenseService extends TransactionBaseService
 {
     /**
      * Handle expense transaction.
@@ -52,10 +53,7 @@ class ExpenseService extends TransactionBaseService
             foreach ($data['expense_lines'] as $expense) {
                 $lineDesc = !empty($expense['description'])
                     ? $expense['description']
-                    : TransactionHelper::generateLineDescription(
-                        $expense['coa_id'],
-                        $expense['description'] ?? null
-                    );
+                    : $parentDescription;
 
                 $lines[] = $this->line(
                     $expense['coa_id'],
@@ -86,8 +84,37 @@ class ExpenseService extends TransactionBaseService
                 TransactionType::EXPENSE
             );
 
+            /*
+            |--------------------------------------------------------------------------
+            | Handle File Upload (Google Drive)
+            |--------------------------------------------------------------------------
+            */
+            if (isset($data['receipt_file']) && $data['receipt_file'] instanceof \Illuminate\Http\UploadedFile) {
+                $file = $data['receipt_file'];
+                $extension = $file->getClientOriginalExtension();
+                $transaction->load(['period', 'subPeriod']);
+
+                $jenis         = strtoupper($transaction->transaction_type->value); // EXPENSE
+                $periodName    = str_replace(['/', '\\', ' '], '_', $transaction->period?->name ?? 'Tanpa_Periode');
+                $subPeriodName = str_replace(['/', '\\', ' '], '_', $transaction->subPeriod?->name ?? 'Tanpa_Sub_Periode');
+                $tanggal       = $transaction->transaction_date->format('Y-m-d');
+                $trxNumber     = str_replace(['/', '\\', ' '], '_', $transaction->transaction_number);
+
+                $directory = sprintf('%s/%s/%s', $jenis, $periodName, $subPeriodName);
+                $fileName  = $tanggal . '_' . $trxNumber . '.' . $extension;
+
+                Storage::disk('google_receipt_transaction')->putFileAs($directory, $file, $fileName);
+                $receiptPath = trim($directory, '/') . '/' . $fileName;
+
+                $transaction->update(['receipt_path' => $receiptPath]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Journal Entry & Update General Ledger
+            |--------------------------------------------------------------------------
+            */
             if ($status === TransactionStatus::POSTED->value) {
-                // Create Journal Entry & Update General Ledger / CoaBalance
                 $this->generateJournal(
                     [
                         'transaction_date' => $transaction->transaction_date,
@@ -103,7 +130,11 @@ class ExpenseService extends TransactionBaseService
                 );
             }
 
-            // Audit Log Transaction Created
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Log
+            |--------------------------------------------------------------------------
+            */
             $this->logger->log(
                 action: 'CREATE',
                 module: 'TRANSACTION_EXPENSE',

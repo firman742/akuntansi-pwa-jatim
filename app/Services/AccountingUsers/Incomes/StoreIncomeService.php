@@ -8,11 +8,10 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\Transaction;
 use App\Services\TransactionBaseService;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class IncomeService extends TransactionBaseService
+class StoreIncomeService extends TransactionBaseService
 {
     public function handle(array $data): Transaction
     {
